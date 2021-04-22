@@ -20,14 +20,15 @@ An Instrument class holds specific configuration for generation of bespoke Babel
 # Python script
 import babelscan
 scan1 = babelscan.file_loader('12345.nxs')
+scan2 = babelscan.file_loader('i16_1234.dat')
 exp = babelscan.FolderMonitor('/path/to/files')
-scan2 = exp.scan(0)  # returns latest scan in directory
-scans = scan1 + scan2  # creates MultiScan object
+scan3 = exp.scan(0)  # returns latest scan in directory
+scans = scan1 + scan2 + scan3  # creates MultiScan object that combines the 3 datasets
 ```
 
 ### Installation
 #### requirements: numpy, h5py, imageio, [optional: matplotlib, lmfit]
-#### available from: 
+#### available from: https://github.com/DanPorter/babelscan
 
 ### Examples
 ```python

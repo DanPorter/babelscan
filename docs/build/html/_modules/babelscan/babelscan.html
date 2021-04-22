@@ -1,0 +1,1328 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>babelscan.babelscan &mdash; BabelScan 0.3.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BabelScan
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Code.html">Code</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BabelScan</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>babelscan.babelscan</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for babelscan.babelscan</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">babelscan object for holding many types of scan data</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">fn</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">EVAL_MODE</span>
+<span class="kn">from</span> <span class="nn">.settings</span> <span class="kn">import</span> <span class="n">init_scan_plot_manager</span><span class="p">,</span> <span class="n">init_multiscan_plot_manager</span><span class="p">,</span> <span class="n">init_scan_fit_manager</span>
+<span class="kn">from</span> <span class="nn">.volume</span> <span class="kn">import</span> <span class="n">ArrayVolume</span>
+
+
+<span class="s2">&quot;----------------------------------------------------------------------------------------------------------------------&quot;</span>
+<span class="s2">&quot;------------------------------------------------- Scan ---------------------------------------------------------------&quot;</span>
+<span class="s2">&quot;----------------------------------------------------------------------------------------------------------------------&quot;</span>
+
+
+<div class="viewcode-block" id="Scan"><a class="viewcode-back" href="../../Code.html#babelscan.Scan">[docs]</a><span class="k">class</span> <span class="nc">Scan</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Scan class</span>
+<span class="sd">    Contains a namespace of data associated with names and a seperate dictionary of name associations,</span>
+<span class="sd">    allowing multiple names to reference the same data.</span>
+<span class="sd">      namespace = {</span>
+<span class="sd">        &#39;data1&#39;: [1,2,3],</span>
+<span class="sd">        &#39;data2&#39;: [10,20,30]</span>
+<span class="sd">      }</span>
+<span class="sd">      alt_names = {</span>
+<span class="sd">        &#39;xaxis&#39;: &#39;data1&#39;,</span>
+<span class="sd">        &#39;yaxis&#39;: &#39;data2&#39;,</span>
+<span class="sd">      }</span>
+<span class="sd">      dh = Scan(namespace, alt_names)</span>
+<span class="sd">      dh(&#39;xaxis&#39;) &gt;&gt; returns [1,2,3]</span>
+
+<span class="sd">    :param namespace: dict : dict of names and data {name: data}</span>
+<span class="sd">    :param alt_names: dict or None* : dict of alternative names to names in namespace</span>
+<span class="sd">    :param kwargs: key-word-argments as options shwon below, keywords and argmuents will be added to the namespace.</span>
+
+<span class="sd">    Options:</span>
+<span class="sd">      reload - True/False*, if True, reload mode is activated, reloading data on each operation</span>
+<span class="sd">      label_name - str, add a name to use to automatically find the label</span>
+<span class="sd">      label_command - str, format specifier for label, e.g. &#39;{scan_number}&#39;</span>
+<span class="sd">      title_name - str, add a name to use to automatically find the title</span>
+<span class="sd">      title_command - str, format specifier for title, e.g. &#39;#{scan_number} Energy={en:5.2f} keV&#39;</span>
+<span class="sd">      scan_command_name - str, add a name to use to automatically find the scan command</span>
+<span class="sd">      start_time_name - str, add a name to use to automatically find the start_time</span>
+<span class="sd">      end_time_name - str, add a name to use to automatically find the end_time</span>
+<span class="sd">      axes_name - str, add a name to use to automatically find the axes (xaxis)</span>
+<span class="sd">      signal_name - str, add a name to use to automatically find the signal (yaxis)</span>
+<span class="sd">      image_name - str, add a name to use to automatically find the detector image</span>
+<span class="sd">      str_list - list of str, list of names to display when print(self)</span>
+<span class="sd">      signal_operation - str, operation to perform on signal, e.g. &#39;/Transmission&#39;</span>
+<span class="sd">      error_function - func., operation to perform on signal to generate errors. e.g. np.sqrt</span>
+<span class="sd">      debug - str or list of str, options for debugging, options:</span>
+<span class="sd">        &#39;namespace&#39; - displays when items are added to the namespace</span>
+<span class="sd">        &#39;eval&#39; - displays when eval operations are used</span>
+
+<span class="sd">    Functions</span>
+<span class="sd">    add2namespace(name, data=None, other_names=None, hdf_address=None)</span>
+<span class="sd">        set data in namespace</span>
+<span class="sd">    add2strlist(names)</span>
+<span class="sd">        Add to list of names in str output</span>
+<span class="sd">    address(name)</span>
+<span class="sd">        Return hdf address of namespace name</span>
+<span class="sd">    array(names, array_length=None)</span>
+<span class="sd">        Return numpy array of data with same length</span>
+<span class="sd">    axes()</span>
+<span class="sd">        Return default axes (xaxis) data</span>
+<span class="sd">    dataset(name)</span>
+<span class="sd">        Return dataset object</span>
+<span class="sd">    eval(operation)</span>
+<span class="sd">        Evaluate operation using names in dataset or in associated names</span>
+<span class="sd">    find_image(multiple=False)</span>
+<span class="sd">        Return address of image data in hdf file</span>
+<span class="sd">    get_plot_data(xname=None, yname=None, signal_op=None, error_op=None)</span>
+<span class="sd">        Return xdata, ydata, yerror, xname, yname</span>
+<span class="sd">    image(idx=None, image_address=None)</span>
+<span class="sd">        Load image from hdf file, works with either image addresses or stored arrays</span>
+<span class="sd">    image_roi(cen_h=None, cen_v=None, wid_h=31, wid_v=31)</span>
+<span class="sd">        Create new region of interest from detector images</span>
+<span class="sd">    image_roi_op(operation)</span>
+<span class="sd">        Create new region of interest (roi) from image data and return sum and maxval</span>
+<span class="sd">    image_roi_sum(cen_h=None, cen_v=None, wid_h=31, wid_v=31)</span>
+<span class="sd">        Create new region of interest</span>
+<span class="sd">    image_size()</span>
+<span class="sd">        Returns the image size</span>
+<span class="sd">    label(new_label=None)</span>
+<span class="sd">        Set or Return the scan label. The label is a short identifier for the scan, such as scan number</span>
+<span class="sd">    load()</span>
+<span class="sd">        Open and return hdf.File object</span>
+<span class="sd">    name(name)</span>
+<span class="sd">        Return corrected name from namespace</span>
+<span class="sd">    options(**kwargs)</span>
+<span class="sd">        Set or display options</span>
+<span class="sd">    reload_mode(mode=None)</span>
+<span class="sd">        Turns on reload mode - reloads the dataset each time</span>
+<span class="sd">    reset()</span>
+<span class="sd">        Reset the namespace</span>
+<span class="sd">    scan_command()</span>
+<span class="sd">        Returns scan command</span>
+<span class="sd">    show_namespace()</span>
+<span class="sd">        return str of namespace</span>
+<span class="sd">    signal()</span>
+<span class="sd">        Return default signal (yaxis) data</span>
+<span class="sd">    string(names, str_format=None)</span>
+<span class="sd">        Return formated string of data</span>
+<span class="sd">    string_format(operation)</span>
+<span class="sd">        Process a string with format specified in {} brackets, values will be returned.</span>
+<span class="sd">    title(new_title=None)</span>
+<span class="sd">        Set or Return the title</span>
+<span class="sd">    tree(detail=False, recursion_limit=100)</span>
+<span class="sd">        Return str of the full tree of data in a hdf object</span>
+<span class="sd">    value(names, array_function=None)</span>
+<span class="sd">        Return single value of data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">namespace</span><span class="p">,</span> <span class="n">alt_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">namespace</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">alt_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">alt_names</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_values</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">default_values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_default_values</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">default_values</span><span class="p">)</span>
+
+        <span class="c1"># Managers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">init_scan_plot_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit</span> <span class="o">=</span> <span class="n">init_scan_fit_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># Options and defaults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_options</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_label_str</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_title_str</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;filename&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scan_command_str</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;scan_command&#39;</span><span class="p">,</span> <span class="s1">&#39;cmd&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_time_str</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;start_time&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_time_str</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;end_time&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exposure_time_str</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;count_time&#39;</span><span class="p">,</span> <span class="s1">&#39;counttime&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_axes_str</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;axes&#39;</span><span class="p">,</span> <span class="s1">&#39;xaxis&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_signal_str</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;signal&#39;</span><span class="p">,</span> <span class="s1">&#39;yaxis&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_size</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_print_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;scan_command&#39;</span><span class="p">,</span> <span class="s1">&#39;axes&#39;</span><span class="p">,</span> <span class="s1">&#39;signal&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reload_mode</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_options</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">(</span><span class="s1">&#39;init&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="s2">&quot;------------------------------- Basic Operations -------------------------------------------&quot;</span>
+
+<div class="viewcode-block" id="Scan.reset"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Regenerate data lists&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="Scan.reload_mode"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.reload_mode">[docs]</a>    <span class="k">def</span> <span class="nf">reload_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Turns on reload mode - reloads the dataset each time</span>
+<span class="sd">        :param mode: Bool or None, True to turn on, None to return current mode</span>
+<span class="sd">        :return: None or str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reload_mode</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;Reload mode is ON&quot;</span>
+            <span class="k">return</span> <span class="s2">&quot;Reload mode is OFF&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reload_mode</span> <span class="o">=</span> <span class="n">mode</span></div>
+
+<div class="viewcode-block" id="Scan.add2namespace"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.add2namespace">[docs]</a>    <span class="k">def</span> <span class="nf">add2namespace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">other_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        set data in namespace</span>
+<span class="sd">        :param name: str name or list of names (each name will store the same data)</span>
+<span class="sd">        :param data: any or None, data to store in namespace (nothing stored if None)</span>
+<span class="sd">        :param other_names: str, list of str or None - strings to associate with name, giving the same result</span>
+<span class="sd">        :param default_value: any or None, data to store in default_value namespace (nothing stored if None)</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">(</span><span class="s1">&#39;namespace&#39;</span><span class="p">,</span> <span class="s1">&#39;Add to namespace: </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fn</span><span class="o">.</span><span class="n">data_string</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">other_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">other_names</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">other_names</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">other_name</span> <span class="ow">in</span> <span class="n">other_names</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">other_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="p">[</span><span class="n">other_name</span><span class="p">]</span> <span class="o">+=</span> <span class="n">names</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="p">[</span><span class="n">other_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">(</span><span class="s1">&#39;namespace&#39;</span><span class="p">,</span> <span class="s1">&#39;Add alt. name: </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">other_name</span><span class="p">,</span> <span class="n">names</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">default_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_default_values</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_value</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">(</span><span class="s1">&#39;namespace&#39;</span><span class="p">,</span> <span class="s1">&#39;Add to namespace: </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fn</span><span class="o">.</span><span class="n">data_string</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="Scan.show_namespace"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.show_namespace">[docs]</a>    <span class="k">def</span> <span class="nf">show_namespace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;return str of namespace&quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;Namespace </span><span class="si">%r</span><span class="s1">:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="si">%-20s</span><span class="s1"> </span><span class="si">%-60s</span><span class="s1"> | </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="s1">&#39;Name&#39;</span><span class="p">,</span> <span class="s1">&#39;Alternate Names&#39;</span><span class="p">,</span> <span class="s1">&#39;Data&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">other_names</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">okey</span> <span class="k">for</span> <span class="n">okey</span><span class="p">,</span> <span class="n">oitem</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">oitem</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="si">%-20s</span><span class="s1"> </span><span class="si">%-60s</span><span class="s1"> | </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">other_names</span><span class="p">,</span> <span class="n">fn</span><span class="o">.</span><span class="n">data_string</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="Scan.add2strlist"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.add2strlist">[docs]</a>    <span class="k">def</span> <span class="nf">add2strlist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add to list of names in str output&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_print_list</span> <span class="o">+=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">names</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scan.options"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.options">[docs]</a>    <span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set or display options&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># return options</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;Options:</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="si">%20s</span><span class="s1"> : </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">out</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_options</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set options&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;reload&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reload_mode</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;reload&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;label_name&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_label_str</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;label_name&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s1">&#39;title_name&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_title_str</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;title_name&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s1">&#39;scan_command_name&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_scan_command_str</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;scan_command_name&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s1">&#39;start_time_name&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_start_time_str</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;start_time_name&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s1">&#39;end_time_name&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_end_time_str</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;end_time_name&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s1">&#39;exposure_time_name&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_exposure_time_str</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;exposure_time_name&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s1">&#39;axes_name&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_axes_str</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;axes_name&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s1">&#39;signal_name&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_signal_str</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;signal_name&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s1">&#39;image_name&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_image_name</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;image_name&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s1">&#39;str_list&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_list</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;str_list&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s1">&#39;scan_plot_manager&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;scan_plot_manager&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;scan_fit_manager&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fit</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;scan_fit_manager&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_debug</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">debug_name</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns message if debug option active</span>
+<span class="sd">        :param debug_name: str name to match in self._options[&#39;debug&#39;]</span>
+<span class="sd">        :param message: str message to print if true</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;debug&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span> <span class="ow">and</span> <span class="n">debug_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="s1">&#39;db:</span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">debug_name</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s1">&#39;debug&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span> <span class="ow">and</span> <span class="s1">&#39;all&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">]:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="s1">&#39;db:</span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">debug_name</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+
+    <span class="s2">&quot;------------------------------- class operations -------------------------------------------&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;Scan(namespace: </span><span class="si">%d</span><span class="s1">, alt_names: </span><span class="si">%d</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print_list</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list_data</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan_length</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">addee</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add two scans together somehow</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">MultiScan</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="n">addee</span><span class="p">])</span>
+
+    <span class="s2">&quot;------------------------------- data -------------------------------------------&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check name in external dictionary, add to internal namespace</span>
+<span class="sd">          This function will be overloaded in subclasses</span>
+<span class="sd">        If &#39;name&#39; not available, raise KeyError</span>
+<span class="sd">        :param name: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span> <span class="s1">&#39;Searching external databases for close match to: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="c1"># Search for close match</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">[</span><span class="n">keys</span><span class="p">[</span><span class="n">keys</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())]]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+                <span class="k">return</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1"> not available in </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_get_name_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get name and data from stored dicts</span>
+<span class="sd">        Search hierachy:</span>
+<span class="sd">          1. Check namespace for name, return namespace[name]</span>
+<span class="sd">          2. Check alt_names for name, return namespace[alt_names[name][i]]</span>
+<span class="sd">          3. Check name against special names in axes_str, signal_str</span>
+<span class="sd">          4. Check name against &#39;nroi&#39;</span>
+<span class="sd">          5. Check name in external source e.g. hdf file</span>
+<span class="sd">          6. Check name, alt_names in defaults_namespace</span>
+<span class="sd">          7. If not available, raise KeyError</span>
+<span class="sd">        :param name: str, key or associated key in namespace</span>
+<span class="sd">        :return name, data: from namespace dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reload_mode</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_data</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span> <span class="s1">&#39;Looking for </span><span class="si">%s</span><span class="s1"> in namespace, alt_names, specials&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">alt_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">alt_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">alt_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">[</span><span class="n">alt_name</span><span class="p">]</span>
+        <span class="c1"># Check defaults</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes_str</span><span class="p">:</span>  <span class="c1"># e.g. &#39;axes&#39;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">()</span>  <span class="c1"># return _get_name_data(&#39;eta&#39;)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_signal_str</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal</span><span class="p">()</span>
+        <span class="c1"># Check new region of interest</span>
+        <span class="k">if</span> <span class="s1">&#39;nroi&#39;</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+            <span class="n">roi_sum</span><span class="p">,</span> <span class="n">roi_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_roi_op</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">name</span><span class="p">,</span> <span class="n">roi_sum</span>
+        <span class="c1"># Load data from external dictionary (e.g. hdf file)</span>
+        <span class="c1"># &#39;name&#39; will be added to namespace, or KeyError will be raised</span>
+        <span class="c1"># _load_data can be overloaded in subclasses</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_data</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_name_data</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">ke</span><span class="p">:</span>
+            <span class="c1"># Finally, check the defaults namespace</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_values</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_values</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+                <span class="k">return</span> <span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_values</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">alt_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">alt_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_values</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">alt_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_values</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">alt_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_values</span><span class="p">[</span><span class="n">alt_name</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="n">ke</span>
+
+    <span class="k">def</span> <span class="nf">_get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_name_data</span><span class="p">(</span><span class="n">name</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_get_list_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get data from stored dicts</span>
+<span class="sd">        :param names: str or list of str, key or associated key in namespace</span>
+<span class="sd">        :return: list of data from namespace dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">new_name</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_name_data</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">+=</span> <span class="p">[</span><span class="n">d</span><span class="p">]</span>
+            <span class="n">new_name</span> <span class="o">+=</span> <span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">new_name</span><span class="p">,</span> <span class="n">data</span>
+
+<div class="viewcode-block" id="Scan.array"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.array">[docs]</a>    <span class="k">def</span> <span class="nf">array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">array_length</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return numpy array of data with same length</span>
+<span class="sd">         data with length 1 will be cast over the full length</span>
+<span class="sd">         data with length &gt;1 and &lt; array_length will be filled with nans</span>
+<span class="sd">        :param names: str or list of str, key or associated key in namespace</span>
+<span class="sd">        :param array_length: int or None, length of arrays returned</span>
+<span class="sd">        :return: array(n,array_length) where n is the length of list names</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">names</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list_data</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">array_length</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">array_length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">array_length</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">n</span><span class="p">])]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="Scan.value"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.value">[docs]</a>    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">array_function</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return single value of data</span>
+<span class="sd">        :param names: str or list of str, key or associated key in namespace</span>
+<span class="sd">        :param array_function: function to return a single value from an array</span>
+<span class="sd">        :return: value or list of values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">names</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list_data</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">array_function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">array_function</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">VALUE_FUNCTION</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="n">array_function</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="Scan.name"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.name">[docs]</a>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return corrected name from namespace</span>
+<span class="sd">        :param name: str or list of str</span>
+<span class="sd">        :return: str or list of str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_name_data</span><span class="p">(</span><span class="n">name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="Scan.string"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.string">[docs]</a>    <span class="k">def</span> <span class="nf">string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">str_format</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return formated string of data</span>
+<span class="sd">        :param names: str or list of str, key or associated key in namespace</span>
+<span class="sd">        :param str_format: format to use, e.g. &#39;%s:%s&#39;</span>
+<span class="sd">        :return: str or list of str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">names</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list_data</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">str_format</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">str_format</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">OUTPUT_FORMAT</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="n">str_format</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fn</span><span class="o">.</span><span class="n">data_string</span><span class="p">(</span><span class="n">val</span><span class="p">))</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">data</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="Scan.time"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.time">[docs]</a>    <span class="k">def</span> <span class="nf">time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">date_format</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return datetime object from data name</span>
+<span class="sd">        :param names: str or list of str, key or associated key in namespace</span>
+<span class="sd">        :param date_format: str format used in datetime.strptime (see https://strftime.org/)</span>
+<span class="sd">        :return: list of datetime ojbjects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">names</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list_data</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fn</span><span class="o">.</span><span class="n">data_datetime</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">date_format</span><span class="p">)</span></div>
+
+    <span class="s2">&quot;------------------------------- Operations -----------------------------------------&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_prep_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        prepare operation string, replace names with names in namespace</span>
+<span class="sd">        :param operation: str</span>
+<span class="sd">        :return operation: str, names replaced to match namespace</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># First look for addresses in operation to seperate addresses from divide operations</span>
+        <span class="c1"># addresses = fn.re_address.findall(operation)</span>
+
+        <span class="n">old_op</span> <span class="o">=</span> <span class="n">operation</span>
+
+        <span class="c1"># Determine custom regions of interest &#39;nroi&#39;</span>
+        <span class="n">rois</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">re_nroi</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">rois</span><span class="p">:</span>
+            <span class="n">new_name</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_name_data</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">operation</span> <span class="o">=</span> <span class="n">operation</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">)</span>
+
+        <span class="c1"># Determine data for other variables</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">re_varname</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">new_name</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_name_data</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">new_name</span> <span class="o">!=</span> <span class="n">name</span><span class="p">:</span>
+                <span class="n">operation</span> <span class="o">=</span> <span class="n">operation</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">(</span><span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;Prepare eval operation</span><span class="se">\n</span><span class="s1">  initial: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">  final: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">old_op</span><span class="p">,</span> <span class="n">operation</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">operation</span>
+
+    <span class="k">def</span> <span class="nf">_name_eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate operation using names in dataset or in associated names</span>
+<span class="sd">        :param operation: str</span>
+<span class="sd">        :return: corrected operation, output of operation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">EVAL_MODE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_name_data</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+        <span class="n">bad_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import&#39;</span><span class="p">,</span> <span class="s1">&#39;os.&#39;</span><span class="p">,</span> <span class="s1">&#39;sys.&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">bad</span> <span class="ow">in</span> <span class="n">bad_names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">bad</span> <span class="ow">in</span> <span class="n">operation</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;This operation is not allowed as it contains: &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">bad</span><span class="p">)</span>
+        <span class="n">operation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prep_operation</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="nb">globals</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">operation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span> <span class="ow">or</span> <span class="n">operation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">operation</span><span class="p">,</span> <span class="n">result</span>
+        <span class="c1"># add to namespace</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="s1">&#39;operation</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="s1">&#39;operation</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">operation</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">operation</span><span class="p">,</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="Scan.eval"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.eval">[docs]</a>    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate operation using names in dataset or in associated names</span>
+<span class="sd">        :param operation: str</span>
+<span class="sd">        :return: output of operation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name_eval</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="Scan.string_format"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.string_format">[docs]</a>    <span class="k">def</span> <span class="nf">string_format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process a string with format specified in {} brackets, values will be returned.</span>
+<span class="sd">        e.g.</span>
+<span class="sd">          operation = &#39;the energy is {energy} keV&#39;</span>
+<span class="sd">          out = string_command(operation)</span>
+<span class="sd">          # energy is found within hdf tree</span>
+<span class="sd">          out = &#39;the energy is 3.00 keV&#39;</span>
+<span class="sd">        :param operation: str format operation e.g. &#39;#{scan_number}: {title}&#39;</span>
+<span class="sd">        :return: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># get values inside brackets</span>
+        <span class="n">ops</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">re_strop</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+        <span class="n">format_namespace</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># remove format specifier</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name_eval</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">VALUE_FUNCTION</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="n">format_namespace</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="n">operation</span> <span class="o">=</span> <span class="n">operation</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">operation</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">format_namespace</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">operation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return uncertainty on data using operation</span>
+<span class="sd">        :param operation: function to apply to signal, e.g. &#39;np.sqrt&#39;</span>
+<span class="sd">        :param operation: None* will default to zero, unless &quot;error_function&quot; in options</span>
+<span class="sd">        :return: operation(array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name_eval</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">operation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;error_function&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">:</span>
+                <span class="n">operation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">[</span><span class="s1">&#39;error_function&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">operation</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_signal_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">signal_op</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">error_op</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return data after operation with error</span>
+<span class="sd">        :param name: str name in namespace</span>
+<span class="sd">        :param signal_op: operation to perform on name, e.g. &#39;/Transmission&#39;</span>
+<span class="sd">        :param error_op: function to performon name, e.g. np.sqrt</span>
+<span class="sd">        :return: signal_name, output, error arrays</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name_eval</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_error</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">error_op</span><span class="p">)</span>
+        <span class="c1"># add error array to namespace</span>
+        <span class="n">error_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_error&#39;</span> <span class="o">%</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">error_name</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">signal_op</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;signal_operation&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">:</span>
+                <span class="n">signal_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">[</span><span class="s1">&#39;signal_operation&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">error</span>
+        <span class="c1"># Create operations</span>
+        <span class="n">operation</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="n">signal_op</span>
+        <span class="n">operation_error</span> <span class="o">=</span> <span class="n">error_name</span> <span class="o">+</span> <span class="n">signal_op</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">operation_error</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">operation</span><span class="p">,</span> <span class="n">signal</span><span class="p">,</span> <span class="n">error</span>
+
+    <span class="s2">&quot;------------------------------- Defaults -------------------------------------------&quot;</span>
+
+<div class="viewcode-block" id="Scan.label"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.label">[docs]</a>    <span class="k">def</span> <span class="nf">label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set or Return the scan label. The label is a short identifier for the scan, such as scan number</span>
+<span class="sd">        :param new_label: str or None, if str sets the label as str, if None, returns automatic label</span>
+<span class="sd">        :return: None or str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">new_label</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_label_str</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_label</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="s1">&#39;label_command&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">string_format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">[</span><span class="s1">&#39;label_command&#39;</span><span class="p">])</span>
+
+        <span class="n">add2othernames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label_str</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_data</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">other_names</span><span class="o">=</span><span class="n">add2othernames</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">data</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">add2othernames</span> <span class="o">+=</span> <span class="p">[</span><span class="n">s</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;No label in </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scan.title"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.title">[docs]</a>    <span class="k">def</span> <span class="nf">title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_title</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set or Return the title</span>
+<span class="sd">        :param new_title: str or None, if str sets the title as str, if None, returns automatic title</span>
+<span class="sd">        :return: None or str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">new_title</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_title_str</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_title</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="s1">&#39;title_command&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">string_format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">[</span><span class="s1">&#39;title_command&#39;</span><span class="p">])</span>
+
+        <span class="n">add2othernames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_title_str</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_data</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">other_names</span><span class="o">=</span><span class="n">add2othernames</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">data</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">add2othernames</span> <span class="o">+=</span> <span class="p">[</span><span class="n">s</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;No title in </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scan.scan_command"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.scan_command">[docs]</a>    <span class="k">def</span> <span class="nf">scan_command</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns scan command</span>
+<span class="sd">        :return: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">add2othernames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_command_str</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_data</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">other_names</span><span class="o">=</span><span class="n">add2othernames</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">data</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">add2othernames</span> <span class="o">+=</span> <span class="p">[</span><span class="n">s</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;No Scan Command in </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scan.time_start"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.time_start">[docs]</a>    <span class="k">def</span> <span class="nf">time_start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return scan time_start time</span>
+<span class="sd">        :return: datetime</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">add2othernames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_time_str</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="n">s</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">other_names</span><span class="o">=</span><span class="n">add2othernames</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">data</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">add2othernames</span> <span class="o">+=</span> <span class="p">[</span><span class="n">s</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;No time_start time in </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scan.time_end"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.time_end">[docs]</a>    <span class="k">def</span> <span class="nf">time_end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return scan end time</span>
+<span class="sd">        :return: datetime</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">add2othernames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end_time_str</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="n">s</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">other_names</span><span class="o">=</span><span class="n">add2othernames</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">data</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">add2othernames</span> <span class="o">+=</span> <span class="p">[</span><span class="n">s</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_time_str</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="n">s</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">other_names</span><span class="o">=</span><span class="n">add2othernames</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">data</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">add2othernames</span> <span class="o">+=</span> <span class="p">[</span><span class="n">s</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;No end time in </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scan.duration"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.duration">[docs]</a>    <span class="k">def</span> <span class="nf">duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate time difference between two times</span>
+<span class="sd">        :param start_time: str name of date dataset or array of timestamps</span>
+<span class="sd">        :param end_time: None or str name of date dataset</span>
+<span class="sd">        :return: datetime.timedelta</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">end_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">end_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="n">end_time</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">start_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_start</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="n">start_time</span><span class="p">)</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">end_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">end_time</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">end_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">end_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_end</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span></div>
+
+<div class="viewcode-block" id="Scan.exposure_time"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.exposure_time">[docs]</a>    <span class="k">def</span> <span class="nf">exposure_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the exposure time&quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exposure_time_str</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="s1">&#39;exposure_time&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">other_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_exposure_time_str</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
+
+    <span class="k">def</span> <span class="nf">_find_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find default axes and signal (x-axis/y-axis), adds to namespace</span>
+<span class="sd">         This function may be overloaded in subclasses</span>
+<span class="sd">        :return: axes_name, signal_name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scan_command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan_command</span><span class="p">()</span>
+        <span class="c1"># axes / x-axis</span>
+        <span class="n">axes_name</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">axes_from_cmd</span><span class="p">(</span><span class="n">scan_command</span><span class="p">)</span>
+        <span class="n">axes_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_data</span><span class="p">(</span><span class="n">axes_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">axes_name</span><span class="p">,</span> <span class="n">axes_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes_str</span><span class="p">)</span>
+        <span class="c1"># signal / y-axis</span>
+        <span class="n">signal_name</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">signal_from_cmd</span><span class="p">(</span><span class="n">scan_command</span><span class="p">)</span>
+        <span class="n">signal_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_data</span><span class="p">(</span><span class="n">signal_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">signal_name</span><span class="p">,</span> <span class="n">signal_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_signal_str</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">axes_name</span><span class="p">,</span> <span class="n">signal_name</span>
+
+<div class="viewcode-block" id="Scan.axes"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.axes">[docs]</a>    <span class="k">def</span> <span class="nf">axes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return default axes (xaxis) data</span>
+<span class="sd">        :return: array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">add2othernames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes_str</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">other_names</span><span class="o">=</span><span class="n">add2othernames</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">alt_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">alt_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">other_names</span><span class="o">=</span><span class="n">add2othernames</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">[</span><span class="n">alt_name</span><span class="p">]</span>
+            <span class="n">add2othernames</span> <span class="o">+=</span> <span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="c1"># axes not in namespace, get from scan command</span>
+        <span class="n">axes_name</span><span class="p">,</span> <span class="n">signal_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_defaults</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_name_data</span><span class="p">(</span><span class="n">axes_name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scan.signal"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.signal">[docs]</a>    <span class="k">def</span> <span class="nf">signal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return default signal (yaxis) data</span>
+<span class="sd">        :return: array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">add2othernames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_signal_str</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">other_names</span><span class="o">=</span><span class="n">add2othernames</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">alt_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_names</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">alt_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">other_names</span><span class="o">=</span><span class="n">add2othernames</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">[</span><span class="n">alt_name</span><span class="p">]</span>
+            <span class="n">add2othernames</span> <span class="o">+=</span> <span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="c1"># signal not in namespace, get from scan command</span>
+        <span class="n">axes_name</span><span class="p">,</span> <span class="n">signal_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_defaults</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_name_data</span><span class="p">(</span><span class="n">signal_name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scan.scan_length"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.scan_length">[docs]</a>    <span class="k">def</span> <span class="nf">scan_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of points in the scan (length of &#39;axes&#39;)</span>
+<span class="sd">        :return: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="Scan.get_plot_data"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.get_plot_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_plot_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">signal_op</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">error_op</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return xdata, ydata, yerror, xname, yname</span>
+<span class="sd">         x, y, dy, xlabel, ylabel = scan.get_plot_data(&#39;axes&#39;, &#39;signal&#39;, &#39;/Transmission&#39;, np.sqrt)</span>
+
+<span class="sd">        :param xname: str name of value to use as x-axis</span>
+<span class="sd">        :param yname: str name of value to use as y-axis</span>
+<span class="sd">        :param signal_op: operation to perform on yaxis, e.g. &#39;/Transmission&#39;</span>
+<span class="sd">        :param error_op: function to use on yaxis to generate error, e.g. np.sqrt</span>
+<span class="sd">        :return xdata: array</span>
+<span class="sd">        :return ydata: array</span>
+<span class="sd">        :return yerror: array</span>
+<span class="sd">        :return xname: str</span>
+<span class="sd">        :return yname: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">xname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">xname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">yname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">yname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_signal_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">xname</span><span class="p">,</span> <span class="n">xdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_name_data</span><span class="p">(</span><span class="n">xname</span><span class="p">)</span>
+        <span class="n">yname</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">yerror</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_signal_operation</span><span class="p">(</span><span class="n">yname</span><span class="p">,</span> <span class="n">signal_op</span><span class="p">,</span> <span class="n">error_op</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">yerror</span><span class="p">,</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span></div>
+
+<div class="viewcode-block" id="Scan.save_plot_data"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.save_plot_data">[docs]</a>    <span class="k">def</span> <span class="nf">save_plot_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">signal_op</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">error_op</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return xdata, ydata, yerror, xname, yname</span>
+<span class="sd">         x, y, dy, xlabel, ylabel = scan.get_plot_data(&#39;axes&#39;, &#39;signal&#39;, &#39;/Transmission&#39;, np.sqrt)</span>
+
+<span class="sd">        :param filename: str filename to save data to</span>
+<span class="sd">        :param xname: str name of value to use as x-axis</span>
+<span class="sd">        :param yname: str name of value to use as y-axis</span>
+<span class="sd">        :param signal_op: operation to perform on yaxis, e.g. &#39;/Transmission&#39;</span>
+<span class="sd">        :param error_op: function to use on yaxis to generate error, e.g. np.sqrt</span>
+<span class="sd">        :return xdata: array</span>
+<span class="sd">        :return ydata: array</span>
+<span class="sd">        :return yerror: array</span>
+<span class="sd">        :return xname: str</span>
+<span class="sd">        :return yname: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">yerror</span><span class="p">,</span> <span class="n">xlabel</span><span class="p">,</span> <span class="n">ylabel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_plot_data</span><span class="p">(</span><span class="n">xname</span><span class="p">,</span> <span class="n">yname</span><span class="p">,</span> <span class="n">signal_op</span><span class="p">,</span> <span class="n">error_op</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;Scan_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">.csv&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">(),</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;wt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;# </span><span class="si">%r</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1"># &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;# </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">title</span><span class="p">)</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">xlabel</span><span class="p">,</span> <span class="n">ylabel</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">])</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;# </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">labels</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">yerror</span><span class="p">):</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">, </span><span class="si">%s</span><span class="s1">, </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;(</span><span class="si">%s</span><span class="s1">, </span><span class="si">%s</span><span class="s1">, error) written to </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">xlabel</span><span class="p">,</span> <span class="n">ylabel</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span></div>
+
+
+    <span class="s2">&quot;------------------------------- images -------------------------------------------&quot;</span>
+
+<div class="viewcode-block" id="Scan.image"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.image">[docs]</a>    <span class="k">def</span> <span class="nf">image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return detector image</span>
+<span class="sd">         Overloaded in subclasses, this version does nothing interesting</span>
+<span class="sd">        :param idx: int index of image</span>
+<span class="sd">        :return: 2d array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Scan.volume"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.volume">[docs]</a>    <span class="k">def</span> <span class="nf">volume</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Rerturn volume</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scan_length</span><span class="p">())])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span> <span class="o">=</span> <span class="n">ArrayVolume</span><span class="p">(</span><span class="n">vol</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span></div>
+
+<div class="viewcode-block" id="Scan.image_size"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.image_size">[docs]</a>    <span class="k">def</span> <span class="nf">image_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the image size</span>
+<span class="sd">        :return: tuple</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_size</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_size</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_size</span> <span class="o">=</span> <span class="n">shape</span>
+        <span class="k">return</span> <span class="n">shape</span></div>
+
+<div class="viewcode-block" id="Scan.image_roi"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.image_roi">[docs]</a>    <span class="k">def</span> <span class="nf">image_roi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cen_h</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cen_v</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wid_h</span><span class="o">=</span><span class="mi">31</span><span class="p">,</span> <span class="n">wid_v</span><span class="o">=</span><span class="mi">31</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create new region of interest from detector images</span>
+<span class="sd">        :param cen_h: int or None</span>
+<span class="sd">        :param cen_v: int or None</span>
+<span class="sd">        :param wid_h:  int or None</span>
+<span class="sd">        :param wid_v:  int or None</span>
+<span class="sd">        :return: l*v*h array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">volume</span><span class="p">()</span><span class="o">.</span><span class="n">roi</span><span class="p">(</span><span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scan.image_roi_sum"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.image_roi_sum">[docs]</a>    <span class="k">def</span> <span class="nf">image_roi_sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cen_h</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cen_v</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wid_h</span><span class="o">=</span><span class="mi">31</span><span class="p">,</span> <span class="n">wid_v</span><span class="o">=</span><span class="mi">31</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create new region of interest</span>
+<span class="sd">        :param cen_h: int or None</span>
+<span class="sd">        :param cen_v: int or None</span>
+<span class="sd">        :param wid_h:  int or None</span>
+<span class="sd">        :param wid_v:  int or None</span>
+<span class="sd">        :return: roi_sum, roi_max</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">volume</span><span class="p">()</span>
+        <span class="n">roi_sum</span><span class="p">,</span> <span class="n">roi_max</span> <span class="o">=</span> <span class="n">volume</span><span class="o">.</span><span class="n">roi_sum</span><span class="p">(</span><span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">)</span>
+        <span class="c1"># Add to namespace</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="s1">&#39;nroi</span><span class="si">%d</span><span class="s1">_sum&#39;</span> <span class="o">%</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">full_name</span> <span class="o">=</span> <span class="s1">&#39;nroi[</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="s1">&#39;nroi</span><span class="si">%d</span><span class="s1">_sum&#39;</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="n">roi_sum</span><span class="p">,</span> <span class="n">other_names</span><span class="o">=</span><span class="n">full_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="s1">&#39;nroi</span><span class="si">%d</span><span class="s1">_max&#39;</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="n">roi_max</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">roi_sum</span><span class="p">,</span> <span class="n">roi_max</span></div>
+
+<div class="viewcode-block" id="Scan.image_roi_op"><a class="viewcode-back" href="../../Code.html#babelscan.Scan.image_roi_op">[docs]</a>    <span class="k">def</span> <span class="nf">image_roi_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create new region of interest (roi) from image data and return sum and maxval</span>
+<span class="sd">        The roi centre and size is defined by an operation:</span>
+<span class="sd">          operation = &#39;nroi[210, 97, 75, 61]&#39;</span>
+<span class="sd">          &#39;nroi&#39;      -   creates a region of interest in the detector centre with size 31x31</span>
+<span class="sd">          &#39;nroi[h,v]&#39; -   creates a roi in the detector centre with size hxv, where h is horizontal, v is vertical</span>
+<span class="sd">          &#39;nroi[m,n,h,v] - create a roi with cen_h, cen_v, wid_h, wid_v = n, m, h, v</span>
+<span class="sd">        :param operation: str : operation string</span>
+<span class="sd">        :return: sum, maxval : [o] length arrays</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">volume</span><span class="p">()</span>
+        <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">volume</span><span class="o">.</span><span class="n">check_roi_op</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+        <span class="n">roi_sum</span><span class="p">,</span> <span class="n">roi_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_roi_sum</span><span class="p">(</span><span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">)</span>
+        <span class="c1"># Add operation to associated namespace</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="s1">&#39;nroi</span><span class="si">%d</span><span class="s1">_sum&#39;</span> <span class="o">%</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">n</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;nroi</span><span class="si">%d</span><span class="s1">_sum&#39;</span> <span class="o">%</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">(</span><span class="s1">&#39;nroi&#39;</span><span class="p">,</span> <span class="s1">&#39;New ROI created: </span><span class="si">%s</span><span class="s1">, saved in namespace as </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add2namespace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">other_names</span><span class="o">=</span><span class="n">operation</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">roi_sum</span><span class="p">,</span> <span class="n">roi_max</span></div></div>
+
+
+<span class="s2">&quot;----------------------------------------------------------------------------------------------------------------------&quot;</span>
+<span class="s2">&quot;----------------------------------------------- MultiScan ------------------------------------------------------------&quot;</span>
+<span class="s2">&quot;----------------------------------------------------------------------------------------------------------------------&quot;</span>
+
+
+<div class="viewcode-block" id="MultiScan"><a class="viewcode-back" href="../../Code.html#babelscan.MultiScan">[docs]</a><span class="k">class</span> <span class="nc">MultiScan</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for holding multiple DataHolders</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scan_list</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">scan</span> <span class="ow">in</span> <span class="n">scan_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">scan</span><span class="p">),</span> <span class="n">MultiScan</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">scan</span><span class="o">.</span><span class="n">_scan_list</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scan</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">variables</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># Managers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">init_multiscan_plot_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;MultiScan(</span><span class="si">%d</span><span class="s1"> items)&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="p">)):</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="si">%3d</span><span class="s1"> </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">label</span><span class="p">(),</span> <span class="n">variables</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">MultiScan</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">scan</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">scan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MultiScan.add_variable"><a class="viewcode-back" href="../../Code.html#babelscan.MultiScan.add_variable">[docs]</a>    <span class="k">def</span> <span class="nf">add_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add variable</span>
+<span class="sd">        :param name: name of variable parameter between scans</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_variable_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return array of variable data such that</span>
+<span class="sd">          data = self._get_variable_data()</span>
+<span class="sd">          data[0] == data for self._variables[0]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_variable_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return string of variable data</span>
+<span class="sd">        :return: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return corrected name from first scan</span>
+<span class="sd">        :param name: str</span>
+<span class="sd">        :return: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">array_length</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">array_length</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">array_length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">scan</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">array_length</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">scan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">scan</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">scan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">scan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="p">:</span>
+            <span class="n">strlist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scan</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">strlist</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">string_format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">scan</span><span class="o">.</span><span class="n">string_format</span><span class="p">(</span><span class="n">command</span><span class="p">)</span> <span class="k">for</span> <span class="n">scan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="p">]</span>
+
+<div class="viewcode-block" id="MultiScan.griddata"><a class="viewcode-back" href="../../Code.html#babelscan.MultiScan.griddata">[docs]</a>    <span class="k">def</span> <span class="nf">griddata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">signal</span><span class="o">=</span><span class="s1">&#39;signal&#39;</span><span class="p">,</span> <span class="n">repeat_after</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate 2D square grid of single values for each scan</span>
+<span class="sd">        Return x, y axis when taking single values from each scan</span>
+<span class="sd">        :param axes: str or list of str, names of axes data</span>
+<span class="sd">        :param signal: str name of signal data</span>
+<span class="sd">        :param repeat_after: int or None, defines repeat length of data</span>
+<span class="sd">        :return: xaxis, yaxis, zaxis square [n,m] arrays</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">xaxis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xaxis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="p">))</span>
+
+        <span class="n">yaxis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">zaxis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">signal</span><span class="p">)</span>
+        <span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span><span class="p">,</span> <span class="n">zaxis</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">square_array</span><span class="p">(</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span><span class="p">,</span> <span class="n">zaxis</span><span class="p">,</span> <span class="n">repeat_after</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span><span class="p">,</span> <span class="n">zaxis</span></div>
+
+<div class="viewcode-block" id="MultiScan.get_plot_variable"><a class="viewcode-back" href="../../Code.html#babelscan.MultiScan.get_plot_variable">[docs]</a>    <span class="k">def</span> <span class="nf">get_plot_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">yname</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get plotting data for plotting data points from each scan</span>
+<span class="sd">         x, y, xlabel, ylabel = scans.get_plot_variable(&#39;signal&#39;, &#39;scanno&#39;)</span>
+<span class="sd">        e.g.</span>
+<span class="sd">         for n in range(len(x)):</span>
+<span class="sd">            plt.plot(x[n], y[n])</span>
+<span class="sd">        plt.xlabel(xlabel)</span>
+<span class="sd">        plt.ylabel(ylabel)</span>
+
+<span class="sd">        :param yname: str name of value to use as y-axis</span>
+<span class="sd">        :param variable: str, list of str or None for default list of scans variables</span>
+<span class="sd">        :return xdata: list of arrays for each scan</span>
+<span class="sd">        :return ydata: list of arrays for each scan</span>
+<span class="sd">        :return yerror: list of arrays for each scan</span>
+<span class="sd">        :return labels: list of str for each scan</span>
+<span class="sd">        :return xlabel: str, axis label for x-axis</span>
+<span class="sd">        :return ylabel: str, axis label for y-axis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">variable</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">variable</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span>
+        <span class="n">xlabel</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">xdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">xlabel</span><span class="p">)</span>
+        <span class="n">ylabel</span> <span class="o">=</span> <span class="n">yname</span>
+        <span class="n">ydata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">yname</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">xlabel</span><span class="p">,</span> <span class="n">ylabel</span></div>
+
+<div class="viewcode-block" id="MultiScan.get_plot_lines"><a class="viewcode-back" href="../../Code.html#babelscan.MultiScan.get_plot_lines">[docs]</a>    <span class="k">def</span> <span class="nf">get_plot_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">signal_op</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">error_op</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get plotting data for plotting as series of lines</span>
+<span class="sd">         x, y, dy, labels, xlabel, ylabel = scans.get_plot_lines(&#39;axes&#39;, &#39;signal&#39;, &#39;/Transmission&#39;, np.sqrt)</span>
+<span class="sd">        e.g.</span>
+<span class="sd">         for n in range(len(x)):</span>
+<span class="sd">            plt.errorbar(x[n], y[n], dy[n])</span>
+<span class="sd">        plt.legend(labels)</span>
+<span class="sd">        plt.xlabel(xlabel)</span>
+<span class="sd">        plt.ylabel(ylabel)</span>
+
+<span class="sd">        :param xname: str name of value to use as x-axis</span>
+<span class="sd">        :param yname: str name of value to use as y-axis</span>
+<span class="sd">        :param signal_op: operation to perform on yaxis, e.g. &#39;/Transmission&#39;</span>
+<span class="sd">        :param error_op: function to use on yaxis to generate error, e.g. np.sqrt</span>
+<span class="sd">        :return xdata: list of arrays for each scan</span>
+<span class="sd">        :return ydata: list of arrays for each scan</span>
+<span class="sd">        :return yerror: list of arrays for each scan</span>
+<span class="sd">        :return labels: list of str for each scan</span>
+<span class="sd">        :return xlabel: str, axis label for x-axis</span>
+<span class="sd">        :return ylabel: str, axis label for y-axis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xdata</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ydata</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">dydata</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">xlabel</span><span class="p">,</span> <span class="n">ylabel</span> <span class="o">=</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span>
+        <span class="k">for</span> <span class="n">scan</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_list</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">xlabel</span><span class="p">,</span> <span class="n">ylabel</span> <span class="o">=</span> <span class="n">scan</span><span class="o">.</span><span class="n">get_plot_data</span><span class="p">(</span><span class="n">xname</span><span class="p">,</span> <span class="n">yname</span><span class="p">,</span> <span class="n">signal_op</span><span class="p">,</span> <span class="n">error_op</span><span class="p">)</span>
+            <span class="n">xdata</span> <span class="o">+=</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span>
+            <span class="n">ydata</span> <span class="o">+=</span> <span class="p">[</span><span class="n">y</span><span class="p">]</span>
+            <span class="n">dydata</span> <span class="o">+=</span> <span class="p">[</span><span class="n">dy</span><span class="p">]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">dydata</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">xlabel</span><span class="p">,</span> <span class="n">ylabel</span></div>
+
+<div class="viewcode-block" id="MultiScan.get_plot_mesh"><a class="viewcode-back" href="../../Code.html#babelscan.MultiScan.get_plot_mesh">[docs]</a>    <span class="k">def</span> <span class="nf">get_plot_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">signal_op</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">error_op</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return array data for plotting as mesh</span>
+<span class="sd">         x, y, z, xlabel, ylabel, zlabel = scans.get_plot_mesh(&#39;axes&#39;, &#39;signal&#39;, &#39;/Transmission&#39;, np.sqrt)</span>
+<span class="sd">        e.g.</span>
+<span class="sd">         plt.pcolormesh(x, y, z)</span>
+<span class="sd">         plt.xlabel(xlabel)</span>
+<span class="sd">         plt.ylabel(ylabel)</span>
+
+<span class="sd">        :param xname: str name of value to use as x-axis</span>
+<span class="sd">        :param yname: str name of value to use as y-axis</span>
+<span class="sd">        :param signal_op: operation to perform on yaxis, e.g. &#39;/Transmission&#39;</span>
+<span class="sd">        :param error_op: function to use on yaxis to generate error, e.g. np.sqrt</span>
+<span class="sd">        :return xdata: list of arrays for each scan</span>
+<span class="sd">        :return ydata: list of arrays for each scan</span>
+<span class="sd">        :return yerror: list of arrays for each scan</span>
+<span class="sd">        :return labels: list of str for each scan</span>
+<span class="sd">        :return xlabel: str, axis label for x-axis</span>
+<span class="sd">        :return ylabel: str, axis label for y-axis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_name</span><span class="p">(</span><span class="n">xname</span><span class="p">)</span>
+        <span class="n">yname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_name</span><span class="p">(</span><span class="n">yname</span><span class="p">)</span>
+        <span class="k">pass</span></div></div>
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Dan Porter.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,6 +1,6 @@
 """
-babelscan: a generic class for reading many types of scan data that you don't need to put in your ear.
-A generic class for reading data files from scan data
+BabelScan
+A generic class for reading many types of scan data that you don't need to put in your ear.
 
 requirements: numpy, h5py, imageio
 Optional requirements: matplotlib, lmfit

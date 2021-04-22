@@ -10,7 +10,7 @@ setup(
     name='babelscan',
     version='1.0',
     packages=['babelscan'],
-    url='',
+    url='https://github.com/DanPorter/babelscan',
     license='GNU General Public License',
     author='dgporter',
     author_email='dan.porter@diamond.ac.uk',
