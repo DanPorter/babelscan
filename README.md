@@ -15,6 +15,10 @@ A FolderMonitor class allows loading of specific files in numeric order
 
 An Instrument class holds specific configuration for generation of bespoke BabelScan objects.
 
+You can read the documentation [here!](https://babelscan.readthedocs.io/en/latest/) 
+
+[![Documentation Status](https://readthedocs.org/projects/babelscan/badge/?version=latest)](https://babelscan.readthedocs.io/en/latest/?badge=latest)
+
 ### Usage
 ```python
 # Python script

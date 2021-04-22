@@ -76,17 +76,16 @@ class CsvScan(Scan):
         }
         alt_names = {
             # shortcut: name in file
-            'scanno': 'scan_number',
             'cmd': 'scan_command',
         }
-        super().__init__(namespace, alt_names, **kwargs)
+        super(CsvScan, self).__init__(namespace, alt_names, **kwargs)
         self._label_str.extend(['scanno', 'filetitle'])
-        self.header, self.data = self._load_data()
 
     def reset(self):
         """Reset the namespace"""
         self._namespace = {
             'filename': self.filename,
+            'filetitle': self.file,
             'scanno': self.scan_number
         }
 
