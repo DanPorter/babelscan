@@ -730,12 +730,12 @@ class Scan:
         for name in self._axes_str:
             if name in self._namespace:
                 self.add2namespace(name, other_names=add2othernames)
-                return self._namespace[name]
+                return name, self._namespace[name]
             if name in self._alt_names:
                 for alt_name in self._alt_names[name]:
                     if alt_name in self._namespace:
                         self.add2namespace(name, other_names=add2othernames)
-                        return self._namespace[alt_name]
+                        return alt_name, self._namespace[alt_name]
             add2othernames += [name]
         # axes not in namespace, get from scan command
         axes_name, signal_name = self._find_defaults()
@@ -750,12 +750,12 @@ class Scan:
         for name in self._signal_str:
             if name in self._namespace:
                 self.add2namespace(name, other_names=add2othernames)
-                return self._namespace[name]
+                return name, self._namespace[name]
             if name in self._alt_names:
                 for alt_name in self._alt_names[name]:
                     if alt_name in self._namespace:
                         self.add2namespace(name, other_names=add2othernames)
-                        return self._namespace[alt_name]
+                        return alt_name, self._namespace[alt_name]
             add2othernames += [name]
         # signal not in namespace, get from scan command
         axes_name, signal_name = self._find_defaults()
@@ -766,7 +766,7 @@ class Scan:
         Return the number of points in the scan (length of 'axes')
         :return: int
         """
-        return np.size(self.axes())
+        return np.size(self.axes()[1])
 
     def get_plot_data(self, xname=None, yname=None, signal_op=None, error_op=None):
         """
