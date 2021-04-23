@@ -721,15 +721,14 @@ class HdfScan(Scan):
         with load(self.filename) as hdf:
             address = get_address(hdf, name, address_list)
             self._debug('hdf', 'Search hdf for %s, find: %s' % (name, address))
+            if not address and name in self._alt_names:
+                for alt_name in self._alt_names[name]:
+                    # alt_names must find an exact match
+                    address = get_address(hdf, alt_name, address_list, exact_only=True)
+                    self._debug('hdf', 'Alt. Search hdf for %s, find: %s' % (alt_name, address))
+                    if address is not None: break
             if not address:
-                if name in self._alt_names:
-                    for alt_name in self._alt_names[name]:
-                        # alt_names must find an exact match
-                        address = get_address(hdf, alt_name, address_list, exact_only=True)
-                        self._debug('hdf', 'Alt. Search hdf for %s, find: %s' % (alt_name, address))
-                        if address is not None: break
-                else:
-                    raise KeyError('\'%s\' not available in hdf file' % name)
+                raise KeyError('\'%s\' not available in hdf file' % name)
             dataset = hdf.get(address)
             data = dataset_data(dataset)
         # Store for later use

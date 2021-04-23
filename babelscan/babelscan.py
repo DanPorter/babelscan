@@ -187,7 +187,7 @@ class Scan:
         if default_value is not None:
             for name in names:
                 self._default_values[name] = default_value
-                self._debug('namespace', 'Add to namespace: %s: %s' % (name, fn.data_string(data)))
+                self._debug('namespace', 'Add to default values: %s: %s' % (name, fn.data_string(data)))
 
     def show_namespace(self):
         """return str of namespace"""
