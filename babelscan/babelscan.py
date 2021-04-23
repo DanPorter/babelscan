@@ -353,7 +353,7 @@ class Scan:
             if name in self._alt_names:
                 for alt_name in self._alt_names[name]:
                     if alt_name in self._default_values:
-                        self.add2namespace(alt_name, self._default_values[name], name)
+                        self.add2namespace(alt_name, self._default_values[alt_name], name)
                         return alt_name, self._default_values[alt_name]
             raise ke
 
