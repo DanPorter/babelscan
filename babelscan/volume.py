@@ -162,6 +162,10 @@ class Volume:
       Contains various functions to operate on 3D volumes
     """
 
+    shape = (0, 0)
+    size = 0
+    ndim = 3
+
     def _lazy_op(self, operation, other):
         """Lazy operation"""
         if issubclass(type(other), float) or issubclass(type(other), int):
@@ -194,6 +198,10 @@ class Volume:
         """self != other"""
         return self._lazy_op(operator.ne, other)
 
+    def sum_flat(self):
+        """Return sum of images: np.sum(volume, axis=0)"""
+        return np.sum(self, axis=0)
+
     def array_sum(self):
         """Returns [sum(image) for image in volume]"""
         return np.array([np.sum(im) for im in self])
@@ -201,6 +209,22 @@ class Volume:
     def array_max(self):
         """Returns [max(image) for image in volume]"""
         return np.array([np.max(im) for im in self])
+
+    def array_min(self):
+        """Returns [min(image) for image in volume]"""
+        return np.array([np.min(im) for im in self])
+
+    def array_mean(self):
+        """Returns [mean(image) for image in volume]"""
+        return np.array([np.mean(im) for im in self])
+
+    def array_argmax(self):
+        """Returns [i,j = argmax(im) for im in self]"""
+        return np.array([np.unravel_index(np.argmax(im), im.shape) for im in self])
+
+    def array_peak(self):
+        """Returns [i,j = peak_search(im) for im in self]"""
+        return np.array([pixel_peak_search(im) for im in self])
 
     def argmax(self):
         """Numpy argmax, return i,j,k"""
@@ -223,6 +247,25 @@ class Volume:
         avk = np.average(k[bright], weights=weights)
         return int(avi), int(avj), int(avk)
 
+    def background(self, background_percentile=50):
+        """
+        Average bottom percentile of elements to determine background value
+        :param background_percentile: int from 0-100, percentile of volume to use as background
+        :return: float
+        """
+        bkg = self <= np.percentile(self, background_percentile)
+        return np.mean(self[bkg])
+
+    def peak_amplitude(self, background_percentile=50):
+        """
+        Sum the volume with background removed
+        :param background_percentile: int from 0-100, percentile of volume to use as background
+        :return: float
+        """
+        bkg = self.background(background_percentile)
+        idx = self > bkg
+        return np.sum(self[idx])
+
     def roi(self, cen_h=None, cen_v=None, wid_h=31, wid_v=31):
         """
         Create new region of interest from detector images
@@ -236,7 +279,7 @@ class Volume:
             cen_h = self.shape[2] // 2
         if cen_v is None:
             cen_v = self.shape[1] // 2
-        return self[:, cen_v - wid_v // 2:cen_v + wid_v // 2, cen_h - wid_h // 2:cen_h + wid_h // 2]
+        return ArrayVolume(self[:, cen_v - wid_v // 2:cen_v + wid_v // 2, cen_h - wid_h // 2:cen_h + wid_h // 2])
 
     def roi_sum(self, cen_h=None, cen_v=None, wid_h=31, wid_v=31):
         """

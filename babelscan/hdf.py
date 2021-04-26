@@ -39,14 +39,27 @@ def address_name(address):
     return os.path.basename(address)
 
 
-def address_group(address, group_name):
+def address_group(address, group_name=None):
     """
     Return part of address upto group_name
     :param address: str hdf address
     :param group_name: str name of group
     :return: reduced str
     """
+    if group_name is None:
+        names = os.path.split(address)
+        return os.path.join(names[:-1])
     return re.findall(r'(.+?%s.*?)(?:\/|$)' % group_name, address, re.IGNORECASE)[0]
+
+
+def address_group_name(address):
+    """
+    Return name of dataset group /entry/[group]/name
+    :param address: str hdf address
+    :return: str
+    """
+    names = address.replace('\\', '/').split('/')
+    return names[-2]
 
 
 def is_dataset(dataset):
@@ -180,11 +193,11 @@ def dataset_addresses(hdf_group, addresses='/', recursion_limit=100, get_size=No
             # address is Group
             new_addresses = ['/'.join([address, d]).replace('//', '/') for d in data.keys()]
             out += dataset_addresses(hdf_group, new_addresses, recursion_limit - 1, get_size, get_ndim)
-        elif recursion_limit > 0:
-            # address is None, search for group address and iterate
-            new_address = get_address(hdf_group, address, return_group=True)
-            if new_address:
-                out += dataset_addresses(hdf_group, new_address, recursion_limit - 1, get_size, get_ndim)
+        #elif recursion_limit > 0:
+        #    # address is None, search for group address and iterate
+        #    new_address = get_address(hdf_group, address, return_group=True)  # this goes forever if a group fails to load
+        #    if new_address:
+        #        out += dataset_addresses(hdf_group, new_address, recursion_limit - 1, get_size, get_ndim)
     return out
 
 
@@ -231,21 +244,26 @@ def find_cascade(name, address_list, exact_only=False):
         return [address for address in address_list if address.lower().endswith(name.lower())]
 
     # only match the address name
-    match_list = [address_name(address) for address in address_list]
+    name_list = [address_name(address) for address in address_list]
 
     # Exact match
-    exact_match = [address for idx, address in enumerate(address_list) if name == match_list[idx]]
+    exact_match = [address for idx, address in enumerate(address_list) if name == name_list[idx]]
     if exact_match or exact_only:
         return exact_match
 
     # If not found, try matching lower case
-    lower_match = [address for idx, address in enumerate(address_list) if name.lower() == match_list[idx].lower()]
+    lower_match = [address for idx, address in enumerate(address_list) if name.lower() == name_list[idx].lower()]
     if lower_match:
         return lower_match
 
     # If not found, try matching any
     any_match = [address for address in address_list if address.lower().endswith(name.lower())]
-    return any_match
+    if any_match:
+        return any_match
+
+    # If not found, try matching group
+    group_match = [address for address in address_list if name == address_group_name(address)]
+    return group_match
 
 
 def tree(hdf_group, detail=False, recursion_limit=100):
@@ -310,16 +328,6 @@ def get_address(hdf_group, name, address_list=None, exact_only=False, return_gro
         if not f_address:
             addresses += [None]
             continue
-        """
-        f_address = find_name(name, address_list, match_case=True, whole_word=True)
-        if len(f_address) == 0:
-            f_address = find_name(name, address_list, match_case=False, whole_word=True)
-        if len(f_address) == 0:
-            f_address = find_name(name, address_list, match_case=False, whole_word=False)
-        if len(f_address) == 0:
-            addresses += [None]
-            continue
-        """
 
         if return_group:
             f_address = address_group(f_address[0], name)
@@ -360,7 +368,7 @@ def find_nxclass(hdf_group, nxclass='NX_detector'):
 def find_attr(hdf_group, attr='axes'):
     """
     Returns location of hdf attribute
-    Workds recursively - starts at the top level and searches all lower hdf groups
+    Works recursively - starts at the top level and searches all lower hdf groups
     :param hdf_group: hdf5 File or Group object
     :param attr: str : attribute name to search for
     :return: str hdf address
@@ -389,27 +397,27 @@ def auto_xyaxis(hdf_group, cmd_string=None, address_list=None):
     """
     try:
         # try fast nexus compliant method
-        xaxis, yaxis = nexus_xyaxis(hdf_group)
+        xaddress, yaddress = nexus_xyaxis(hdf_group)
     except KeyError:
-        xaxis = ''
-        yaxis = ''
+        xaddress = ''
+        yaddress = ''
         if cmd_string:
             xname = fn.axes_from_cmd(cmd_string)
-            xaxis = get_address(hdf_group, xname, address_list)
+            xaddress = get_address(hdf_group, xname, address_list, exact_only=True)
             yname = fn.signal_from_cmd(cmd_string)
-            yaxis = get_address(hdf_group, yname, address_list)
+            yaddress = get_address(hdf_group, yname, address_list, exact_only=True)
 
-        if not xaxis:
+        if not xaddress:
             try:
-                xaxis = find_attr(hdf_group, 'axes')[0]
+                xaddress = find_attr(hdf_group, 'axes')[0]
             except IndexError:
                 raise KeyError('axes not found in hdf hierachy')
-        if not yaxis:
+        if not yaddress:
             try:
-                yaxis = find_attr(hdf_group, 'signal')[0]
+                yaddress = find_attr(hdf_group, 'signal')[0]
             except IndexError:
                 raise KeyError('signal not found in hdf hierachy')
-    return xaxis, yaxis
+    return xaddress, yaddress
 
 
 def nexus_xyaxis(hdf_group):
@@ -452,6 +460,116 @@ def badnexus_xyaxis(hdf_group):
     if len(signal_address) == 0:
         raise KeyError('signal not found in hdf hierachy')
     return axes_address[0], signal_address[0]
+
+
+def nexus_axes(hdf_group):
+    """
+    Nexus compliant method of finding default plotting axes in hdf files
+     - find "default" entry in top File group
+     - find "default" data in entry
+     - find "axes" attr in default data
+     - generate addresses of axes
+     if not nexus compliant, raises KeyError
+    This method is very fast but only works on nexus compliant files
+    :param hdf_group: hdf5 File
+    :return axes_address: str hdf addresses
+    """
+    # From: https://manual.nexusformat.org/examples/h5py/index.html
+    nx_entry = hdf_group[hdf_group.attrs["default"]]
+    nx_data = nx_entry[nx_entry.attrs["default"]]
+    axes_list = np.asarray(nx_data.attrs["axes"], dtype=str).reshape(-1)
+    axes_address = nx_data[axes_list[0]].name
+    return axes_address
+
+
+def nexus_signal(hdf_group):
+    """
+    Nexus compliant method of finding default plotting axes in hdf files
+     - find "default" entry in top File group
+     - find "default" data in entry
+     - find "signal" attr in default data
+     - generate addresses of signal and axes
+     if not nexus compliant, raises KeyError
+    This method is very fast but only works on nexus compliant files
+    :param hdf_group: hdf5 File
+    :return signal_address: str hdf addresses
+    """
+    # From: https://manual.nexusformat.org/examples/h5py/index.html
+    nx_entry = hdf_group[hdf_group.attrs["default"]]
+    nx_data = nx_entry[nx_entry.attrs["default"]]
+    signal_list = np.asarray(nx_data.attrs["signal"], dtype=str).reshape(-1)
+    signal_address = nx_data[signal_list[0]].name
+    return signal_address
+
+
+def auto_axes(hdf_group, cmd_string=None, address_list=None):
+    """
+    Find default axes hdf addresses
+    :param hdf_group: hdf5 File or Group object
+    :param cmd_string: str of command to take x,y axis from as backup
+    :param address_list: list of str of dataset addresses (None to generate from hdf_group)
+    :return: xaxis_address
+    """
+    try:
+        return nexus_axes(hdf_group)
+    except KeyError:
+        pass
+
+    if cmd_string:
+        name = fn.axes_from_cmd(cmd_string)
+        address = get_address(hdf_group, name, address_list)
+        if address:
+            return address
+
+    # cmd failed or not available, look for axes attribute
+    address = find_attr(hdf_group, 'axes')
+    if address:
+        return address[0]
+
+    # axes not in attrs, find first full length 1D array
+    if address_list is None:
+        address_list = dataset_addresses(hdf_group)
+
+    array_len = np.max([hdf_group.get(adr).size for adr in address_list if hdf_group.get(adr).ndim == 1])
+    address = [adr for adr in address_list if hdf_group.get(adr).ndim == 1 and hdf_group(adr).size == array_len]
+    if address:
+        return address[0]
+    raise KeyError('axes not found in hdf hierachy')
+
+
+def auto_signal(hdf_group, cmd_string=None, address_list=None):
+    """
+    Find default signal hdf addresses
+    :param hdf_group: hdf5 File or Group object
+    :param cmd_string: str of command to take x,y axis from as backup
+    :param address_list: list of str of dataset addresses (None to generate from hdf_group)
+    :return: yaxis_address
+    """
+    try:
+        return nexus_signal(hdf_group)
+    except KeyError:
+        pass
+
+    if cmd_string:
+        name = fn.signal_from_cmd(cmd_string)
+        address = get_address(hdf_group, name, address_list)
+        if address:
+            return address
+
+    # cmd failed or not available, look for signal attribute
+    address = find_attr(hdf_group, 'signal')
+    if address:
+        return address[0]
+
+    # signal not in attrs, find first full length 1D array
+    if address_list is None:
+        address_list = dataset_addresses(hdf_group)
+
+    array_len = np.max([hdf_group.get(adr).size for adr in address_list if hdf_group.get(adr).ndim == 1])
+    address = [adr for adr in address_list if hdf_group.get(adr).ndim == 1 and hdf_group.get(adr).size == array_len]
+    if address:
+        return address[0]
+    raise KeyError('signal not found in hdf hierachy')
 
 
 "------------------------------------ IMAGE FUNCTIONS  ----------------------------------------------------"
@@ -501,56 +619,6 @@ def find_image(hdf_group, address_list=None, multiple=False):
         return all_addresses
     else:
         return None
-
-
-def image_size(hdf_group, address=None):
-    """
-    Returns image shape [scan len, vertical, horizontal]
-    :param hdf_group: hdf5 File or Group object
-    :param address: None or str : if not None, pointer to location of image data in hdf5
-    :return: (n,m,o) : len, vertical, horizontal
-    """
-    if address is None:
-        address = find_image(hdf_group)
-    dataset = hdf_group.get(address)
-    # if array - return array shape
-    if len(dataset.shape) > 1:
-        return dataset.shape
-    array_len = len(dataset)
-    # Get 1st image
-    image = image_data(hdf_group, 0, address)
-    return (array_len, *image.shape)
-
-
-def image_data(hdf_group, index=None, address=None):
-    """
-    Return image data, if available
-    if index=None, all images are combined, otherwise only a single frame at index is returned
-    :param hdf_group: hdf5 File or Group object
-    :param index: None or int : return a specific image, None uses the half way index
-    :param address: None or str : if not None, pointer to location of image data in hdf5
-    :return: 2d array
-    """
-    if address is None:
-        address = find_image(hdf_group)
-    dataset = hdf_group.get(address)
-    if index is None:
-        index = len(dataset) // 2
-    # if array - return array
-    if len(dataset.shape) > 1:
-        # array data
-        return dataset[index]
-    # if file - load file with imread, return array
-    filename = fn.bytestr2str(dataset[index])
-    try:
-        return imread(filename)
-    except FileNotFoundError:
-        pass
-    # filename maybe absolute, just take the final folder
-    abs_filepath = os.path.dirname(hdf_group.file.filename)
-    f = '/'.join(os.path.abspath(filename).replace('\\', '/').split('/')[-2:])
-    filename = os.path.join(abs_filepath, f)
-    return imread(filename)
 
 
 "----------------------------------------------------------------------------------------------------------------------"
@@ -644,7 +712,7 @@ class HdfScan(Scan):
         }
         super(HdfScan, self).__init__(namespace, alt_names, **kwargs)
 
-        self._label_str.extend(['scan_number', 'filetitle'])
+        #self._label_str.extend(['scan_number', 'filetitle'])
         self._hdf_address_list = []
         self._hdf_name2address = {}
 
@@ -662,7 +730,7 @@ class HdfScan(Scan):
 
     def load(self):
         """Open and return hdf.File object"""
-        return load(self.filename)
+        return HdfWrapper(self.filename)
 
     def dataset(self, name):
         """Return dataset object"""
@@ -681,6 +749,7 @@ class HdfScan(Scan):
         with load(self.filename) as hdf:
             out = tree(hdf[group_address], detail, recursion_limit)
         return out
+    info = tree
 
     def add2namespace(self, name, data=None, other_names=None, default_value=None, hdf_address=None):
         """
@@ -704,6 +773,7 @@ class HdfScan(Scan):
         """
         if self._hdf_address_list:
             return self._hdf_address_list
+        self._debug('hdf', 'Loading address list from %s' % self.file)
         with load(self.filename) as hdf_group:
             out = dataset_addresses(hdf_group)
         self._hdf_address_list = out
@@ -744,7 +814,9 @@ class HdfScan(Scan):
         address_list = self._dataset_addresses()
         # find data address
         with load(self.filename) as hdf:
-            axes_address, signal_address = auto_xyaxis(hdf, scan_command, address_list)
+            #axes_address, signal_address = auto_xyaxis(hdf, scan_command, address_list)
+            axes_address = auto_axes(hdf, scan_command, address_list)
+            signal_address = auto_signal(hdf, scan_command, address_list)
             axes_dataset = hdf.get(axes_address)
             signal_dataset = hdf.get(signal_address)
             axes_data = dataset_data(axes_dataset)
@@ -794,20 +866,6 @@ class HdfScan(Scan):
             out = find_image(hdf, address_list, multiple)
         return out
 
-    def image(self, idx=None, image_address=None):
-        """
-        Load image from hdf file, works with either image addresses or stored arrays
-        :param idx: int image number
-        :param image_address: str hdf address of image location
-        :return: numpy.array with ndim 2
-        """
-        volume = self.volume(image_address)
-        if idx is None:
-            idx = len(volume) // 2
-        elif idx == 'sum':
-            return np.sum(volume, axis=0)
-        return volume[idx]
-
     def volume(self, image_address=None):
         """
         Load image from hdf file, works with either image addresses or stored arrays
@@ -826,17 +884,18 @@ class HdfScan(Scan):
                 raise KeyError('image path template not found in %r' % self)
             self._image_name = image_address
 
-        with load(self.filename) as hdf:
-            dataset = hdf.get(image_address)
+        hdf = load(self.filename)
+        dataset = hdf.get(image_address)
 
-            # if array - return array
-            if len(dataset.shape) > 1:
-                # array data
-                self._volume = DatasetVolume(dataset)
-                return self._volume
+        # if array - return array
+        if len(dataset.shape) > 1:
+            # array data
+            self._volume = DatasetVolume(dataset)
+            return self._volume
 
-            # if file - load file with imread, return array
-            filenames = [fn.bytestr2str(file) for file in dataset]
+        # if file - load file with imread, return array
+        filenames = [fn.bytestr2str(file) for file in dataset]
+        hdf.close()
 
         try:
             return ImageVolume(filenames)

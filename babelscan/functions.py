@@ -4,12 +4,14 @@ Module of General functions
 
 import os
 import re
+import json
 import datetime
 import numpy as np
 
 
 BYTES_DECODER = 'utf-8'
 VALUE_FUNCTION = np.mean  # lambda a: np.asarray(a).reshape(-1)[0]
+MAX_STRING_LENGTH = 100
 VALUE_FORMAT = '%.5g'
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
 OUTPUT_FORMAT = '%20s = %s'
@@ -89,9 +91,10 @@ def data_string(data):
     size = np.size(data)
     shape = np.shape(data)
     if size == 1:
-        if issubclass(type(data), dict):
-            return "%s" % data
-        return shortstr(str(data))
+        out_str = shortstr(str(data))
+        if len(out_str) > MAX_STRING_LENGTH:
+            out_str = "%s ..." % out_str[:MAX_STRING_LENGTH]
+        return out_str
     try:
         amax = np.max(data)
         amin = np.min(data)
@@ -107,27 +110,45 @@ def data_string(data):
         return out_str % (shape, array_start, array_end)
 
 
+def value_datetime(value, date_format=None):
+    """
+    Convert date string or timestamp to datetime object
+    :param value: str or float
+    :param date_format: datetime
+    :return: datetime with tzinfo removed for easy comparison
+    """
+    if date_format is None:
+        date_format = DATE_FORMAT
+
+    def strptime(val):
+        return datetime.datetime.strptime(val, date_format)
+
+    def timestamp(val):
+        return datetime.datetime.fromtimestamp(float(val))
+
+    timefun = [datetime.datetime.fromisoformat, strptime, timestamp]
+    for fun in timefun:
+        try:
+            dt = fun(value)
+            dt = dt.replace(tzinfo=None)  # make datetime tznieve
+            return dt
+        except (ValueError, TypeError):
+            pass
+    return ValueError('%s cannot be converted to datetime' % value)
+
+
 def data_datetime(data, date_format=None):
     """
     Convert date string to datetime object
       datetime_array = date_datetime('2020-10-22T09:33:11.894+01:00', "%Y-%m-%dT%H:%M:%S.%f%z")
      datetime_array[0] will give first time
      datetime_array[-1] will give last time
-    :param data: str or list of str
+    :param data: str or list of str or list of floats
     :param date_format: str format used in datetime.strptime (see https://strftime.org/)
     :return: list of datetime
     """
-    if date_format is None:
-        date_format = DATE_FORMAT
-
     data = liststr(data)
-    try:
-        # str date passed, e.g. start_time: '2020-10-22T09:33:11.894+01:00'
-        dates = np.array([datetime.datetime.strptime(date, date_format) for date in data])
-    except ValueError:
-        # float timestamp passed, e.g. TimeFromEpoch: 1603355594.96
-        dates = np.array([datetime.datetime.fromtimestamp(float(time)) for time in data])
-    return dates
+    return np.array([value_datetime(value, date_format) for value in data])
 
 
 def axes_from_cmd(cmd):
@@ -169,17 +190,20 @@ def signal_from_cmd(cmd):
     :return: str
     """
     cmd_split = cmd.split()
-    try:
-        float(cmd_split[-1])
-        signal = cmd_split[-2]
-    except ValueError:
-        signal = cmd_split[-1]
+    signal = 'signal'
+    for signal in cmd_split[::-1]:
+        try:
+            float(signal)
+        except ValueError:
+            break
     # These are specific to I16...
     if signal == 't':
         signal = 'APD'
     elif 'roi' in signal:
         signal = signal + '_sum'
     elif 'pil100k' in cmd:
+        signal = 'sum'
+    elif 'pil3_100k' in cmd:
         signal = 'sum'
     elif 'pil2m' in cmd:
         signal = 'sum'
@@ -250,3 +274,90 @@ def time_difference(start_time, end_time=None):
     time_delta = end_time - start_time
     return time_delta
 
+
+def check_naughty_eval(eval_str):
+    """
+    Check str for naughty eval arguments such as os or import
+    This is not foolproof.
+    :param eval_str: str
+    :return: pass or raise error
+    """
+    from .__settings__ import EVAL_MODE
+    if not EVAL_MODE:
+        raise Exception('EVAL_MODE is not active')
+    bad_names = ['import', 'os.', 'sys.']
+    for bad in bad_names:
+        if bad in eval_str:
+            raise Exception('This operation is not allowed as it contains: "%s"' % bad)
+
+
+def function_generator(operation):
+    """
+    Generate a function from an operation on "x"
+      fn = function_generator("np.sqrt(x + 0.1)")
+    :param operation: str operation acting on variable "x"
+    :return: function
+    """
+    if hasattr(operation, '__call__'):
+        return operation
+    check_naughty_eval(operation)
+    function_str = "lambda x: %s" % operation
+    return eval(function_str)
+
+
+def load_from_config(config_file):
+    """
+    Load config settings from instrument.config file.
+      .config files should be json files with the following keys:
+        'name': str
+        'default_names': dict,
+        'formats': dict,
+        'default_values': dict,
+        'options': dict
+    :param config_file: str config filename
+    :return: name, default_names, formats, default_values, options
+    """
+    with open(config_file, 'r') as fp:
+        config = json.load(fp)
+    name = config['name'] if 'name' in config else 'None'
+    default_names = config['default_names'] if 'default_names' in config else {}
+    formats = config['formats'] if 'formats' in config else {}
+    default_values = config['default_values'] if 'default_values' in config else {}
+    options = config['options'] if 'options' in config else {}
+    options['config_file'] = config_file
+    return name, default_names, formats, default_values, options
+
+
+def save_to_config(config_file=None, name='None', default_names=None, formats=None, default_values=None, options=None):
+    """
+    Saves config settings to instrument.config file.
+      .config files should be json files with the following keys:
+        'name': str
+        'default_names': dict,
+        'formats': dict,
+        'default_values': dict,
+        'options': dict
+    :param config_file: str config filename
+    :param name: str
+    :param default_names: dict
+    :param formats: dict
+    :param default_values: dict
+    :param options: dict
+    :return: None
+    """
+    if config_file is None:
+        if options is not None and 'config_file' in options:
+            config_file = options['config_file']
+        else:
+            raise IOError('config_file not found in options')
+
+    config = {
+        'name': name, 'default_names': {} if default_names is None else default_names,
+        'formats': {} if formats is None else formats,
+        'default_values': {} if default_values is None else default_values,
+        'options': {} if options is None else options
+    }
+
+    with open(config_file, 'w') as fp:
+        json.dump(config, fp, sort_keys=True, indent=4)
+    print('config file written: %s' % config_file)

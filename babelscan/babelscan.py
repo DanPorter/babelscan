@@ -30,6 +30,8 @@ class Scan:
       dh = Scan(namespace, alt_names)
       dh('xaxis') >> returns [1,2,3]
 
+    Scan is usually inhereted by subclasses HdfScan, DatScan or CsvScan.
+
     :param namespace: dict : dict of names and data {name: data}
     :param alt_names: dict or None* : dict of alternative names to names in namespace
     :param kwargs: key-word-argments as options shwon below, keywords and argmuents will be added to the namespace.
@@ -58,14 +60,10 @@ class Scan:
         set data in namespace
     add2strlist(names)
         Add to list of names in str output
-    address(name)
-        Return hdf address of namespace name
     array(names, array_length=None)
         Return numpy array of data with same length
     axes()
         Return default axes (xaxis) data
-    dataset(name)
-        Return dataset object
     eval(operation)
         Evaluate operation using names in dataset or in associated names
     find_image(multiple=False)
@@ -84,8 +82,6 @@ class Scan:
         Returns the image size
     label(new_label=None)
         Set or Return the scan label. The label is a short identifier for the scan, such as scan number
-    load()
-        Open and return hdf.File object
     name(name)
         Return corrected name from namespace
     options(**kwargs)
@@ -106,13 +102,11 @@ class Scan:
         Process a string with format specified in {} brackets, values will be returned.
     title(new_title=None)
         Set or Return the title
-    tree(detail=False, recursion_limit=100)
-        Return str of the full tree of data in a hdf object
     value(names, array_function=None)
         Return single value of data
     """
     def __init__(self, namespace, alt_names=None, default_values=None, **kwargs):
-        self._namespace = kwargs.copy()
+        self._namespace = {}
         self._alt_names = {}
         self._namespace.update(namespace)
         if alt_names is not None:
@@ -127,12 +121,12 @@ class Scan:
 
         # Options and defaults
         self._options = {}
-        self._label_str = ['label']
-        self._title_str = ['title', 'filename']
-        self._scan_command_str = ['scan_command', 'cmd']
-        self._start_time_str = ['start_time']
-        self._end_time_str = ['end_time']
-        self._exposure_time_str = ['count_time', 'counttime', 't']
+        #self._label_str = ['label']
+        #self._title_str = ['title', 'filename']
+        #self._scan_command_str = ['scan_command', 'cmd']
+        #self._start_time_str = ['start_time']
+        #self._end_time_str = ['end_time']
+        #self._exposure_time_str = ['count_time', 'counttime', 't']
         self._axes_str = ['axes', 'xaxis']
         self._signal_str = ['signal', 'yaxis']
         self._image_name = None
@@ -141,6 +135,22 @@ class Scan:
         self._reload_mode = False
         self._set_options(**kwargs)
         self._volume = None
+
+        self.add2namespace(
+            name=['scan_command', 'command', 'cmd'],
+            other_names=['_scan_command', 'scan_command', 'command', 'cmd'],
+            default_value='scan axes signal'
+        )
+        self.add2namespace(
+            name=['scan_number', 'filename'],
+            other_names='_label',
+            default_value='Scan'
+        )
+        self.add2namespace(
+            name=['filename'],
+            other_names='_title',
+            default_value='Scan Title'
+        )
 
         self._debug('init', '%r' % self)
 
@@ -197,38 +207,47 @@ class Scan:
             other_names = ', '.join(okey for okey, oitem in self._alt_names.items() if key in oitem)
             out += '%-20s %-60s | %s\n' % (key, other_names, fn.data_string(item))
         return out
+    info = show_namespace  # info maybe overloaded
 
     def add2strlist(self, names):
         """Add to list of names in str output"""
         self._print_list += fn.liststr(names)
 
-    def options(self, **kwargs):
-        """Set or display options"""
-        if len(kwargs) == 0:
+    def options(self, *args, **kwargs):
+        """
+        Set, get or display options
+          scan.options() >> returns str of current options
+          scan.options('name') >> returns options['name'] or None
+          scan.options(name=value) >> set option 'name' as value
+          scan.options(**options_dict) >> set options using dict
+        :param args: option to look for
+        :param kwargs: options to set
+        :return:
+        """
+        if len(args) == 0 and len(kwargs) == 0:
             # return options
             out = 'Options:\n'
             for key, item in self._options.items():
                 out += '%20s : %s\n' % (key, item)
             return out
+        for arg in args:
+            if arg in self._options:
+                return self._options[arg]
+            else:
+                return None
         self._set_options(**kwargs)
 
     def _set_options(self, **kwargs):
         """Set options"""
         self._options.update(kwargs)
+        if 'data' in kwargs:
+            self._namespace.update(kwargs['data'])
+        if 'names' in kwargs:
+            self._alt_names.update(kwargs['names'])
+        if 'defaults' in kwargs:
+            self._default_values.update(kwargs['defaults'])
         if 'reload' in kwargs:
             self._reload_mode = kwargs['reload']
-        if 'label_name' in kwargs:
-            self._label_str = fn.liststr(kwargs['label_name'])
-        if 'title_name' in kwargs:
-            self._title_str = fn.liststr(kwargs['title_name'])
-        if 'scan_command_name' in kwargs:
-            self._scan_command_str = fn.liststr(kwargs['scan_command_name'])
-        if 'start_time_name' in kwargs:
-            self._start_time_str = fn.liststr(kwargs['start_time_name'])
-        if 'end_time_name' in kwargs:
-            self._end_time_str = fn.liststr(kwargs['end_time_name'])
-        if 'exposure_time_name' in kwargs:
-            self._exposure_time_str = fn.liststr(kwargs['exposure_time_name'])
         if 'axes_name' in kwargs:
             self._axes_str = fn.liststr(kwargs['axes_name'])
         if 'signal_name' in kwargs:
@@ -237,10 +256,27 @@ class Scan:
             self._image_name = fn.liststr(kwargs['image_name'])
         if 'str_list' in kwargs:
             self._print_list = fn.liststr(kwargs['str_list'])
+        if 'start_time_name' in kwargs:
+            self.add2namespace(kwargs['start_time_name'], other_names='_time_start')
+        if 'end_time_name' in kwargs:
+            self.add2namespace(kwargs['end_time_name'], other_names='_time_end')
         if 'scan_plot_manager' in kwargs:
             self.plot = kwargs['scan_plot_manager'](self)
         if 'scan_fit_manager' in kwargs:
             self.fit = kwargs['scan_fit_manager'](self)
+
+    def load_config(self, config_file, run_formats=True):
+        """Load settings from config file, adds various parameters to the namespaces"""
+        name, default_names, formats, default_values, options = fn.load_from_config(config_file)
+        self.options(**options)
+        for name, alt_names in default_names.items():
+            self.add2namespace(name, other_names=alt_names)
+        for name, value in default_values.items():
+            self.add2namespace(name, default_value=value)
+        if run_formats:
+            for name, operation in formats.items():
+                string = self.string_format(operation)
+                self.add2namespace(name, string)
 
     def _debug(self, debug_name, message):
         """
@@ -249,6 +285,7 @@ class Scan:
         :param message: str message to print if true
         :return: None
         """
+
         if 'debug' in self._options and debug_name in self._options['debug']:
             m = 'db:%s: %s' % (debug_name, message)
             print(m)
@@ -444,6 +481,8 @@ class Scan:
         :param date_format: str format used in datetime.strptime (see https://strftime.org/)
         :return: list of datetime ojbjects
         """
+        if date_format is None and 'date_format' in self._options:
+            date_format = self._options['date_format']
         names, data = self._get_list_data(names)
         return fn.data_datetime(data, date_format)
 
@@ -469,9 +508,12 @@ class Scan:
         # Determine data for other variables
         names = fn.re_varname.findall(operation)
         for name in names:
-            new_name, data = self._get_name_data(name)
-            if new_name != name:
-                operation = operation.replace(name, new_name)
+            try:
+                new_name, data = self._get_name_data(name)
+                if new_name != name:
+                    operation = operation.replace(name, new_name)
+            except KeyError:
+                pass
         self._debug('eval', 'Prepare eval operation\n  initial: %s\n  final: %s' % (old_op, operation))
         return operation
 
@@ -483,10 +525,7 @@ class Scan:
         """
         if not EVAL_MODE:
             return self._get_name_data(operation)
-        bad_names = ['import', 'os.', 'sys.']
-        for bad in bad_names:
-            if bad in operation:
-                raise Exception('This operation is not allowed as it contains: "%s"' % bad)
+        fn.check_naughty_eval(operation)  # raise error if bad
         operation = self._prep_operation(operation)
         result = eval(operation, globals(), self._namespace)
         if operation in self._namespace or operation in self._alt_names:
@@ -545,7 +584,8 @@ class Scan:
                 operation = self._options['error_function']
             else:
                 return np.zeros(np.shape(data))
-        return operation(data)
+        error_fun = fn.function_generator(operation)
+        return error_fun(data)
 
     def _get_signal_operation(self, name, signal_op=None, error_op=None):
         """
@@ -575,103 +615,44 @@ class Scan:
 
     "------------------------------- Defaults -------------------------------------------"
 
-    def label(self, new_label=None):
+    def label(self):
         """
         Set or Return the scan label. The label is a short identifier for the scan, such as scan number
-        :param new_label: str or None, if str sets the label as str, if None, returns automatic label
         :return: None or str
         """
-        if new_label:
-            self.add2namespace(self._label_str[0], new_label)
-            return
-
         if 'label_command' in self._options:
             return self.string_format(self._options['label_command'])
+        return self._get_data('_label')
 
-        add2othernames = []
-        for s in self._label_str:
-            try:
-                data = self._get_data(s)
-                self.add2namespace(s, other_names=add2othernames)
-                return data
-            except KeyError:
-                add2othernames += [s]
-        raise Exception('No label in %r' % self)
-
-    def title(self, new_title=None):
+    def title(self):
         """
         Set or Return the title
-        :param new_title: str or None, if str sets the title as str, if None, returns automatic title
         :return: None or str
         """
-        if new_title:
-            self.add2namespace(self._title_str[0], new_title)
-            return
-
         if 'title_command' in self._options:
             return self.string_format(self._options['title_command'])
-
-        add2othernames = []
-        for s in self._title_str:
-            try:
-                data = self._get_data(s)
-                self.add2namespace(s, other_names=add2othernames)
-                return data
-            except KeyError:
-                add2othernames += [s]
-        raise Exception('No title in %r' % self)
+        return self._get_data('_title')
 
     def scan_command(self):
         """
         Returns scan command
         :return: str
         """
-        add2othernames = []
-        for s in self._scan_command_str:
-            try:
-                data = self._get_data(s)
-                self.add2namespace(s, other_names=add2othernames)
-                return data
-            except KeyError:
-                add2othernames += [s]
-        raise Exception('No Scan Command in %r' % self)
+        return self._get_data('_scan_command')
 
     def time_start(self):
         """
         Return scan time_start time
         :return: datetime
         """
-        add2othernames = []
-        for s in self._start_time_str:
-            try:
-                data = self.time(s)[0]
-                self.add2namespace(s, other_names=add2othernames)
-                return data
-            except KeyError:
-                add2othernames += [s]
-        raise Exception('No time_start time in %r' % self)
+        return self.time('_time_start')[0]
 
     def time_end(self):
         """
         Return scan end time
         :return: datetime
         """
-        add2othernames = []
-        for s in self._end_time_str:
-            try:
-                data = self.time(s)[-1]
-                self.add2namespace(s, other_names=add2othernames)
-                return data
-            except KeyError:
-                add2othernames += [s]
-        for s in self._start_time_str[::-1]:
-            try:
-                data = self.time(s)[-1]
-                self.add2namespace(s, other_names=add2othernames)
-                return data
-            except KeyError:
-                add2othernames += [s]
-        raise Exception('No end time in %r' % self)
+        return self.time('_time_end')[-1]
 
     def duration(self, start_time=None, end_time=None):
         """
@@ -692,17 +673,6 @@ class Scan:
         if end_time is None:
             end_time = self.time_end()
         return end_time - start_time
-
-    def exposure_time(self):
-        """Return the exposure time"""
-        value = 1.0
-        for s in self._exposure_time_str:
-            try:
-                value = self.value(s)
-            except KeyError:
-                pass
-        self.add2namespace('exposure_time', value, other_names=self._exposure_time_str)
-        return value
 
     def _find_defaults(self):
         """
@@ -787,7 +757,7 @@ class Scan:
             xname = self._axes_str[0]
         if yname is None:
             yname = self._signal_str[0]
-        xname, xdata = self._get_name_data(xname)
+        xname, xdata = self._name_eval(xname)
         yname, ydata, yerror = self._get_signal_operation(yname, signal_op, error_op)
         return xdata, ydata, yerror, xname, yname
 
@@ -822,25 +792,38 @@ class Scan:
                 f.write('%s, %s, %s\n' % (x, y, e))
         print('(%s, %s, error) written to %s' % (xlabel, ylabel, filename))
 
-
     "------------------------------- images -------------------------------------------"
 
-    def image(self, idx):
+    def image(self, idx=None):
         """
-        Return detector image
-         Overloaded in subclasses, this version does nothing interesting
-        :param idx: int index of image
-        :return: 2d array
+        Load image from hdf file, works with either image addresses or stored arrays
+        :param idx: int image number, or:
+                    'sum' - returns vertical sum of all images
+                    'max' - returns image with bightest point
+                    'peak' - returns image at peak position (volume.peak_search)
+        :return: numpy.array with ndim 2
         """
-        return np.zeros([100, 100])
+        volume = self.volume()
+        if idx is None:
+            idx = len(volume) // 2
+        elif idx == 'sum':
+            return np.sum(volume, axis=0)
+        elif idx == 'peak':
+            i, j, k = volume.peak_search()
+            return volume[i]
+        elif idx == 'max':
+            i, j, k = volume.argmax()
+            return volume[i]
+        return volume[idx]
 
     def volume(self):
         """
         Rerturn volume
-        :return:
+        :return: babelscan.volume.Volume object
         """
         if self._volume is None:
-            vol = np.array([self.image(idx) for idx in range(self.scan_length())])
+            scanlen = self.scan_length()
+            vol = np.zeros([scanlen, 100, 100])
             self._volume = ArrayVolume(vol)
         return self._volume
 

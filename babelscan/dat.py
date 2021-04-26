@@ -120,7 +120,7 @@ class DatScan(Scan):
             'energy': ['en'],
         }
         super(DatScan, self).__init__(namespace, alt_names, **kwargs)
-        self._label_str.extend(['scanno', 'filetitle'])
+        #self._label_str.extend(['scanno', 'filetitle'])
 
     def reset(self):
         """Reset the namespace"""
@@ -143,6 +143,7 @@ class DatScan(Scan):
         dataobj = read_dat_file(self.filename)
         self._namespace.update(dataobj.metadata)
         self._namespace.update(dataobj)
+        self.add2namespace('_scan_data', dataobj)
         if name in self._namespace:
             return
         if name in self._alt_names:
@@ -150,19 +151,43 @@ class DatScan(Scan):
                 if alt_name in self._namespace:
                     return
         super(DatScan, self)._load_data(name)
-        
-    def image(self, idx=None):
+
+    def _find_defaults(self):
         """
-        Load image from dat file image path tempate
-        :param idx: int image number or 'sum'
-        :return: numpy.array with ndim 2
+        Find default axes and signal (x-axis/y-axis), adds to namespace
+         Overloads Scan._find_defaults to fall back on first/ last item in list
+        :return: axes_name, signal_name
         """
-        volume = self.volume()
-        if idx is None:
-            idx = len(volume) // 2
-        elif idx == 'sum':
-            return np.sum(volume, axis=0)
-        return volume[idx]
+        scan_command = self.scan_command()
+        # axes / x-axis
+        axes_name = fn.axes_from_cmd(scan_command)
+        try:
+            axes_data = self._get_data(axes_name)
+        except KeyError:
+            scan_data = self._get_data('_scan_data')
+            axes_name = list(scan_data.keys())[0]  # make use of ordered dict
+            axes_data = self._get_data(axes_name)
+        self.add2namespace(axes_name, axes_data, self._axes_str)
+        # signal / y-axis
+        signal_name = fn.signal_from_cmd(scan_command)
+        try:
+            signal_name, signal_data = self._get_name_data(signal_name)
+        except KeyError:
+            scan_data = self._get_data('_scan_data')
+            signal_name = list(scan_data.keys())[-1]  # make use of ordered dict
+            signal_data = self._get_data(signal_name)
+        self.add2namespace(signal_name, signal_data, self._signal_str)
+        return axes_name, signal_name
+
+    def tree(self):
+        """Return str of data in dat file"""
+        s = "%r\nMetadata:\n" % self
+        scan_data = self._get_data('_scan_data')
+        s += '\n'.join(self.string(list(scan_data.metadata.keys())))
+        s += "\nScan data:\n"
+        s += '\n'.join(self.string(list(scan_data.keys())))
+        return s
+    info = tree
 
     def volume(self):
         """

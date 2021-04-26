@@ -77,21 +77,19 @@ class FolderMonitor:
         else:
             self._scan_loader = scan_loader
 
-        self._options = kwargs
-        if 'title' in kwargs:
-            self.title = self._options.pop('title')
-        else:
-            self.title = os.path.basename(data_directory[0])
+        title = os.path.basename(data_directory[0])
+        options = {
+            'title': title,
+            'title_command': '{FolderTitle} #{scan_number}',
+            'data': {},
+            'filename_format': '%06d.nxs'
+        }
+        options.update(kwargs)
+        options['data']['FolderTitle'] = title
 
-        self._options['FolderTitle'] = self.title
-        if 'title_command' not in kwargs:
-            self._options['title_command'] = '{FolderTitle} #{scan_number}'
-
-        if 'filename_format' in kwargs:
-            self._filename_format = kwargs['filename_format']
-        else:
-            self._filename_format = '%06d.nxs'
-        self._updatemode = False
+        self._options = options
+        self._filename_format = options['filename_format']
+        self.title = options['title']
 
     def __repr__(self):
         return 'FolderMonitor(%s)' % self.title
@@ -149,21 +147,6 @@ class FolderMonitor:
         """Set the directory to save output too"""
         self._working_directory = working_directory
 
-    def update_mode(self, update=None):
-        """
-        When update mode is True, files will search their entire structure
-        This is useful when working in a live directory or with files from different times when the nexus files
-        don't have the same structure.
-        :param update: True/False or None to toggle
-        """
-        if update is None:
-            if self._updatemode:
-                update = False
-            else:
-                update = True
-        print('Update mode is: %s' % update)
-        self._updatemode = update
-
     def latest_scan_number(self):
         """
         Get the latest scan number from the current experiment directory (self.data_directory[-1])
@@ -197,7 +180,7 @@ class FolderMonitor:
         :param scan_number: int : scan number, scans < 1 will look for the latest scan
         :return: filename or '' if scan doesn't appear in directory
         """
-        if os.path.isfile(scan_number):
+        if issubclass(type(scan_number), str) and os.path.isfile(scan_number):
             return scan_number
 
         if scan_number < 1:
@@ -220,7 +203,7 @@ class FolderMonitor:
         try:
             filename = self.getfile(scan_number_or_filename)
         except TypeError:
-            raise Exception('Scan(\'%s\') filename must be number or string' % scan_number_or_filename)
+            raise TypeError('Scan(\'%s\') filename must be number or string' % scan_number_or_filename)
 
         options = self._options.copy()
         options.update(kwargs)
@@ -288,8 +271,11 @@ class FolderMonitor:
         scan = self.scan(scan_number)
         print(scan)
 
-    def printscans(self, scan_numbers, names='scan_command'):
-        scan_numbers = np.asarray(scan_numbers).reshape(-1)
+    def printscans(self, scan_numbers=None, names='scan_command'):
+        if scan_numbers is None:
+            scan_numbers = self.allscanfiles()
+        else:
+            scan_numbers = np.asarray(scan_numbers).reshape(-1)
         out = ''
         for n in range(len(scan_numbers)):
             scan = self.scan(scan_numbers[n])

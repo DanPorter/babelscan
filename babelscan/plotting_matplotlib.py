@@ -282,6 +282,9 @@ def plot_3d_surface(axes, image, xdata=None, ydata=None, samples=None, clim=None
 class ScanPlotManager:
     """
     ScanPlotManager
+    Options called from babelscan.Scan:
+      'plot_show': True >> automatically call "plt.show" after plot command
+
     :param scan: babelscan.Scan
     """
     def __init__(self, scan):
@@ -336,6 +339,8 @@ class ScanPlotManager:
         # Add labels
         ttl = self.scan.title()
         labels(ttl, xname, yname, legend=True)
+        if self.scan.options('plot_show'):
+            plt.show()
         return axes
 
     def plot_image(self, index=None, xaxis='axes', axes=None, clim=None, cmap=None, colorbar=False, **kwargs):
@@ -370,6 +375,8 @@ class ScanPlotManager:
         ttl = '%s\n%s [%s] = %s' % (self.scan.title(), xname, index, xvalue)
         labels(ttl, colorbar=colorbar, colorbar_label='Detector', axes=axes)
         colormap(clim, cmap, axes)
+        if self.scan.options('plot_show'):
+            plt.show()
         return axes
 
 

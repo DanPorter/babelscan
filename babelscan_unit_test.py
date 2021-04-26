@@ -20,6 +20,32 @@ im_file = r'C:\\Users\\dgpor\\OneDrive - Diamond Light Source Ltd\\I16\\Nexus_Fo
 dat_file = r'C:\\Users\\dgpor\\OneDrive - Diamond Light Source Ltd\\I16\\Nexus_Format\\example_nexus\\872996.dat'
 datadir = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus"  # eta scan with pilatus
 rsmap = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\872996-pilatus3_100k-files\rsmap_872996_201215_101906.nxs"
+i10_file = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I10_nexus\i10-578596.nxs"
+i06_file = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I06_example\227980.dat"
+
+
+print('\n\n############ File Type Tests ##############')
+print('standard I16 eta scan:')
+scan = babelscan.file_loader(file)
+print(scan)
+print('\nI16 CV scan:')
+scan = babelscan.file_loader(cv_file)
+print(scan)
+print('\nI16 hkl scan:')
+scan = babelscan.file_loader(im_file)
+print(scan)
+print('\nI16 .dat file:')
+scan = babelscan.file_loader(dat_file)
+print(scan)
+print('\nI16 rsmap file:')
+scan = babelscan.file_loader(rsmap)
+print(scan)
+print('\nI10 Nexus file:')
+scan = babelscan.file_loader(i10_file)
+print(scan)
+print('\nI06 .dat file:')
+scan = babelscan.file_loader(i06_file, scan_command_name='command')
+print(scan)
 
 
 print('\n\n############ Missing count_time Tests ##############')
@@ -40,7 +66,7 @@ print(scan)
 
 print('\n\n##################### Plot Tests ###################')
 scan = exp.scan(794940)
-x, y, dy, xlab, ylab = scan.get_plot_data('axes', 'nroi_peak[31,31]', '/count_time/Transmission', np.sqrt)
+x, y, dy, xlab, ylab = scan.get_plot_data('axes', 'nroi_peak[31,31]', '/count_time/Transmission', 'np.sqrt(x+0.1)')
 
 plt.figure()
 plt.errorbar(x, y, dy, fmt='-o')
@@ -91,3 +117,27 @@ print('\n%r, %s' % (scan3, scan3.find_image()))
 print(volume3)
 print(np.max(volume3))
 print(volume3.peak_search())
+
+
+print('\n\n#################### Time Tests ####################')
+allscan = exp.allscannumbers()
+for scn in allscan:
+    scan = exp.scan(scn)
+    scan.options(start_time_name=['start_time', 'TimeSec'], end_time_name=['end_time', 'TimeSec'])
+    scan.add2namespace(['counttime', 'Time', 't'], other_names='count_time', default_value=0)
+    start_time = scan.time_start()
+    duration = scan.duration()
+    print('#%s  start: %s,  duration: %s' % (scn, start_time, duration))
+
+
+print('\n\n#################### .dat Tests ####################')
+exp.set_format('%d.dat')
+allscan = exp.allscannumbers()
+for scn in allscan:
+    scan = exp.scan(scn)
+    scan.options(start_time_name=['start_time', 'TimeSec'], end_time_name=['end_time', 'TimeSec'])
+    scan.add2namespace(['counttime', 'Time', 't'], other_names='count_time', default_value=0)
+    start_time = scan.time_start()
+    duration = scan.duration()
+    print(scan)
+    print('#%s  start: %s,  duration: %s' % (scn, start_time, duration))
