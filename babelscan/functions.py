@@ -134,7 +134,7 @@ def value_datetime(value, date_format=None):
             return dt
         except (ValueError, TypeError):
             pass
-    return ValueError('%s cannot be converted to datetime' % value)
+    raise ValueError('%s cannot be converted to datetime' % value)
 
 
 def data_datetime(data, date_format=None):
