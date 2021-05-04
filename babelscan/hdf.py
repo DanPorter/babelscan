@@ -913,3 +913,23 @@ class HdfScan(Scan):
         filenames = [os.path.join(abs_filepath, file) for file in f]
         self._volume = ImageVolume(filenames)
         return self._volume
+
+    def _prep_operation(self, operation):
+        """
+        prepare operation string, replace names with names in namespace
+          Overloaded from Scan method, runs beforehand and replaces hdf addresses
+        :param operation: str
+        :return operation: str, names replaced to match namespace
+        """
+
+        old_op = operation
+        # First look for addresses in operation to seperate addresses from divide operations
+        addresses = fn.re_address.findall(operation)
+        for address in addresses:
+            try:
+                new_name, data = self._get_name_data(address)
+                operation = operation.replace(address, address_name(new_name))
+            except KeyError:
+                pass  # address regex may have caught genuine expressions such as sum/Transmission
+        self._debug('eval', 'Prepare eval operation for HDF\n  initial: %s\n  final: %s' % (old_op, operation))
+        return super(HdfScan, self)._prep_operation(operation)
