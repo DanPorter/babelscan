@@ -74,19 +74,20 @@ By Dan Porter, PhD
 Diamond
 2021
 
-Version 0.4.0
-Last updated: 26/04/21
+Version 0.4.1
+Last updated: 04/05/21
 
 Version History:
 13/04/21 0.1.0  Version History started.
 16/04/21 0.2.0  Added instrument and other additions to Scan, changed container.py to folder_monitor.py
 22/04/21 0.3.0  Changed _get_data search path and added _default_values dict, added volume.py, settings.py
 26/04/21 0.4.0  Various changes and fixes after testing with i06, i10 files
+04/05/21 0.4.1  Added names dict to axes/signal from cmd functions
 """
 
 
-__version__ = "0.4.0"
-__date__ = "26/04/2021"
+__version__ = "0.4.1"
+__date__ = "04/05/2021"
 
 
 from .__settings__ import EVAL_MODE

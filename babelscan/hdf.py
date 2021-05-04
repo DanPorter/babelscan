@@ -502,12 +502,13 @@ def nexus_signal(hdf_group):
     return signal_address
 
 
-def auto_axes(hdf_group, cmd_string=None, address_list=None):
+def auto_axes(hdf_group, cmd_string=None, address_list=None, cmd_axes_names=None):
     """
     Find default axes hdf addresses
     :param hdf_group: hdf5 File or Group object
     :param cmd_string: str of command to take x,y axis from as backup
     :param address_list: list of str of dataset addresses (None to generate from hdf_group)
+    :param cmd_axes_names: dict of names to pass to axes_from_cmd
     :return: xaxis_address
     """
     try:
@@ -516,7 +517,7 @@ def auto_axes(hdf_group, cmd_string=None, address_list=None):
         pass
 
     if cmd_string:
-        name = fn.axes_from_cmd(cmd_string)
+        name = fn.axes_from_cmd(cmd_string, cmd_axes_names)
         address = get_address(hdf_group, name, address_list)
         if address:
             return address
@@ -537,12 +538,13 @@ def auto_axes(hdf_group, cmd_string=None, address_list=None):
     raise KeyError('axes not found in hdf hierachy')
 
 
-def auto_signal(hdf_group, cmd_string=None, address_list=None):
+def auto_signal(hdf_group, cmd_string=None, address_list=None, cmd_signal_names=None):
     """
     Find default signal hdf addresses
     :param hdf_group: hdf5 File or Group object
     :param cmd_string: str of command to take x,y axis from as backup
     :param address_list: list of str of dataset addresses (None to generate from hdf_group)
+    :param cmd_signal_names: dict of names to pass to signal_from_cmd
     :return: yaxis_address
     """
     try:
@@ -551,7 +553,7 @@ def auto_signal(hdf_group, cmd_string=None, address_list=None):
         pass
 
     if cmd_string:
-        name = fn.signal_from_cmd(cmd_string)
+        name = fn.signal_from_cmd(cmd_string, cmd_signal_names)
         address = get_address(hdf_group, name, address_list)
         if address:
             return address
@@ -815,11 +817,15 @@ class HdfScan(Scan):
         # find data address
         with load(self.filename) as hdf:
             #axes_address, signal_address = auto_xyaxis(hdf, scan_command, address_list)
-            axes_address = auto_axes(hdf, scan_command, address_list)
-            signal_address = auto_signal(hdf, scan_command, address_list)
+            axes_address = auto_axes(hdf, scan_command, address_list, self._axes_cmd_names)
+            signal_address = auto_signal(hdf, scan_command, address_list, self._axes_cmd_names)
             axes_dataset = hdf.get(axes_address)
             signal_dataset = hdf.get(signal_address)
-            axes_data = dataset_data(axes_dataset)
+            # Catch axes being wrong size
+            if axes_dataset.size == 1 and signal_dataset.size > 1:
+                axes_data = np.arange(len(signal_dataset.size))
+            else:
+                axes_data = dataset_data(axes_dataset)
             signal_data = dataset_data(signal_dataset)
             axes_name = address_name(axes_address)
             signal_name = address_name(signal_address)

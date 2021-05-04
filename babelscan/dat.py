@@ -160,7 +160,7 @@ class DatScan(Scan):
         """
         scan_command = self.scan_command()
         # axes / x-axis
-        axes_name = fn.axes_from_cmd(scan_command)
+        axes_name = fn.axes_from_cmd(scan_command, self._axes_cmd_names)
         try:
             axes_data = self._get_data(axes_name)
         except KeyError:
@@ -169,7 +169,7 @@ class DatScan(Scan):
             axes_data = self._get_data(axes_name)
         self.add2namespace(axes_name, axes_data, self._axes_str)
         # signal / y-axis
-        signal_name = fn.signal_from_cmd(scan_command)
+        signal_name = fn.signal_from_cmd(scan_command, self._signal_cmd_names)
         try:
             signal_name, signal_data = self._get_name_data(signal_name)
         except KeyError:

@@ -129,6 +129,8 @@ class Scan:
         #self._exposure_time_str = ['count_time', 'counttime', 't']
         self._axes_str = ['axes', 'xaxis']
         self._signal_str = ['signal', 'yaxis']
+        self._axes_cmd_names = {}
+        self._signal_cmd_names = {}
         self._image_name = None
         self._image_size = None
         self._print_list = ['scan_command', 'axes', 'signal']
@@ -244,6 +246,8 @@ class Scan:
             self._namespace.update(kwargs['data'])
         if 'names' in kwargs:
             self._alt_names.update(kwargs['names'])
+        if 'alt_names' in kwargs:
+            self._alt_names.update(kwargs['alt_names'])
         if 'defaults' in kwargs:
             self._default_values.update(kwargs['defaults'])
         if 'reload' in kwargs:
@@ -252,6 +256,10 @@ class Scan:
             self._axes_str = fn.liststr(kwargs['axes_name'])
         if 'signal_name' in kwargs:
             self._signal_str = fn.liststr(kwargs['signal_name'])
+        if 'axes_cmd_names' in kwargs:
+            self._axes_cmd_names.update(kwargs['axes_cmd_names'])
+        if 'signal_cmd_names' in kwargs:
+            self._signal_cmd_names.update(kwargs['signal_cmd_names'])
         if 'image_name' in kwargs:
             self._image_name = fn.liststr(kwargs['image_name'])
         if 'str_list' in kwargs:
@@ -682,11 +690,11 @@ class Scan:
         """
         scan_command = self.scan_command()
         # axes / x-axis
-        axes_name = fn.axes_from_cmd(scan_command)
+        axes_name = fn.axes_from_cmd(scan_command, self._axes_cmd_names)
         axes_data = self._get_data(axes_name)
         self.add2namespace(axes_name, axes_data, self._axes_str)
         # signal / y-axis
-        signal_name = fn.signal_from_cmd(scan_command)
+        signal_name = fn.signal_from_cmd(scan_command, self._signal_cmd_names)
         signal_data = self._get_data(signal_name)
         self.add2namespace(signal_name, signal_data, self._signal_str)
         return axes_name, signal_name

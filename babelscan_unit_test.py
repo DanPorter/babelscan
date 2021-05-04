@@ -141,3 +141,18 @@ for scn in allscan:
     duration = scan.duration()
     print(scan)
     print('#%s  start: %s,  duration: %s' % (scn, start_time, duration))
+
+
+print('\n\n########## More FolderMonitor Tests ################')
+exp = babelscan.FolderMonitor(datadir)
+# Add options
+exp.options(
+    str_list=['scan_number', 'scan_command', 'axes', 'signal', 'start_time', 'end_time', 'count_time'],
+    start_time_name=['start_time', 'TimeSec'],
+    end_time_name=['end_time', 'TimeSec'],
+    names={'count_time': ['Time', 'counttime', 't']},
+    defaults={'count_time': 0, 'start_time': None, 'end_time': None}
+)
+allfiles = exp.allscanfiles()
+for f in allfiles:
+    print(exp.scan(f))

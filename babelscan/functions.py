@@ -151,14 +151,18 @@ def data_datetime(data, date_format=None):
     return np.array([value_datetime(value, date_format) for value in data])
 
 
-def axes_from_cmd(cmd):
+def axes_from_cmd(cmd, alt_names=None):
     """
     Get axes name from command string
     :param cmd: str
+    :param alt_names: dict {name_in_cmd: name_in_file}
     :return: str
     """
+    alt_names = {} if alt_names is None else alt_names
     cmd = cmd.split()
     axes = cmd[1]
+    if axes in alt_names:
+        axes = alt_names[axes]
     # These are specific to I16...
     if axes == 'hkl':
         if cmd[0] == 'scan':
@@ -174,6 +178,8 @@ def axes_from_cmd(cmd):
             axes = 'k'
         else:
             axes = 'l'
+    elif axes == 'energy':
+        axes = 'energy2'
     elif axes == 'sr2':
         axes = 'azimuthal'  # 'phi' in pre-DiffCalc scans
     elif axes == 'th2th':
@@ -183,12 +189,14 @@ def axes_from_cmd(cmd):
     return axes
 
 
-def signal_from_cmd(cmd):
+def signal_from_cmd(cmd, alt_names=None):
     """
     Get signal name from command string
     :param cmd: str
+    :param alt_names: dict {name_in_cmd: name_in_file}
     :return: str
     """
+    alt_names = {} if alt_names is None else alt_names
     cmd_split = cmd.split()
     signal = 'signal'
     for signal in cmd_split[::-1]:
@@ -196,6 +204,8 @@ def signal_from_cmd(cmd):
             float(signal)
         except ValueError:
             break
+    if signal in alt_names:
+        signal = alt_names[signal]
     # These are specific to I16...
     if signal == 't':
         signal = 'APD'
