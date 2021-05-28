@@ -41,6 +41,7 @@ class ScanFitManager:
         self.scan = scan
 
     def __call__(self, *args, **kwargs):
+        """Calls ScanFitManager.fit(...)"""
         return self.fit(*args, **kwargs)
 
     def fit(self, xaxis='axes', yaxis='signal', fit_type=None, print_result=True, plot_result=False):

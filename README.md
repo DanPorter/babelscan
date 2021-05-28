@@ -7,7 +7,7 @@ BabelScan is implicitly Lazy Loading and only loads data when requested, making 
 Data fields are stored in a format independent way, with the abiliity to find close matches to a 
 requested field.
 
-3D datasets such as images from detectors are specially hanelled and contain several special functions.
+3D datasets such as images from detectors are specially handelled and contain several special functions.
 
 If packages lmfit and matplotlib are available, fitting and plotting options are included in the BabelScan object.
 
@@ -33,6 +33,9 @@ scans = scan1 + scan2 + scan3  # creates MultiScan object that combines the 3 da
 ### Installation
 #### requirements: numpy, h5py, imageio, [optional: matplotlib, lmfit]
 #### available from: https://github.com/DanPorter/babelscan
+```commandline
+pip install git+https://github.com/DanPorter/babelscan.git
+```
 
 ### Examples
 ```python
@@ -48,3 +51,4 @@ title = scan.title()  # generates a plot title
 
 im = scan.image(0)  # returns first detector image if scan contains 3D data
 ```
+See the included example_*.py files for more examples.

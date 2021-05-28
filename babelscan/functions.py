@@ -305,7 +305,7 @@ def function_generator(operation):
     """
     Generate a function from an operation on "x"
       fn = function_generator("np.sqrt(x + 0.1)")
-    :param operation: str operation acting on variable "x"
+    :param operation: str operation acting on variable "x", or function
     :return: function
     """
     if hasattr(operation, '__call__'):

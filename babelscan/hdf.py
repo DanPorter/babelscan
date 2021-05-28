@@ -303,12 +303,13 @@ def get_address(hdf_group, name, address_list=None, exact_only=False, return_gro
     """
     Return address of dataset that most closely matches str name
      if multiple addresses match, take the longest array
+     if name does not match any address, None is returned
     :param hdf_group: hdf5 File or Group object
     :param name: str or list of str of dataset address or name
     :param address_list: list of str of dataset addresses (None to generate from hdf_group)
     :param exact_only: Bool, if True only searches for exact matches to name
     :param return_group: Bool if True returns the group address rather than dataset address
-    :return: str address of best match or list of str address with same length as name list
+    :return: str address of best match or list of str address with same length as name list or None if no match
     """
     names = np.asarray(name, dtype=str).reshape(-1)
     if address_list is None:
@@ -881,6 +882,7 @@ class HdfScan(Scan):
         if self._volume and image_address is None:
             return self._volume
         if image_address:
+            image_address = self.address(image_address)
             self._image_name = image_address
         elif self._image_name:
             image_address = self._image_name
@@ -925,11 +927,9 @@ class HdfScan(Scan):
         old_op = operation
         # First look for addresses in operation to seperate addresses from divide operations
         addresses = fn.re_address.findall(operation)
+        ds_addresses = self._dataset_addresses()
         for address in addresses:
-            try:
-                new_name, data = self._get_name_data(address)
-                operation = operation.replace(address, address_name(new_name))
-            except KeyError:
-                pass  # address regex may have caught genuine expressions such as sum/Transmission
+            if address in ds_addresses:
+                operation = operation.replace(address, address_name(address))
         self._debug('eval', 'Prepare eval operation for HDF\n  initial: %s\n  final: %s' % (old_op, operation))
         return super(HdfScan, self)._prep_operation(operation)

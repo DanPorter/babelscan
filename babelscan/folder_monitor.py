@@ -23,7 +23,7 @@ def create_scan(data, headers, alternate_names=None, default_values=None, **kwar
     :param kwargs: other options
     :return: Scan
     """
-    name2data = {n: d for n,d in zip(headers, data)}
+    name2data = {n: d for n, d in zip(headers, data)}
     return Scan(name2data, alternate_names, default_values, **kwargs)
 
 
@@ -60,8 +60,31 @@ def load_files(filenames, variables=None, **kwargs):
     :param kwargs: options
     :return: MultiScan
     """
+    filenames = fn.liststr(filenames)
+    if len(filenames) == 1:
+        return file_loader(filenames[0], **kwargs)
     holders = [file_loader(file, **kwargs) for file in filenames]
     return MultiScan(holders, variables)
+
+
+def find_files(folders, file_type='nxs'):
+    """
+    Find scan files in folders using format specifier
+    :param folders: str or list of str directories
+    :param file_type: name of extension, 'nxs' or 'dat'
+    :return: list of scan files
+    """
+    folders = fn.liststr(folders)
+    spec, ext = os.path.splitext(file_type)
+    if ext == '':
+        ext = spec
+    if ext[0] != '.':
+        ext = '.' + ext
+    filelist = []
+    for directory in folders:
+        filelist += glob.glob('%s/*%s' % (directory, ext))
+    filelist = np.sort(filelist)
+    return filelist
 
 
 class FolderMonitor:
@@ -69,15 +92,14 @@ class FolderMonitor:
     Monitors a folder or several folders for files following a particular format
     """
     def __init__(self, data_directory, working_directory='.', scan_loader=None, **kwargs):
-        data_directory = np.asarray(data_directory).reshape(-1)
-        self._data_directories = data_directory
+        self._data_directories = fn.liststr(data_directory)
         self._working_directory = working_directory
         if scan_loader is None:
             self._scan_loader = file_loader
         else:
             self._scan_loader = scan_loader
 
-        title = os.path.basename(data_directory[0])
+        title = os.path.basename(self._data_directories[0])
         options = {
             'title': title,
             'title_command': '{FolderTitle} #{scan_number}',
@@ -100,6 +122,8 @@ class FolderMonitor:
         out += '\n  '.join(self._data_directories)
         out += '\nWorking directory:\n  %s\n' % os.path.abspath(self._working_directory)
         scanfiles = self.allscanfiles()
+        if scanfiles is None:
+            scanfiles = []
         out += 'Number of files: %d\nFirst file: %s\nLast file: %s\n' % \
                (len(scanfiles), scanfiles[0], scanfiles[-1])
         return out
@@ -279,6 +303,15 @@ class FolderMonitor:
         out = ''
         for n in range(len(scan_numbers)):
             scan = self.scan(scan_numbers[n])
-            data = ', '.join(scan.string(names).strip())
+            strings = fn.liststr(scan.string(names))
+            data = ', '.join(strings)
             out += '%s: %s\n' % (scan_numbers[n], data)
         print(out)
+
+    def plotscan(self, scan_number=0, xaxis='axes', yaxis='signal'):
+        scan = self.scan(scan_number)
+        scan.plot(xaxis, yaxis)
+
+    def plot_image(self, scan_number=0):
+        scan = self.scan(scan_number)
+        scan.plot.plot_image()

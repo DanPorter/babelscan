@@ -19,8 +19,9 @@ def instrument_from_config(config_file):
     :param config_file: str config filename
     :return: Instrument
     """
-    name, default_names, formats, default_values, options = fn.load_from_config(config_file)
-    return Instrument(name, default_names, formats, default_values, options)
+    instr = Instrument('')
+    instr.load_config_file(config_file)
+    return instr
 
 
 class Instrument:
@@ -40,6 +41,7 @@ class Instrument:
         self._formats = {} if formats is None else formats
         self._default_values = {} if default_values is None else default_values
         self._options = {} if options is None else options
+        self.filename = '%s.json' % name
 
     def __repr__(self):
         return "Instrument(%s)" % self.name
@@ -47,9 +49,69 @@ class Instrument:
     def __str__(self):
         return '%r' % self
 
+    def add_name(self, name, alt_names, default=None):
+        """
+        Set a name that will automatically be defined in the namespace
+        :param name: str name that will appear in namespace
+        :param alt_names: list of str alternative names that will return the same data as name
+        :param default: any or None, if a search for name or alt_name returns no data, default will be used
+        :return: None
+        """
+        self._default_names[name] = fn.liststr(alt_names)
+        if default is not None:
+            self._default_values[name] = default
+
+    def add_format(self, name, operation):
+        """
+        Add a format operation
+          add_format('i16_Energy', '{en:5.4f} keV')
+        Note: Names referenced in format specifiers should have been added to the namespace using add_name
+              otherwise errors may occur if the value can't be found
+        :param name: str name of operation, will appear in scan namespace
+        :param operation: str operation, calling namespace variables
+        :return: None
+        """
+        self._formats[name] = operation
+
+    def options(self, **kwargs):
+        """Set or display options"""
+        if len(kwargs) == 0:
+            # return options
+            out = 'Options:\n'
+            for key, item in self._options.items():
+                out += '%20s : %s\n' % (key, item)
+            return out
+        self._options.update(kwargs)
+
     def set_format(self, filename_format='%06d.nxs'):
         """Set the file format to monitor, uses printf-style string format, e.g. '%5d.nxs'"""
         self._options['filename_format'] = filename_format
+
+    def set_str_list(self, names):
+        """
+        Set scan str_list - specifying which values to show on print(scan)
+          set_str_list(['scan_command','axes','signal','en']
+        :param names: list of str names
+        :return: None
+        """
+        names = fn.liststr(names)
+        self._options['str_list'] = names
+
+    def set_error(self, error_op):
+        """
+        Set the default error operation
+        :param error_op: function or str operation on 'x', e.g. 'np.sqrt(x+0.1)'
+        :return: None
+        """
+        self._options['error_function'] = error_op
+
+    def set_signal_operation(self, operation):
+        """
+        Set the operation to act on each can value when auto plotting (normalisation)
+        :param operation: str operation, e.g. '/count_time/Transmission'
+        :return: None
+        """
+        self._options['signal_operation'] = operation
 
     def _add_items(self, scan):
         """Add Insturment defaults to Scan"""
@@ -74,14 +136,34 @@ class Instrument:
             scan.add2namespace(name, string)
         return scan
 
-    def save_config_file(self, config_file):
+    def save_config_file(self, config_file=None):
         """
         Save config file
         :param config_file: str
         :return: None
         """
+        if config_file is None:
+            config_file = self.filename
+        else:
+            self.filename = config_file
         fn.save_to_config(config_file, self.name, self._default_names, self._formats,
                           self._default_values, self._options)
+
+    def load_config_file(self, config_file=None):
+        """
+        Load values from config file
+        :param config_file: str address of file
+        :return: None
+        """
+        if config_file is None:
+            config_file = self.filename
+        name, default_names, formats, default_values, options = fn.load_from_config(config_file)
+        self.name = name
+        self._default_names.update(default_names)
+        self._formats.update(formats)
+        self._default_values.update(default_values)
+        self._options.update(options)
+        self.filename = config_file
 
     def experiment(self, directory, working_dir='.', **kwargs):
         """Create FolderMonitor"""

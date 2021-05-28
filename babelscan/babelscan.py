@@ -121,12 +121,6 @@ class Scan:
 
         # Options and defaults
         self._options = {}
-        #self._label_str = ['label']
-        #self._title_str = ['title', 'filename']
-        #self._scan_command_str = ['scan_command', 'cmd']
-        #self._start_time_str = ['start_time']
-        #self._end_time_str = ['end_time']
-        #self._exposure_time_str = ['count_time', 'counttime', 't']
         self._axes_str = ['axes', 'xaxis']
         self._signal_str = ['signal', 'yaxis']
         self._axes_cmd_names = {}
@@ -137,6 +131,7 @@ class Scan:
         self._reload_mode = False
         self._set_options(**kwargs)
         self._volume = None
+        self._use_signal_op = True
 
         self.add2namespace(
             name=['scan_command', 'command', 'cmd'],
@@ -149,7 +144,7 @@ class Scan:
             default_value='Scan'
         )
         self.add2namespace(
-            name=['filename'],
+            name=['filetitle'],
             other_names='_title',
             default_value='Scan Title'
         )
@@ -582,7 +577,7 @@ class Scan:
     def _get_error(self, name, operation=None):
         """
         Return uncertainty on data using operation
-        :param operation: function to apply to signal, e.g. 'np.sqrt'
+        :param operation: function to apply to signal, e.g. np.sqrt or 'np.sqrt(x+0.1)'
         :param operation: None* will default to zero, unless "error_function" in options
         :return: operation(array)
         """
@@ -599,8 +594,8 @@ class Scan:
         """
         Return data after operation with error
         :param name: str name in namespace
-        :param signal_op: operation to perform on name, e.g. '/Transmission'
-        :param error_op: function to performon name, e.g. np.sqrt
+        :param signal_op: str operation to perform on name, e.g. '/Transmission'
+        :param error_op: str operation to perform on name to generate error, e.g. 'np.sqrt(x)'
         :return: signal_name, output, error arrays
         """
         name, data = self._name_eval(name)
@@ -609,6 +604,8 @@ class Scan:
         error_name = '%s_error' % name
         self.add2namespace(error_name, error)
 
+        if not self._use_signal_op:
+            return name, data, error
         if signal_op is None:
             if 'signal_operation' in self._options:
                 signal_op = self._options['signal_operation']
@@ -617,8 +614,10 @@ class Scan:
         # Create operations
         operation = name + signal_op
         operation_error = error_name + signal_op
+        print(name, signal_op, operation, operation_error)
         signal = self.eval(operation)
         error = self.eval(operation_error)
+        print(signal, error)
         return operation, signal, error
 
     "------------------------------- Defaults -------------------------------------------"
@@ -745,6 +744,16 @@ class Scan:
         :return: int
         """
         return np.size(self.axes()[1])
+
+    def toggle_signal_operation(self, use_signal_op=None):
+        """Turn on/off signal operations (normalisation)"""
+        if use_signal_op is not None:
+            self._use_signal_op = use_signal_op
+            return
+        if self._use_signal_op:
+            self._use_signal_op = False
+        else:
+            self._use_signal_op = True
 
     def get_plot_data(self, xname=None, yname=None, signal_op=None, error_op=None):
         """

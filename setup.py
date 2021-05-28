@@ -11,7 +11,7 @@ setup(
     version='1.0',
     packages=['babelscan'],
     url='https://github.com/DanPorter/babelscan',
-    license='GNU General Public License',
+    license='Apache 2.0',
     author='dgporter',
     author_email='dan.porter@diamond.ac.uk',
     description='BabelScan is a format independent data structure for holding different types of data from a scan file',

@@ -17,7 +17,11 @@ datadirs = [
 
 
 exp = FolderMonitor(datadirs)
-scan = exp.scan(872996)
+scan = exp.scan(877619)
 print(scan)
+
+scan.plot()
+
+scan.plot.plot_image()
 
 

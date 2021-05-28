@@ -282,6 +282,12 @@ def plot_3d_surface(axes, image, xdata=None, ydata=None, samples=None, clim=None
 class ScanPlotManager:
     """
     ScanPlotManager
+        scan.plot = ScanPlotManager(scan)
+        scan.plot() # plot default axes
+        scan.plot.plot(xaxis, yaxis)  # creates figure
+        scan.plot.plotline(xaxis, yaxis)  # plots line on current figure
+        scan.plot.plot_image()  # create figure and display detector image
+
     Options called from babelscan.Scan:
       'plot_show': True >> automatically call "plt.show" after plot command
 
@@ -291,7 +297,8 @@ class ScanPlotManager:
         self.scan = scan
 
     def __call__(self, *args, **kwargs):
-        return self.plot( *args, **kwargs)
+        """Calls ScanPlotManager.plot(...)"""
+        return self.plot(*args, **kwargs)
 
     def plotline(self, xaxis='axes', yaxis='signal', *args, **kwargs):
         """

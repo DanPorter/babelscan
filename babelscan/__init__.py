@@ -5,6 +5,9 @@ A generic class for reading many types of scan data that you don't need to put i
 requirements: numpy, h5py, imageio
 Optional requirements: matplotlib, lmfit
 
+Installation:
+  pip install git+https://github.com/DanPorter/babelscan.git
+
 Usage:
   from babelscan import file_loader
   scan1 = file_loader('some/file.nxs', **options)  # creates Scan class
@@ -15,6 +18,10 @@ Usage:
   from babelscan import FolderMonitor
   mon = FolderMonitor('/some/folder', **options)
   scan = mon.scan(0)  # creates scan from latest file in folder
+
+  # intrument configuration file
+  from babelscan import Instrument
+  i16 = Instrument('i16',
 
 Scan class
   Scan class contains an internal namespace where each dataset can contain multiple names. Calling the instantiated
@@ -74,8 +81,8 @@ By Dan Porter, PhD
 Diamond
 2021
 
-Version 0.4.1
-Last updated: 04/05/21
+Version 0.5.0
+Last updated: 28/05/21
 
 Version History:
 13/04/21 0.1.0  Version History started.
@@ -83,18 +90,68 @@ Version History:
 22/04/21 0.3.0  Changed _get_data search path and added _default_values dict, added volume.py, settings.py
 26/04/21 0.4.0  Various changes and fixes after testing with i06, i10 files
 04/05/21 0.4.1  Added names dict to axes/signal from cmd functions
+28/05/21 0.5.0  Tidied up code, various fixes
+
+-----------------------------------------------------------------------------
+   Copyright 2021 Diamond Light Source Ltd.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+ Dr Daniel G Porter, dan.porter@diamond.ac.uk
+ www.diamond.ac.uk
+ Diamond Light Source, Chilton, Didcot, Oxon, OX11 0DE, U.K.
 """
 
 
-__version__ = "0.4.1"
-__date__ = "04/05/2021"
+__version__ = "0.5.0"
+__date__ = "28/05/2021"
 
 
 from .__settings__ import EVAL_MODE
-from .babelscan import Scan, MultiScan
-from .hdf import HdfScan
-from .dat import DatScan
-from .csv import CsvScan
+# from .babelscan import Scan, MultiScan
+# from .hdf import HdfScan
+# from .dat import DatScan
+# from .csv import CsvScan
 from .folder_monitor import create_scan, file_loader, hdf_loader, load_files, FolderMonitor
 from .instrument import Instrument, instrument_from_config
 from .functions import load_from_config, save_to_config
+
+
+def version_info():
+    return 'babelscan version %s (%s)' % (__version__, __date__)
+
+
+def module_info():
+    import sys
+    out = 'Python version %s' % sys.version
+    out += '\n%s' % version_info()
+    # Modules
+    import numpy
+    out += '\n     numpy version: %s' % numpy.__version__
+    import h5py
+    out += '\n      h5py version: %s' % h5py.__version__
+    import imageio
+    out += '\n   imageio version: %s' % imageio.__version__
+    try:
+        import matplotlib
+        out += '\nmatplotlib version: %s' % matplotlib.__version__
+    except ImportError:
+        out += '\nmatplotlib version: None'
+    try:
+        import lmfit
+        out += '\n     lmfit version: %s' % lmfit.__version__
+    except ImportError:
+        out += '\n     lmfit version: None'
+    import os
+    out += 'Running in directory: %s\n' % os.path.abspath('.')
+    return out
