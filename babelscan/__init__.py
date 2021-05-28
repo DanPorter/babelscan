@@ -20,8 +20,10 @@ Usage:
   scan = mon.scan(0)  # creates scan from latest file in folder
 
   # intrument configuration file
-  from babelscan import Instrument
-  i16 = Instrument('i16',
+  from babelscan import instrument_from_config
+  i16 = instrument_from_config('config_files/i16.config')
+  experiment = i16.experiment('/data/folder')
+  scan = experiment.scan(0)
 
 Scan class
   Scan class contains an internal namespace where each dataset can contain multiple names. Calling the instantiated
@@ -122,9 +124,10 @@ from .__settings__ import EVAL_MODE
 # from .hdf import HdfScan
 # from .dat import DatScan
 # from .csv import CsvScan
-from .folder_monitor import create_scan, file_loader, hdf_loader, load_files, FolderMonitor
+from .hdf import HdfWrapper, HdfDataset
+from .folder_monitor import create_scan, file_loader, hdf_loader, load_files, find_files, FolderMonitor
 from .instrument import Instrument, instrument_from_config
-from .functions import load_from_config, save_to_config
+from .functions import save_to_config
 
 
 def version_info():
@@ -153,5 +156,5 @@ def module_info():
     except ImportError:
         out += '\n     lmfit version: None'
     import os
-    out += 'Running in directory: %s\n' % os.path.abspath('.')
+    out += '\nRunning in directory: %s\n' % os.path.abspath('.')
     return out

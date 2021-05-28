@@ -7,7 +7,6 @@ import re
 import datetime
 import numpy as np
 import h5py
-from imageio import imread  # read Tiff images
 
 from . import functions as fn
 from .babelscan import Scan
@@ -622,6 +621,101 @@ def find_image(hdf_group, address_list=None, multiple=False):
         return all_addresses
     else:
         return None
+
+
+"----------------------------------------------------------------------------------------------------------------------"
+"-------------------------------------------- DatasetWrapper ----------------------------------------------------------"
+"----------------------------------------------------------------------------------------------------------------------"
+
+
+class HdfDataset:
+    """
+    HDF Dataset reloader
+    Self contained holder for a HDF5 dataset, will load the data when called
+      dataset = HdfAddress('hdf/file/path.hdf', '/dataset/address')
+      data = dataset()
+    HdfDataset has attributes:
+        dataset.filename
+        dataset.address
+        dataset.name
+        dataset.group
+        dataset.size
+        dataset.shape
+        dataset.ndim
+        dataset.len
+    If the hdf address doesn't associate with a dataset in the hdf file, a KeyError is raised
+    """
+    size = 0
+    shape = 0
+    ndim = 0
+    len = 0
+
+    def __init__(self, filename, address):
+        self.filename = filename
+        self.address = address
+        self.name = address_name(address)
+        self.group = address_group(address)
+        # Check address
+        with load(self.filename) as hdf:
+            dataset = hdf.get(self.address)
+            if dataset is None:
+                raise KeyError('"%s" is not availble in %s' % (self.address, self.filename))
+            self._update(dataset)
+
+    def __repr__(self):
+        return "HdfDataset(\"%s\", \"%s\", shape: %s)" % (self.filename, self.address, self.shape)
+
+    def __len__(self):
+        return self.len
+
+    def __call__(self):
+        return self._load_data()
+
+    def _update(self, dataset):
+        self.size = dataset.size
+        self.shape = dataset.shape
+        self.ndim = dataset.ndim
+        self.len = dataset.len()
+
+    def _load_data(self):
+        with load(self.filename) as hdf:
+            dataset = hdf.get(self.address)
+            self._update(dataset)
+            data = dataset_data(dataset)
+        return data
+
+    def data(self):
+        """Return data directly from dataset"""
+        with load(self.filename) as hdf:
+            dataset = hdf.get(self.address)
+            self._update(dataset)
+            data = dataset_data(dataset)
+        return data
+
+    def string(self):
+        """Return string from dataset"""
+        with load(self.filename) as hdf:
+            dataset = hdf.get(self.address)
+            self._update(dataset)
+            data = dataset_string(dataset)
+        return data
+
+    def value(self):
+        """Return float value or mean of array"""
+        with load(self.filename) as hdf:
+            dataset = hdf.get(self.address)
+            self._update(dataset)
+            data = np.mean(dataset)
+        return data
+
+    def array(self, array_len=1):
+        """Return array, single values are copied"""
+        data = self.data()
+        if self.ndim == 1:
+            return data
+        if self.ndim == 0:
+            return np.repeat(data, array_len)
+        return np.reshape(data, -1)
 
 
 "----------------------------------------------------------------------------------------------------------------------"
