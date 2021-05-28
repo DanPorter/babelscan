@@ -28,6 +28,16 @@ scan2 = babelscan.file_loader('i16_1234.dat')
 exp = babelscan.FolderMonitor('/path/to/files')
 scan3 = exp.scan(0)  # returns latest scan in directory
 scans = scan1 + scan2 + scan3  # creates MultiScan object that combines the 3 datasets
+
+# Folder monitor:
+mon = babelscan.FolderMonitor('/some/folder', **options)
+scan = mon.scan(0)  # creates scan from latest file in folder
+
+# intrument configuration file
+i16 = babelscan.instrument_from_config('config_files/i16.config')
+experiment = i16.experiment('/data/folder')
+scan = experiment.scan(12345)
+print(scan)  # displays I16 metadata by default
 ```
 
 ### Installation
