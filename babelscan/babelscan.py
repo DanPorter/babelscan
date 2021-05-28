@@ -691,10 +691,14 @@ class Scan:
         # axes / x-axis
         axes_name = fn.axes_from_cmd(scan_command, self._axes_cmd_names)
         axes_data = self._get_data(axes_name)
+        if np.ndim(axes_data) == 0:
+            axes_data = np.array(axes_data)
         self.add2namespace(axes_name, axes_data, self._axes_str)
         # signal / y-axis
         signal_name = fn.signal_from_cmd(scan_command, self._signal_cmd_names)
         signal_data = self._get_data(signal_name)
+        if np.ndim(signal_data) == 0:
+            signal_data = np.array(signal_data)
         self.add2namespace(signal_name, signal_data, self._signal_str)
         return axes_name, signal_name
 

@@ -363,13 +363,12 @@ class ScanPlotManager:
         :return: axes object
         """
         # x axis data
-        print(self.scan)
         xname, xdata = self.scan._name_eval(xaxis)
 
         # image data
         im = self.scan.image(index)
         if index is None or index == 'sum':
-            xvalue = xdata[len(xdata) // 2]
+            xvalue = xdata[np.size(xdata) // 2]
         else:
             xvalue = xdata[index]
 

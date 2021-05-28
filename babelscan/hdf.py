@@ -921,7 +921,13 @@ class HdfScan(Scan):
                 axes_data = np.arange(len(signal_dataset.size))
             else:
                 axes_data = dataset_data(axes_dataset)
+            print('axes data:', axes_data, np.ndim(axes_data))
+            if np.ndim(axes_data) == 0:
+                axes_data = np.reshape(axes_data, -1)
             signal_data = dataset_data(signal_dataset)
+            print('signal_data data:', signal_data, np.ndim(signal_data))
+            if np.ndim(signal_data) == 0:
+                signal_data = np.reshape(signal_data, -1)
             axes_name = address_name(axes_address)
             signal_name = address_name(signal_address)
         self.add2namespace(axes_name, axes_data, self._axes_str, hdf_address=axes_address)

@@ -84,7 +84,7 @@ def find_files(folders, file_type='nxs'):
     for directory in folders:
         filelist += glob.glob('%s/*%s' % (directory, ext))
     filelist = np.sort(filelist)
-    return filelist
+    return list(filelist)
 
 
 class FolderMonitor:
