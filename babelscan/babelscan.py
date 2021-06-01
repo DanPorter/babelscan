@@ -614,10 +614,8 @@ class Scan:
         # Create operations
         operation = name + signal_op
         operation_error = error_name + signal_op
-        print(name, signal_op, operation, operation_error)
         signal = self.eval(operation)
         error = self.eval(operation_error)
-        print(signal, error)
         return operation, signal, error
 
     "------------------------------- Defaults -------------------------------------------"

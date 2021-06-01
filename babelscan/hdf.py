@@ -30,6 +30,30 @@ def reload(hdf):
     return load(filename)
 
 
+def load_values(files, address, default=None):
+    """
+    Load single dataset value (metadata) from hdf files
+      Will return str or float value as per dataset. Array datsets will be averaged to return a single float.
+    :param files: str or list of str file names
+    :param address: str hdf dataset address
+    :param default: value to return if dataset not in file
+    :return: array of floats or strings
+    """
+    files = fn.liststr(files)
+    values = np.empty(len(files), dtype=object)
+    for n, file in enumerate(files):
+        with load(file) as hdf:
+            if address in hdf:
+                dataset = hdf.get(address)
+                if dataset.ndim > 0:
+                    values[n] = np.mean(dataset)
+                else:
+                    values[n] = hdf.get(address)[()]
+            else:
+                values[n] = default
+    return values
+
+
 "--------------------------DATASET FUNCTIONS--------------------------------"
 
 
@@ -46,8 +70,8 @@ def address_group(address, group_name=None):
     :return: reduced str
     """
     if group_name is None:
-        names = os.path.split(address)
-        return os.path.join(names[:-1])
+        names = address.replace('\\', '/').split('/')
+        return '/'.join(names[:-1])
     return re.findall(r'(.+?%s.*?)(?:\/|$)' % group_name, address, re.IGNORECASE)[0]
 
 
@@ -265,11 +289,12 @@ def find_cascade(name, address_list, exact_only=False):
     return group_match
 
 
-def tree(hdf_group, detail=False, recursion_limit=100):
+def tree(hdf_group, detail=False, groups=False, recursion_limit=100):
     """
     Return str of the full tree of data in a hdf object
     :param hdf_group: hdf5 File or Group object
     :param detail: False/ True - provide further information about each group and dataset
+    :param groups: Fasle/ True - only display group level structure
     :param recursion_limit: int max number of levels
     :return: str
     """
@@ -282,11 +307,13 @@ def tree(hdf_group, detail=False, recursion_limit=100):
         for branch in hdf_group.keys():
             new_group = hdf_group.get(branch)
             if new_group:
-                outstr += tree(new_group, detail, recursion_limit-1)
+                outstr += tree(new_group, detail, groups, recursion_limit-1)
         return outstr
     except AttributeError:
         # doesn't have .keys(), hdf_group = dataset, should have .name, .size, .shape
-        if detail:
+        if groups:
+            out = ""
+        elif detail:
             out = '  %s: %s\n' % (hdf_group.name, dataset_string(hdf_group))
             for attr, val in hdf_group.attrs.items():
                 out += '    @%s: %s\n' % (attr, val)
@@ -532,7 +559,7 @@ def auto_axes(hdf_group, cmd_string=None, address_list=None, cmd_axes_names=None
         address_list = dataset_addresses(hdf_group)
 
     array_len = np.max([hdf_group.get(adr).size for adr in address_list if hdf_group.get(adr).ndim == 1])
-    address = [adr for adr in address_list if hdf_group.get(adr).ndim == 1 and hdf_group(adr).size == array_len]
+    address = [adr for adr in address_list if hdf_group.get(adr).ndim == 1 and hdf_group.get(adr).size == array_len]
     if address:
         return address[0]
     raise KeyError('axes not found in hdf hierachy')
@@ -683,6 +710,19 @@ class HdfDataset:
             self._update(dataset)
             data = dataset_data(dataset)
         return data
+
+    def files(self, filenames, default=None):
+        """Generate another address object pointing at a different file"""
+        filenames = fn.liststr(filenames)
+        if len(filenames) == 1:
+            try:
+                return HdfDataset(filenames[0])
+            except KeyError:
+                return default
+        out = []
+        for filename in filenames:
+            out += [self.files(filename, default)]
+        return out
 
     def data(self):
         """Return data directly from dataset"""
@@ -835,16 +875,17 @@ class HdfScan(Scan):
         hdf = load(self.filename)
         return hdf.get(address)
 
-    def tree(self, group_address='/', detail=False, recursion_limit=100):
+    def tree(self, group_address='/', detail=False, groups=False, recursion_limit=100):
         """
         Return str of the full tree of data in a hdf object
         :param group_address: str address of hdf group to time_start in
         :param detail: False/ True - provide further information about each group and dataset, including attributes
+        :param groups: False/ True - only provide group level information
         :param recursion_limit: int max number of levels
         :return: str
         """
         with load(self.filename) as hdf:
-            out = tree(hdf[group_address], detail, recursion_limit)
+            out = tree(hdf[group_address], detail, groups, recursion_limit)
         return out
     info = tree
 
@@ -921,11 +962,9 @@ class HdfScan(Scan):
                 axes_data = np.arange(len(signal_dataset.size))
             else:
                 axes_data = dataset_data(axes_dataset)
-            print('axes data:', axes_data, np.ndim(axes_data))
             if np.ndim(axes_data) == 0:
                 axes_data = np.reshape(axes_data, -1)
             signal_data = dataset_data(signal_dataset)
-            print('signal_data data:', signal_data, np.ndim(signal_data))
             if np.ndim(signal_data) == 0:
                 signal_data = np.reshape(signal_data, -1)
             axes_name = address_name(axes_address)
@@ -948,6 +987,16 @@ class HdfScan(Scan):
                     return self._hdf_name2address[alt_name]
         self._load_data(name)
         return self._hdf_name2address[name]
+
+    def group_addresses(self, group_name):
+        """
+        Return list of hdf addresses
+        :param group_name: str name of hdf grop
+        :return: list of str
+        """
+        addresses = self._dataset_addresses()
+        group_name = '/%s/' % group_name
+        return [adr for adr in addresses if group_name in adr]
 
     def find_address(self, name, match_case=False, whole_word=False):
         """

@@ -83,8 +83,8 @@ By Dan Porter, PhD
 Diamond
 2021
 
-Version 0.5.0
-Last updated: 28/05/21
+Version 0.5.1
+Last updated: 01/06/21
 
 Version History:
 13/04/21 0.1.0  Version History started.
@@ -93,6 +93,7 @@ Version History:
 26/04/21 0.4.0  Various changes and fixes after testing with i06, i10 files
 04/05/21 0.4.1  Added names dict to axes/signal from cmd functions
 28/05/21 0.5.0  Tidied up code, various fixes
+01/06/21 0.5.1  Added additional hdf functions
 
 -----------------------------------------------------------------------------
    Copyright 2021 Diamond Light Source Ltd.
@@ -115,8 +116,8 @@ Version History:
 """
 
 
-__version__ = "0.5.0"
-__date__ = "28/05/2021"
+__version__ = "0.5.1"
+__date__ = "2021/06/01"
 
 
 from .__settings__ import EVAL_MODE
