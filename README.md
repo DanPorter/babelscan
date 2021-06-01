@@ -19,6 +19,8 @@ You can read the documentation [here!](https://babelscan.readthedocs.io/en/lates
 
 [![Documentation Status](https://readthedocs.org/projects/babelscan/badge/?version=latest)](https://babelscan.readthedocs.io/en/latest/?badge=latest)
 
+By Dan Porter, Diamond Light Source Ltd. 2021
+
 ### Usage
 ```python
 # Python script
@@ -41,11 +43,19 @@ print(scan)  # displays I16 metadata by default
 ```
 
 ### Installation
-#### requirements: numpy, h5py, imageio, [optional: matplotlib, lmfit]
-#### available from: https://github.com/DanPorter/babelscan
+**requirements:** *numpy, h5py, imageio*, [**optional:** *matplotlib, lmfit*]
+
+**available from: https://github.com/DanPorter/babelscan**
+
+Latest version from github:
 ```commandline
 pip install git+https://github.com/DanPorter/babelscan.git
 ```
+Stable version from [PyPI](https://pypi.org/project/babelscan/):
+```commandline
+pip install babelscan
+```
+
 
 ### Examples
 ```python
@@ -60,5 +70,21 @@ y = scan('signal')  # finds default yaxis in Nexus files
 title = scan.title()  # generates a plot title
 
 im = scan.image(0)  # returns first detector image if scan contains 3D data
+
+# Automatically generate x, y, error data and labels for plotting
+# Here we also show off the automatic "region of interest" specification,
+# as well as the automatic normalisation and error generation
+x, y, dy, xlab, ylab = scan.get_plot_data('axes', 'nroi_peak[31,31]', '/count_time/Transmission', 'np.sqrt(x+0.1)')
+
+# If matplotlib is installed, plotting behaviour is enabled:
+scan.plot()  # creates a figure and plots the default axes
+scan.plot.plotline('axes', 'signal', 'b-')  # command similar to plt.plot
+scan.plot.plot_image(index)  # creates figure and plots detector image
+
+# If lmfit is installed, fitting behaviour is enabled:
+scan.fit()  # fits a gaussian peak to the default axes
+scan.fit.fit('axes', 'signal')  # Fits a gaussian peak to choosen axes
+# The resulting parameters are stored in the namespace:
+scan('area')
 ```
 See the included example_*.py files for more examples.

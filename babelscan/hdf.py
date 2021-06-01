@@ -30,7 +30,7 @@ def reload(hdf):
     return load(filename)
 
 
-def load_values(files, address, default=None):
+def load_hdf_values(files, address, default=None):
     """
     Load single dataset value (metadata) from hdf files
       Will return str or float value as per dataset. Array datsets will be averaged to return a single float.

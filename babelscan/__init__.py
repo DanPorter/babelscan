@@ -125,7 +125,7 @@ from .__settings__ import EVAL_MODE
 # from .hdf import HdfScan
 # from .dat import DatScan
 # from .csv import CsvScan
-from .hdf import HdfWrapper, HdfDataset
+from .hdf import HdfWrapper, HdfDataset, load_hdf_values
 from .folder_monitor import create_scan, file_loader, hdf_loader, load_files, find_files, FolderMonitor
 from .instrument import Instrument, instrument_from_config
 from .functions import save_to_config

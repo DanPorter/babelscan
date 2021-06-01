@@ -79,7 +79,7 @@ class CsvScan(Scan):
             'cmd': 'scan_command',
         }
         super(CsvScan, self).__init__(namespace, alt_names, **kwargs)
-        self._label_str.extend(['scanno', 'filetitle'])
+        #self._label_str.extend(['scanno', 'filetitle'])
 
     def reset(self):
         """Reset the namespace"""
