@@ -5,7 +5,8 @@ babelscan object for holding many types of scan data
 import numpy as np
 from . import functions as fn
 from . import EVAL_MODE
-from .settings import init_scan_plot_manager, init_multiscan_plot_manager, init_scan_fit_manager
+from .settings import init_scan_plot_manager, init_multiscan_plot_manager
+from .settings import init_scan_fit_manager, init_multiscan_fit_manager
 from .volume import ArrayVolume
 
 
@@ -131,7 +132,7 @@ class Scan:
         self._reload_mode = False
         self._set_options(**kwargs)
         self._volume = None
-        self._use_signal_op = True
+        self._use_signal_op = False
 
         self.add2namespace(
             name=['scan_command', 'command', 'cmd'],
@@ -921,7 +922,7 @@ class Scan:
 
 class MultiScan:
     """
-    Class for holding multiple DataHolders
+    Class for holding multiple Scan objects
     """
     def __init__(self, scan_list, variables=None):
         self._scan_list = []
@@ -934,10 +935,11 @@ class MultiScan:
         if variables is None:
             self._variables = []
         else:
-            self._variables = list(np.asarray(variables, dtype=str).reshape(-1))
+            self._variables = fn.liststr(variables)
 
         # Managers
         self.plot = init_multiscan_plot_manager(self)
+        self.fit = init_multiscan_fit_manager(self)
 
     def __repr__(self):
         return 'MultiScan(%d items)' % len(self._scan_list)
@@ -967,7 +969,8 @@ class MultiScan:
         :param name: name of variable parameter between scans
         :return:
         """
-        self._variables.append(name)
+        names = fn.liststr(name)
+        self._variables += names
 
     def _get_variable_data(self):
         """
@@ -996,6 +999,14 @@ class MultiScan:
             pass
         return name
 
+    def scan_numbers(self):
+        return [scan.scan_number for scan in self._scan_list]
+
+    def title(self):
+        """Return str title"""
+        scn_range = fn.findranges(self.scan_numbers())
+        return scn_range
+
     def array(self, name, array_length=None):
         data = self.__call__(name)
         if array_length is None:
@@ -1011,6 +1022,17 @@ class MultiScan:
             strlist = np.asarray(scan.string(name), dtype=str).reshape(-1)
             out += [', '.join(s.strip() for s in strlist)]
         return out
+
+    def labels(self, variable_names=None):
+        """
+        Return list of str labels
+        :param variable_names: str or list of str names
+        :return: list
+        """
+        if variable_names is None:
+            variable_names = self._variables
+        variables = self.string(variable_names)
+        return ['%s: %s' % (self._scan_list[n].label(), variables[n]) for n in range(len(self))]
 
     def string_format(self, command):
         return [scan.string_format(command) for scan in self._scan_list]
@@ -1039,6 +1061,20 @@ class MultiScan:
         xaxis, yaxis, zaxis = fn.square_array(xaxis, yaxis, zaxis, repeat_after)
         return xaxis, yaxis, zaxis
 
+    def get_plot_data(self, xname, yname):
+        """
+        Get plotting data - simple extraction of data field from each scan
+        :param xname: str name of value to use as x-axis
+        :param yname: str name of value to use as y-axis
+        :return: xdata, ydata, xlabel, ylabel
+        """
+        xdata = self.__call__(xname)
+        ydata = self.__call__(yname)
+        first = self[0]
+        xlabel = first.name(xname)
+        ylabel = first.name(yname)
+        return xdata, ydata, xlabel, ylabel
+
     def get_plot_variable(self, yname, variable=None):
         """
         Get plotting data for plotting data points from each scan
@@ -1060,7 +1096,7 @@ class MultiScan:
         """
         if variable is None:
             variable = []
-        variables = list(np.asarray(variable, dtype=str).reshape(-1)) + self._variables
+        variables = fn.liststr(variable) + self._variables
         xlabel = variables[0]
         xdata = self.value(xlabel)
         ylabel = yname

@@ -41,4 +41,14 @@ def init_scan_fit_manager(scan):
     return manager
 
 
+def init_multiscan_fit_manager(multiscan):
+    """Initialise plotting"""
+    try:
+        from .fitting import MultiScanFitManager
+        manager = MultiScanFitManager(multiscan)
+    except ImportError:
+        manager = None
+    return manager
+
+
 

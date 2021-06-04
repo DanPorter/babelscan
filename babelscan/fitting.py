@@ -93,3 +93,33 @@ class ScanFitManager:
             return lmfit
         param = lmfit.params[parameter_name]
         return param.value, param.stderr
+
+
+"----------------------------------------------------------------------------------------------------------------------"
+"---------------------------------------------- MultiScanFitManager ---------------------------------------------------"
+"----------------------------------------------------------------------------------------------------------------------"
+
+
+class MultiScanFitManager:
+    """
+    MultiScanFitManager
+    :param scan: babelscan.MultiScan
+    """
+
+    def __init__(self, multiscan):
+        self.multiscan = multiscan
+
+    def __call__(self, *args, **kwargs):
+        """Calls ScanFitManager.fit(...)"""
+        return self.fit(*args, **kwargs)
+
+    def fit(self, xaxis='axes', yaxis='signal', fit_type=None, print_result=True, plot_result=False):
+        """
+        Automatic fitting of scan
+
+        Use LMFit
+        Pass fit_type = LMFit model
+        return LMFit output
+        """
+        return [scan.fit(xaxis, yaxis, fit_type, print_result, plot_result) for scan in self.multiscan._scan_list]
+

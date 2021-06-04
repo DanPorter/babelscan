@@ -8,7 +8,7 @@ import numpy as np
 
 from . import functions as fn
 from .babelscan import Scan, MultiScan
-from .hdf import HdfScan, HdfWrapper
+from .hdf import HdfScan, HdfWrapper, load_hdf_values
 from .dat import DatScan
 from .csv import CsvScan
 
@@ -300,12 +300,24 @@ class FolderMonitor:
             scan_numbers = self.allscanfiles()
         else:
             scan_numbers = np.asarray(scan_numbers).reshape(-1)
-        out = ''
         for n in range(len(scan_numbers)):
             scan = self.scan(scan_numbers[n])
             strings = fn.liststr(scan.string(names))
             data = ', '.join(strings)
-            out += '%s: %s\n' % (scan_numbers[n], data)
+            out = '%s: %s\n' % (scan_numbers[n], data)
+            print(out)
+
+    def print_hdf_address(self, address, scan_numbers=None):
+        if scan_numbers is None:
+            scan_files = self.allscanfiles()
+        else:
+            scan_numbers = np.reshape(scan_numbers, -1)
+            scan_files = [self.getfile(scn) for scn in scan_numbers]
+        values = load_hdf_values(scan_files, address, 'Not available')
+        scan_numbers = [fn.scanfile2number(file) for file in scan_files]
+        out = 'Scan number : %s\n' % address
+        for scn, val in zip(scan_numbers, values):
+            out += '%s : %s\n' % (scn, val)
         print(out)
 
     def plotscan(self, scan_number=0, xaxis='axes', yaxis='signal'):

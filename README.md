@@ -64,6 +64,9 @@ scan = babelscan.file_loader('12345.nxs')
 
 print(scan)  # prints scan information
 
+en = scan('energy')  # finds data field named 'energy', returns data
+val = scan('sum/Transmission')  # Finds 'sum' and 'Transmission' fields, evaluates result
+
 x = scan('axes')  # finds default xaxis in Nexus files
 y = scan('signal')  # finds default yaxis in Nexus files
 

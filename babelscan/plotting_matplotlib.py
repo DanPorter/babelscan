@@ -58,11 +58,18 @@ def labels(ttl=None, xvar=None, yvar=None, zvar=None, legend=False,
         tik = 30
         tit = 32
         lab = 35
+    elif size.lower() in ['small', 'tiny']:
+        tik = 8
+        tit = 12
+        lab = 8
     else:
         # Normal
         tik = 16
         tit = 12
         lab = 14
+
+    axes.tick_params(axis="x", labelsize=tik)
+    axes.tick_params(axis="y", labelsize=tik)
 
     if ttl is not None:
         axes.set_title(ttl, fontsize=tit, fontweight='bold')
@@ -78,7 +85,7 @@ def labels(ttl=None, xvar=None, yvar=None, zvar=None, legend=False,
         axes.set_zlabel(zvar, fontsize=lab)
 
     if legend:
-        axes.legend()
+        axes.legend(fontsize=lab)
 
     if colorbar:
         mappables = axes.images + axes.collections
@@ -156,6 +163,26 @@ def create_axes(fig=None, subplot=111, *args, **kwargs):
         fig = plt.figure(figsize=FIG_SIZE, dpi=FIG_DPI)
     ax = fig.add_subplot(subplot, *args, **kwargs)
     return ax
+
+
+def create_multiplot(nrows=5, ncols=5, title=None, **kwargs):
+    """
+    Create large figure with multiple plots
+    :param nrows: int number of figure rows
+    :param ncols: int number of figure columns
+    :param title: str suptitle
+    :param kwargs: arguments to pass to plt.subplots
+    :return: list of axes, len nrows*ncols
+    """
+    if 'figsize' not in kwargs:
+        kwargs['figsize'] = [FIG_SIZE[0] * 2, FIG_SIZE[1] * 2]
+    if 'dpi' not in kwargs:
+        kwargs['dpi'] = FIG_DPI
+    fig, ax = plt.subplots(nrows, ncols, **kwargs)
+    fig.subplots_adjust(hspace=0.35, wspace=0.32, left=0.07, right=0.97)
+    if title is not None:
+        plt.suptitle(title, fontsize=22)
+    return np.reshape(ax, -1)
 
 
 def plot_line(axes, xdata, ydata, yerrors=None, line_spec='-o', *args, **kwargs):
@@ -334,7 +361,7 @@ class ScanPlotManager:
 
         # Create figure
         if 'axes' in kwargs:
-            axes = kwargs['axes']
+            axes = kwargs.pop('axes')
         else:
             axes = create_axes(subplot=111)
 
@@ -396,11 +423,96 @@ class MultiScanPlotManager:
     ScanPlotManager
     :param scan: babelscan.Scan
     """
-    def __init__(self, scan):
-        self.scan = scan
+    def __init__(self, multiscan):
+        self.multiscan = multiscan
 
     def __call__(self, *args, **kwargs):
-        return self.plot( *args, **kwargs)
+        return self.plot(*args, **kwargs)
 
-    def plot(self, *args, **kwargs):
-        raise Exception("I haven't done it yet!")
+    def plot_simple(self, xname, yname, *args, **kwargs):
+        """
+        Simple plot method, retrieves x,y data and plots using plt.plot
+        :param xname:
+        :param yname:
+        :param args, kwargs: same as plt.plot(x,y, ...)
+        :return: axis
+        """
+
+        # Get data
+        xdata, ydata, xlabel, ylabel = self.multiscan.get_plot_data(xname, yname)
+
+        # Create figure
+        if 'axes' in kwargs:
+            axes = kwargs['axes']
+        else:
+            axes = create_axes(subplot=111)
+
+        axes.plot(xdata, ydata, *args, **kwargs)
+        axes.set_xlabel(xlabel)
+        axes.set_ylabel(ylabel)
+        axes.set_title(self.multiscan.title())
+
+        # Add legend if multiple arrays added
+        if np.ndim(xdata[0]) > 0:
+            # xdata is a list of arrays
+            scan_labels = self.multiscan.labels()
+            axes.legend(scan_labels)
+        return axes
+
+    def plot(self, xaxis='axes', yaxis='signal', *args, **kwargs):
+        """
+        Create matplotlib figure with plot of the scan
+        :param axes: matplotlib.axes subplot
+        :param xaxis: str name or address of array to plot on x axis
+        :param yaxis: str name or address of array to plot on y axis
+        :param args: given directly to plt.plot(..., *args, **kwars)
+        :param axes: matplotlib.axes subplot, or None to create a figure
+        :param kwargs: given directly to plt.plot(..., *args, **kwars)
+        :return: axes object
+        """
+
+        # Create figure
+        if 'axes' in kwargs:
+            axes = kwargs['axes']
+        else:
+            axes = create_axes(subplot=111)
+
+        xname, yname = xaxis, yaxis
+        scan_labels = self.multiscan.labels()
+        for n, scan in enumerate(self.multiscan):
+            xdata, ydata, yerror, xname, yname = scan.get_plot_data(xaxis, yaxis, None, None)
+            plot_line(axes, xdata, ydata, None, *args, label=scan_labels[n], **kwargs)
+
+        # Add labels
+        ttl = self.multiscan.title()
+        labels(ttl, xname, yname, legend=True)
+        if self.multiscan[0].options('plot_show'):
+            plt.show()
+        return axes
+
+    def multiplot(self, xaxis='axes', yaxis='signal', size=(4, 4), *args, **kwargs):
+        """
+        Create matplotlib figure with plot of the scan
+        :param axes: matplotlib.axes subplot
+        :param xaxis: str name or address of array to plot on x axis
+        :param yaxis: str name or address of array to plot on y axis
+        :param size: (ncol, nrow) int values number of axes
+        :param kwargs: given directly to plt.plot(..., *args, **kwars)
+        :return: axes object
+        """
+
+        n_axes = size[0] * size[1]
+        n_figs = int(np.ceil(len(self.multiscan)/float(n_axes)))
+        scan_labels = self.multiscan.labels()
+        yaxis_list = fn.liststr(yaxis)
+        for figno in range(n_figs):
+            scans = self.multiscan[figno * n_axes: (figno + 1) * n_axes]
+            scan_labels = scan_labels[figno * n_axes: (figno + 1) * n_axes]
+
+            # Create figure
+            axes = create_multiplot(size[0], size[1])
+            for n, scan in enumerate(scans):
+                for yaxis in yaxis_list:
+                    xdata, ydata, yerror, xname, yname = scan.get_plot_data(xaxis, yaxis, None, None)
+                    plot_line(axes[n], xdata, ydata, None, *args, label=yname, **kwargs)
+                    labels(scan_labels[n], xaxis, axes=axes[n], size='tiny', legend=True)

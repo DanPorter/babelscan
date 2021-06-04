@@ -8,7 +8,7 @@ def readme():
 
 setup(
     name='babelscan',
-    version='0.5.1',
+    version='0.5.2',
     packages=['babelscan'],
     url='https://github.com/DanPorter/babelscan',
     license='Apache 2.0',

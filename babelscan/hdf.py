@@ -322,6 +322,26 @@ def tree(hdf_group, detail=False, groups=False, recursion_limit=100):
         return out
 
 
+def nexus_tree(hdf_group):
+    """
+    Return str of nexus structure of HDF file
+    :param hdf_group: hdf5 File or Group object
+    :return: str
+    """
+    top_level_groups = tree(hdf_group, groups=True, recursion_limit=3).splitlines()
+    print(top_level_groups)
+    out = 'File: %s\n' % hdf_group.filename
+    out += 'Groups:\n'
+    for group in top_level_groups:
+        datasets = dataset_addresses(hdf_group, group, recursion_limit=1)
+        if len(datasets) < 1: continue
+        names = [address_name(address) for address in datasets]
+        out += '  %s\n   ' % group
+        out += ','.join(names)
+        out += '\n'
+    return out
+
+
 "----------------------ADDRESS DATASET FUNCTIONS------------------------------"
 
 
@@ -793,11 +813,20 @@ class HdfWrapper(h5py.File):
     def tree(self, address='/', detail=False):
         return tree(self.get(address), detail=detail)
 
-    def all_addresses(self):
-        return dataset_addresses(self.get('/'))
+    def dataset_addresses(self, addresses='/', recursion_limit=100, get_size=None, get_ndim=None):
+        """
+        Return list of addresses of datasets, starting at each address
+        :param hdf_group: hdf5 File or Group object
+        :param addresses: list of str or str : time_start in this / these addresses
+        :param recursion_limit: Limit on recursivley checking lower groups
+        :param get_size: None or int, if int, return only datasets with matching size
+        :param get_ndim: None or int, if int, return only datasets with matching ndim
+        :return: list of str
+        """
+        return dataset_addresses(self.get('/'), addresses, recursion_limit, get_size, get_ndim)
 
     def find(self, name, match_case=True, whole_word=True):
-        address_list = self.all_addresses()
+        address_list = self.dataset_addresses()
         return find_name(name, address_list, match_case, whole_word)
 
     def find_image(self):
@@ -872,8 +901,7 @@ class HdfScan(Scan):
     def dataset(self, name):
         """Return dataset object"""
         address = self.address(name)
-        hdf = load(self.filename)
-        return hdf.get(address)
+        return HdfDataset(self.filename, address)
 
     def tree(self, group_address='/', detail=False, groups=False, recursion_limit=100):
         """

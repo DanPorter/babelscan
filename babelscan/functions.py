@@ -110,6 +110,70 @@ def data_string(data):
         return out_str % (shape, array_start, array_end)
 
 
+def findranges(scannos, sep=':'):
+    """
+    Convert a list of numbers to a simple string
+    E.G.
+    findranges([1,2,3,4,5]) = '1:5'
+    findranges([1,2,3,4,5,10,12,14,16]) = '1:5,10:2:16'
+    """
+
+    scannos = np.sort(scannos).astype(int)
+
+    dif = np.diff(scannos)
+
+    stt, stp, rng = [scannos[0]], [dif[0]], [1]
+    for n in range(1, len(dif)):
+        if scannos[n + 1] != scannos[n] + dif[n - 1]:
+            stt += [scannos[n]]
+            stp += [dif[n]]
+            rng += [1]
+        else:
+            rng[-1] += 1
+    stt += [scannos[-1]]
+    rng += [1]
+
+    out = []
+    x = 0
+    while x < len(stt):
+        if rng[x] == 1:
+            out += ['{}'.format(stt[x])]
+            x += 1
+        elif stp[x] == 1:
+            out += ['{}{}{}'.format(stt[x], sep, stt[x + 1])]
+            x += 2
+        else:
+            out += ['{}{}{}{}{}'.format(stt[x], sep, stp[x], sep, stt[x + 1])]
+            x += 2
+    return ','.join(out)
+
+
+def numbers2string(scannos, sep=':'):
+    """
+    Convert a list of numbers to a simple string
+    E.G.
+    numbers2string([50001,50002,50003]) = '5000[1:3]'
+    numbers2string([51020,51030,51040]) = '510[20:10:40]'
+    """
+
+    if type(scannos) is str or type(scannos) is int or len(scannos) == 1:
+        return str(scannos)
+
+    scannos = np.sort(scannos).astype(str)
+
+    n = len(scannos[0])
+    while np.all([scannos[0][:-n] == x[:-n] for x in scannos]):
+        n -= 1
+
+    if n == len(scannos[0]):
+        return '{}-{}'.format(scannos[0], scannos[-1])
+
+    inistr = scannos[0][:-(n + 1)]
+    strc = [i[-(n + 1):] for i in scannos]
+    liststr = findranges(strc, sep=sep)
+    return '{}[{}]'.format(inistr, liststr)
+
+
 def value_datetime(value, date_format=None):
     """
     Convert date string or timestamp to datetime object

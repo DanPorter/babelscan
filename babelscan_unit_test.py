@@ -12,7 +12,8 @@ import babelscan
 print('####################################################')
 print('############## babelscan unit tests ################')
 print('####################################################')
-print('\nbabelscan version: %s (%s)' % (babelscan.__version__, babelscan.__date__))
+print('\n')
+print(babelscan.module_info())
 
 file = r"C:\Users\dgpor\Dropbox\Python\ExamplePeaks\810002.nxs"  # eta scan with pilatus
 cv_file = r"C:\Users\dgpor\Dropbox\Python\ExamplePeaks\857991.nxs"  # trajectory scan/ cvscan/ kthZebra
@@ -22,7 +23,7 @@ datadir = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\
 rsmap = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\872996-pilatus3_100k-files\rsmap_872996_201215_101906.nxs"
 i10_file = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I10_nexus\i10-578596.nxs"
 i06_file = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I06_example\227980.dat"
-
+stop
 
 print('\n\n############ File Type Tests ##############')
 print('standard I16 eta scan:')
