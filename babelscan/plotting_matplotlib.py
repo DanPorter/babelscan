@@ -3,6 +3,7 @@ Matplotlib plotting functions
 """
 
 import os
+import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D # 3D plotting
@@ -301,6 +302,73 @@ def plot_3d_surface(axes, image, xdata=None, ydata=None, samples=None, clim=None
     return surface
 
 
+def create_html_page(body_lines=(), header_lines=()):
+    """Create html page"""
+    css = """<style>
+    .ScanBox {
+      border: 1px solid black;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      padding-left: 10px;
+      width: 90pc;
+      height: 400px;
+    }
+    .ScanDetails {
+      float: left;
+      width: 40pc;
+    }
+    .ScanImage{
+      float: left:
+      padding-left:2px;
+      width: 22pc;
+    }
+  </style>"""
+    header_lines = css.splitlines() + list(header_lines)
+
+    html = "<!doctype html>\n<html lang=\"en\">\n<html>\n\n"
+    html += "<head>\n  %s\n</head>\n\n" % '\n  '.join(header_lines)
+    html += "<body>\n  %s\n</body>" % '\n  '.join(body_lines)
+    html += "\n\n</html>\n"
+    return html
+
+
+def create_figure_div(title, details, fig1_file, fig2_file=None):
+    """
+    Create html code to generate scan details div
+    :param title: str title (single line)
+    :param details: str details of scan (multi-line)
+    :param fig1_file: str
+    :param fig2_file: str or None
+    :param class_name: str
+    :return:
+    """
+
+    detail_div = ["  <div class=\"ScanDetails\">"]
+    detail_div += ['    <p>%s</p>' % det for det in details.splitlines()]
+    detail_div += ["  </div>"]
+
+    image1 = "  <img src=\"%s\" alt=\"%s\" class=\"ScanImage\">" % (
+            fig1_file, title)
+    if fig2_file is None:
+        image2 = ""
+    else:
+        image2 = "  <img src=\"%s\" alt=\"%s\" class=\"ScanImage\">" % (
+            fig2_file, title)
+
+    html = [
+        "<div class=\"ScanBox\">",
+        "  <h3>%s</h3>" % title,
+    ]
+    html = html + detail_div
+    html += [
+        image1,
+        image2,
+        "</div>"
+        ""
+    ]
+    return html
+
+
 "----------------------------------------------------------------------------------------------------------------------"
 "----------------------------------------------- ScanPlotManager ------------------------------------------------------"
 "----------------------------------------------------------------------------------------------------------------------"
@@ -372,7 +440,7 @@ class ScanPlotManager:
 
         # Add labels
         ttl = self.scan.title()
-        labels(ttl, xname, yname, legend=True)
+        labels(ttl, xname, yname, legend=True, axes=axes)
         if self.scan.options('plot_show'):
             plt.show()
         return axes
@@ -411,6 +479,44 @@ class ScanPlotManager:
         if self.scan.options('plot_show'):
             plt.show()
         return axes
+
+    def detail_plot(self, xaxis='axes', yaxis='signal', index=None, cmap=None, **kwargs):
+        """
+        Create matplotlib figure with plot of the scan
+        :param axes: matplotlib.axes subplot
+        :param xaxis: str name or address of array to plot on x axis
+        :param yaxis: str name or address of array to plot on y axis, also accepts list of names for multiplt plots
+        :param args: given directly to plt.plot(..., *args, **kwars)
+        :param axes: matplotlib.axes subplot, or None to create a figure
+        :param kwargs: given directly to plt.plot(..., *args, **kwars)
+        :return: axes object
+        """
+
+        # Create figure
+        fig, ((lt, rt), (lb, rb)) = plt.subplots(2, 2, figsize=[FIG_SIZE[0] * 1.2, FIG_SIZE[1] * 1.2], dpi=FIG_DPI)
+        fig.subplots_adjust(hspace=0.35, left=0.1, right=0.95)
+
+        # Top left - line plot
+        self.plot(xaxis, yaxis, axes=lt, **kwargs)
+
+        # Top right - image plot
+        try:
+            self.plot_image(index, xaxis, cmap=cmap, axes=rt)
+
+        except (FileNotFoundError, KeyError, TypeError):
+            rt.text(0.5, 0.5, 'No Image')
+            rt.set_axis_off()
+
+        # Bottom-Left - details
+        details = str(self.scan)
+        lb.text(-0.1, 0.8, details, multialignment="left", fontsize=12, wrap=True)
+        lb.set_axis_off()
+
+        rb.set_axis_off()
+
+        if self.scan.options('plot_show'):
+            plt.show()
+        return fig
 
 
 "----------------------------------------------------------------------------------------------------------------------"
@@ -516,3 +622,61 @@ class MultiScanPlotManager:
                     xdata, ydata, yerror, xname, yname = scan.get_plot_data(xaxis, yaxis, None, None)
                     plot_line(axes[n], xdata, ydata, None, *args, label=yname, **kwargs)
                     labels(scan_labels[n], xaxis, axes=axes[n], size='tiny', legend=True)
+
+    def plot_details_to_pdf(self, filename):
+        """
+        Create pdf file with scans
+        :param filename: str pdf filename
+        :return: None
+        """
+
+        filename, ext = os.path.splitext(filename)
+        filename = filename + '.pdf'
+
+        from matplotlib.backends.backend_pdf import PdfPages
+        with PdfPages(filename) as pdf:
+            for scan, label in zip(self.multiscan, self.multiscan.labels()):
+                fig = scan.plot.detail_plot()
+                fig.suptitle(label)
+                pdf.savefig(fig)
+                plt.close(fig)
+            # PDF metadata
+            d = pdf.infodict()
+            d['Title'] = self.multiscan.title()
+            d['Author'] = 'BabelScan'
+            d['Subject'] = 'Created in BabelScan.MultiScan.MultiScanPlotManager.plot_details_to_pdf'
+            d['Keywords'] = 'BabelScan'
+            d['CreationDate'] = datetime.datetime.now()
+            d['ModDate'] = datetime.datetime.now()
+
+    def plot_details_to_html(self, folder_name):
+        """
+        Create html file with scans
+        :param filename: str name of folder to create
+        :return: None
+        """
+        if not os.path.isdir(folder_name):
+            os.mkdir(folder_name)
+
+        html = []
+        for scan, label in zip(self.multiscan, self.multiscan.labels()):
+            scan.plot.plot()
+            fname1 = folder_name + '/%s.svg' %  scan.scan_number
+            plt.savefig(fname1)
+            plt.close()
+            try:
+                scan.plot.plot_image()
+                fname2 = folder_name + '/%s.png' % scan.scan_number
+                plt.savefig(fname2)
+                plt.close()
+            except (FileNotFoundError, KeyError, TypeError):
+                fname2 = None
+
+            title = scan.title()
+            details = str(scan)
+            html += create_figure_div(title, details, fname1, fname2)
+
+        html_page = create_html_page(html)
+        with open(folder_name + '/index.html', 'wt') as f:
+            f.write(html_page)
+        print('Scans written to %s' % (folder_name + '/index.html'))

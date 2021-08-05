@@ -80,11 +80,11 @@ FolderMonitor class
 ***functions using fitting only available if lmfit installed
 
 By Dan Porter, PhD
-Diamond
+Diamond Light Source Ltd.
 2021
 
-Version 0.5.2
-Last updated: 04/06/21
+Version 0.5.3
+Last updated: 05/08/21
 
 Version History:
 13/04/21 0.1.0  Version History started.
@@ -95,6 +95,7 @@ Version History:
 28/05/21 0.5.0  Tidied up code, various fixes
 01/06/21 0.5.1  Added additional hdf functions
 04/06/21 0.5.2  Added plot and fit functions for MultiScan
+05/08/21 0.5.3  Added __main__.py
 
 -----------------------------------------------------------------------------
    Copyright 2021 Diamond Light Source Ltd.
@@ -117,8 +118,8 @@ Version History:
 """
 
 
-__version__ = "0.5.2"
-__date__ = "2021/06/04"
+__version__ = "0.5.3"
+__date__ = "2021/08/05"
 
 
 from .__settings__ import EVAL_MODE

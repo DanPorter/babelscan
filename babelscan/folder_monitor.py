@@ -102,7 +102,7 @@ class FolderMonitor:
         title = os.path.basename(self._data_directories[0])
         options = {
             'title': title,
-            'title_command': '{FolderTitle} #{scan_number}',
+            'title_command': '{FolderTitle} #{scan_number:g}',
             'data': {},
             'filename_format': '%06d.nxs'
         }
@@ -297,14 +297,14 @@ class FolderMonitor:
 
     def printscans(self, scan_numbers=None, names='scan_command'):
         if scan_numbers is None:
-            scan_numbers = self.allscanfiles()
+            scan_numbers = self.allscannumbers()
         else:
             scan_numbers = np.asarray(scan_numbers).reshape(-1)
         for n in range(len(scan_numbers)):
             scan = self.scan(scan_numbers[n])
             strings = fn.liststr(scan.string(names))
             data = ', '.join(strings)
-            out = '%s: %s\n' % (scan_numbers[n], data)
+            out = '%s: %s' % (scan_numbers[n], data)
             print(out)
 
     def print_hdf_address(self, address, scan_numbers=None):
