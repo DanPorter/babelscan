@@ -209,6 +209,62 @@ def plot_line(axes, xdata, ydata, yerrors=None, line_spec='-o', *args, **kwargs)
     return lines
 
 
+def plot_lines(axes, xdata, ydata, yerrors=None, cdata=None, cmap=None, line_spec='-o', *args, **kwargs):
+    """
+    Plot lines on given matplotlib axes subplot
+    Uses matplotlib.plot or matplotlib.errorbar if yerrors is not None
+    :param axes: matplotlib figure or subplot axes, None uses current axes
+    :param xdata: array[n] data on x axis
+    :param ydata: list[n] of array[n] data on y axis
+    :param yerrors: list[m] of array[n] errors on y axis (or None)
+    :param cdata: list[n] of values to define line colour
+    :param cmap: name of colormap to generate colour variation in lines
+    :param line_spec: str or list[m] of str matplotlib.plot line_spec
+    :param args: additional arguments
+    :param kwargs: additional arguments
+    :return: output of plt.plot [line], or plt.errorbar [line, xerrors, yerrors]
+    """
+    if axes is None:
+        axes = plt.gca()
+
+    nplots = len(ydata)
+    if xdata is None:
+        xdata = [range(len(y)) for y in ydata]
+    elif len(xdata) != nplots:
+        xdata = [xdata] * nplots
+
+    if yerrors is None:
+        yerrors = [None] * nplots
+    elif len(yerrors) != nplots:
+        yerrors = [yerrors] * nplots
+
+    if cmap is None:
+        cmap = 'viridis'
+    if cdata is None:
+        cdata = np.arange(nplots)
+    else:
+        cdata = np.asarray(cdata)
+    cnorm = cdata - cdata.min()
+    cnorm = cnorm / cnorm.max()
+    cols = plt.get_cmap(cmap)(cnorm)
+
+    line_spec = fn.liststr(line_spec)
+    if len(line_spec) != nplots:
+        line_spec = line_spec * nplots
+
+    print(axes)
+    print(len(xdata), xdata)
+    print(len(ydata), ydata)
+    print(len(yerrors), yerrors)
+    print(len(line_spec), line_spec)
+    print(len(cols), cols)
+
+    lines = []
+    for n in range(nplots):
+        lines += plot_line(axes, xdata[n], ydata[n], yerrors[n], line_spec[n], c=cols[n], *args, **kwargs)
+    return lines
+
+
 def plot_detector_image(axes, image, clim=None, *args, **kwargs):
     """
     Plot detector image
@@ -409,7 +465,7 @@ class ScanPlotManager:
 
         if 'label' not in kwargs:
             kwargs['label'] = self.scan.label()
-        axes = kwargs['axes'] if 'axes' in kwargs else None
+        axes = kwargs.pop('axes') if 'axes' in kwargs else None
         lines = plot_line(axes, xdata, ydata, None, *args, **kwargs)
         return lines
 
@@ -549,7 +605,7 @@ class MultiScanPlotManager:
 
         # Create figure
         if 'axes' in kwargs:
-            axes = kwargs['axes']
+            axes = kwargs.pop('axes')
         else:
             axes = create_axes(subplot=111)
 
@@ -579,7 +635,7 @@ class MultiScanPlotManager:
 
         # Create figure
         if 'axes' in kwargs:
-            axes = kwargs['axes']
+            axes = kwargs.pop('axes')
         else:
             axes = create_axes(subplot=111)
 
@@ -680,3 +736,157 @@ class MultiScanPlotManager:
         with open(folder_name + '/index.html', 'wt') as f:
             f.write(html_page)
         print('Scans written to %s' % (folder_name + '/index.html'))
+
+
+"----------------------------------------------------------------------------------------------------------------------"
+"----------------------------------------------- VolumePlotManager ----------------------------------------------------"
+"----------------------------------------------------------------------------------------------------------------------"
+
+
+class VolumePlotManager:
+    """
+    VolumePlotManager
+        vol.plot = VolumePlotManager(vol)
+        vol.plot() #
+        vol.plot.plot_image()  # create figure and display detector image
+
+    Options called from babelscan.volume.Volume:
+      'plot_show': True >> automatically call "plt.show" after plot command
+
+    :param vol: babelscan.volume.Volume
+    """
+    def __init__(self, vol):
+        self.vol = vol
+
+    def __call__(self, *args, **kwargs):
+        """Calls ScanPlotManager.plot(...)"""
+        return self.image(*args, **kwargs)
+
+    def image(self, index=None, axis=0, clim=None, cmap=None, colorbar=False, **kwargs):
+        """
+        Plot image in matplotlib figure (if available)
+        :param index: int, image index, 0-length of scan, if None, use centre index
+        :param axis: int, axis to index (0-2)
+        :param plot_axes: matplotlib axes to plot on (None to create figure)
+        :param clim: [min, max] colormap cut-offs (None for auto)
+        :param cmap: str colormap name (None for auto)
+        :param colorbar: False/ True add colorbar to plot
+        :param kwargs: additinoal arguments for plot_detector_image
+        :return: axes object
+        """
+
+        if index is None:
+            index = self.vol.shape[axis] // 2
+
+        if index == 'sum':
+            im = np.sum(self.vol, axis=axis)
+        elif axis == 1:
+            im = self.vol[:, index, :]
+        elif axis == 2:
+            im = self.vol[:, :, index]
+        else:
+            im = self.vol[index]
+
+        # Create figure
+        show = False
+        if 'axes' not in kwargs:
+            show = True
+            axes = create_axes(subplot=111)
+        else:
+            axes = kwargs.pop('axes')
+        plot_detector_image(axes, im, **kwargs)
+
+        # labels
+        ttl = 'volume[%s]' % index
+        xlab = '[%s, 0, :]' % index  # might be wrong way around
+        ylab = '[%s, :, 0]' % index  # might be wrong way around
+        labels(ttl, xlab, ylab, colorbar=colorbar, colorbar_label='Detector', axes=axes)
+        colormap(clim, cmap, axes)
+        if show:
+            plt.show()
+        return axes
+
+    def axis_sum(self, sum_axis=0, *args, **kwargs):
+        """
+        Plot cut along axis, summed in other 2 axes
+        :param sum_axis: axis to plot (0-2), summed in other axes
+        :param args: given directly to plt.plot(..., *args, **kwars)
+        :param axes: matplotlib.axes subplot, or None to create a figure
+        :param kwargs: given directly to plt.plot(..., *args, **kwars)
+        :return: axes object
+        """
+
+        if sum_axis == 1:
+            out = np.sum(np.sum(self.vol, axis=0), axis=1)
+        elif sum_axis == 2:
+            out = np.sum(np.sum(self.vol, axis=0), axis=0)
+        else:
+            out = np.sum(np.sum(self.vol, axis=1), axis=1)
+
+        if 'label' not in kwargs:
+            kwargs['label'] = 'axis %d' % sum_axis
+        axes = kwargs.pop('axes') if 'axes' in kwargs else None
+        lines = plot_line(axes, range(len(out)), out, None, *args, **kwargs)
+        return lines
+
+    def cut(self, index1=(0, 0, 0), index2=(-1, -1, -1), *args, **kwargs):
+        """
+        Plot arbitary cut through the volume from index1 to index2
+        :param index1: (i,j,k) start point in the volume
+        :param index2: (i,j,k) end point in the volume
+        :param args: given directly to plt.plot(..., *args, **kwars)
+        :param axes: matplotlib.axes subplot, or None to create a figure
+        :param kwargs: given directly to plt.plot(..., *args, **kwars)
+        :return: axes object
+        """
+        volcut = self.vol.cut(index1, index2)
+        if 'label' not in kwargs:
+            kwargs['label'] = '%s-%s' % (tuple(index1), tuple(index2))
+        axes = kwargs.pop('axes') if 'axes' in kwargs else None
+        lines = plot_line(axes, range(len(volcut)), volcut, None, *args, **kwargs)
+        return lines
+
+    def array_sum(self, *args, **kwargs):
+        """Plots [sum(image) for image in volume]"""
+
+        out = self.vol.array_sum()
+
+        if 'label' not in kwargs:
+            kwargs['label'] = 'array sum'
+        axes = kwargs.pop('axes') if 'axes' in kwargs else None
+        lines = plot_line(axes, range(len(out)), out, None, *args, **kwargs)
+        return lines
+
+    def array_max(self, *args, **kwargs):
+        """Plots [max(image) for image in volume]"""
+
+        out = self.vol.array_max()
+
+        if 'label' not in kwargs:
+            kwargs['label'] = 'array max'
+        axes = kwargs.pop('axes') if 'axes' in kwargs else None
+        lines = plot_line(axes, range(len(out)), out, None, *args, **kwargs)
+        return lines
+
+    def array_min(self, *args, **kwargs):
+        """Plots [min(image) for image in volume]"""
+
+        out = self.vol.array_min()
+
+        if 'label' not in kwargs:
+            kwargs['label'] = 'array min'
+        axes = kwargs.pop('axes') if 'axes' in kwargs else None
+        lines = plot_line(axes, range(len(out)), out, None, *args, **kwargs)
+        return lines
+
+    def array_mean(self, *args, **kwargs):
+        """Plots [mean(image) for image in volume]"""
+
+        out = self.vol.array_mean()
+
+        if 'label' not in kwargs:
+            kwargs['label'] = 'array mean'
+        axes = kwargs.pop('axes') if 'axes' in kwargs else None
+        lines = plot_line(axes, range(len(out)), out, None, *args, **kwargs)
+        return lines
+

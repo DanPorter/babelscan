@@ -51,4 +51,17 @@ def init_multiscan_fit_manager(multiscan):
     return manager
 
 
+def init_vol_plot_manager(vol):
+    """Initialise plotting"""
+    if PLOTTING_MODE.lower() in ['matplotlib', 'pyplot']:
+        try:
+            from .plotting_matplotlib import VolumePlotManager
+            manager = VolumePlotManager(vol)
+        except ImportError:
+            manager = None
+    else:
+        manager = None
+    return manager
+
+
 

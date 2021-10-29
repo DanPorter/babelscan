@@ -8,6 +8,8 @@ import numpy as np
 import h5py
 from imageio import imread
 
+from .settings import init_vol_plot_manager
+
 "----------------------------------------------------------------------------------------------------------------------"
 "------------------------------------------- Volume Functions ---------------------------------------------------------"
 "----------------------------------------------------------------------------------------------------------------------"
@@ -197,6 +199,31 @@ class Volume:
     def __ne__(self, other):
         """self != other"""
         return self._lazy_op(operator.ne, other)
+
+    def cut(self, index1=(0, 0, 0), index2=(-1, -1, -1), *args, **kwargs):
+        """
+        generate arbitary cut between two points in the volume
+        :param index1: (i,j,k) start point in the volume
+        :param index2: (i,j,k) end point in the volume
+        :return: array, length=max difference between index1 and index2
+        """
+
+        index1 = np.asarray(index1, dtype=int)
+        index2 = np.asarray(index2, dtype=int)
+        # assign end values (-1)
+        sh = np.array(self.shape)
+        index1[index1 < 0] = sh[index1 < 0] + index1[index1 < 0]
+        index2[index2 < 0] = sh[index2 < 0] + index2[index2 < 0]
+        diff = index2 - index1
+        mx = np.max(diff)
+        indexes = [
+            [index1[i] + n * diff[i] // mx for i in range(self.ndim)]
+            for n in range(mx)
+        ]
+        try:
+            return self[indexes]  # uses numpy advanced indexing
+        except IndexError:
+            return [self[idx[0], idx[1], idx[2]] for idx in indexes]
 
     def sum_flat(self):
         """Return sum of images: np.sum(volume, axis=0)"""
@@ -388,6 +415,7 @@ class ArrayVolume(Volume):
         self.shape = array.shape
         self.size = array.size
         self.ndim = array.ndim
+        self.plot = init_vol_plot_manager(self)
 
     def __repr__(self):
         return 'ArrayVolume(%r, shape=%s)' % (type(self.dataset), self.shape)
@@ -426,6 +454,7 @@ class ImageVolume(Volume):
         self.shape = (len(self.files), im_shape[0], im_shape[1])
         self.size = len(self.files) * np.size(image)
         self.ndim = 3
+        self.plot = init_vol_plot_manager(self)
 
     def __repr__(self):
         return 'ImageVolume([%s,...], shape=%s)' % (self.files[0], self.shape)
@@ -487,6 +516,7 @@ class DatasetVolume(h5py.Dataset, Volume):
         if dataset.ndim != 3:
             raise TypeError('%r is not a volume' % dataset)
         super(DatasetVolume, self).__init__(dataset.id)
+        self.plot = init_vol_plot_manager(self)
 
     def __repr__(self):
         return 'DatasetVolume(%r)' % (super(DatasetVolume, self).__repr__())

@@ -15,8 +15,8 @@ exp = instrument.experiment(r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd
 scan_numbers = range(794932, 794947, 1)
 scans = exp.scans(scan_numbers, ['sperp', 'spara'])
 
-scans.fit()
+print(scans)
 
+scans.fit.multi_peak_fit(peak_distance_idx=5, print_result=True, plot_result=True)
 scans.plot.plot_simple('sperp', 'amplitude')
-
 scans.plot.multiplot(yaxis=['signal', 'fit'])

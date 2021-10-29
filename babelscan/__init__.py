@@ -83,8 +83,8 @@ By Dan Porter, PhD
 Diamond Light Source Ltd.
 2021
 
-Version 0.5.3
-Last updated: 05/08/21
+Version 0.6.1
+Last updated: 29/10/21
 
 Version History:
 13/04/21 0.1.0  Version History started.
@@ -96,6 +96,8 @@ Version History:
 01/06/21 0.5.1  Added additional hdf functions
 04/06/21 0.5.2  Added plot and fit functions for MultiScan
 05/08/21 0.5.3  Added __main__.py
+22/10/21 0.6.0  Various updates, included plotting in volume, removed automatic search any in scan('name')
+29/10/21 0.6.1  Major update to lmfitting, general purpous multi-peak fitting
 
 -----------------------------------------------------------------------------
    Copyright 2021 Diamond Light Source Ltd.
@@ -118,8 +120,8 @@ Version History:
 """
 
 
-__version__ = "0.5.3"
-__date__ = "2021/08/05"
+__version__ = "0.6.1"
+__date__ = "2021/10/29"
 
 
 from .__settings__ import EVAL_MODE
@@ -140,7 +142,8 @@ def version_info():
 def module_info():
     import sys
     out = 'Python version %s' % sys.version
-    out += '\n%s: %s' % (version_info(), __file__)
+    out += '\n at: %s' % sys.executable
+    out += '\n %s: %s' % (version_info(), __file__)
     # Modules
     import numpy
     out += '\n     numpy version: %s' % numpy.__version__

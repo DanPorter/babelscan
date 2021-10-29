@@ -245,7 +245,7 @@ def find_name(name, address_list, match_case=False, whole_word=False):
     return out
 
 
-def find_cascade(name, address_list, exact_only=False):
+def find_cascade(name, address_list, exact_only=False, find_any=False):
     """
     Find dataset using field name in a cascading fashion:
         1. Find exact match (matching case, whole_word)
@@ -255,6 +255,7 @@ def find_cascade(name, address_list, exact_only=False):
     :param name: str : name to match in dataset field name
     :param address_list: list of str: list of str to search in
     :param exact_only: return list of exact matches only (may be length 0)
+    :param find_any: if True, return matches where string appears anywhere in address
     :return: list of str addresses matching name
     """
     # fast return of full address
@@ -280,9 +281,10 @@ def find_cascade(name, address_list, exact_only=False):
         return lower_match
 
     # If not found, try matching any
-    any_match = [address for address in address_list if address.lower().endswith(name.lower())]
-    if any_match:
-        return any_match
+    if find_any:
+        any_match = [address for address in address_list if address.lower().endswith(name.lower())]
+        if any_match:
+            return any_match
 
     # If not found, try matching group
     group_match = [address for address in address_list if name == address_group_name(address)]
@@ -345,7 +347,7 @@ def nexus_tree(hdf_group):
 "----------------------ADDRESS DATASET FUNCTIONS------------------------------"
 
 
-def get_address(hdf_group, name, address_list=None, exact_only=False, return_group=False):
+def get_address(hdf_group, name, address_list=None, exact_only=False, return_group=False, find_any=False):
     """
     Return address of dataset that most closely matches str name
      if multiple addresses match, take the longest array
@@ -355,6 +357,7 @@ def get_address(hdf_group, name, address_list=None, exact_only=False, return_gro
     :param address_list: list of str of dataset addresses (None to generate from hdf_group)
     :param exact_only: Bool, if True only searches for exact matches to name
     :param return_group: Bool if True returns the group address rather than dataset address
+    :param find_any: Bool if True searches for name anywere in address
     :return: str address of best match or list of str address with same length as name list or None if no match
     """
     names = np.asarray(name, dtype=str).reshape(-1)
@@ -371,7 +374,7 @@ def get_address(hdf_group, name, address_list=None, exact_only=False, return_gro
             continue
 
         # search tree
-        f_address = find_cascade(name, address_list, exact_only)
+        f_address = find_cascade(name, address_list, exact_only, find_any)
         if not f_address:
             addresses += [None]
             continue

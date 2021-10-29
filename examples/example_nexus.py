@@ -19,3 +19,7 @@ print(hdf.tree(detail=True))
 dataset = scan.dataset('sum')
 print(dataset)
 
+print(scan('/entry1/sample/ub_matrix'))
+print(scan('azih, azik, azil'))
+print(scan('h, k, l'))
+

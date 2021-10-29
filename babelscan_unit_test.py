@@ -4,8 +4,6 @@ Unit test for babelscan
 
 import numpy as np
 import matplotlib.pyplot as plt
-
-
 import babelscan
 
 
@@ -23,7 +21,7 @@ datadir = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\
 rsmap = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\872996-pilatus3_100k-files\rsmap_872996_201215_101906.nxs"
 i10_file = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I10_nexus\i10-578596.nxs"
 i06_file = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I06_example\227980.dat"
-stop
+
 
 print('\n\n############ File Type Tests ##############')
 print('standard I16 eta scan:')
@@ -75,14 +73,19 @@ plt.xlabel(xlab)
 plt.ylabel(ylab)
 plt.title(scan.title())
 
+scan.plot.plot_image('sum', clim=[0, 100])
+plt.show()
+
+print('\n\n##################### Fit Tests ###################')
 scan = exp(877619)  # merlin
 scan.fit('axes', 'nroi_peak[31, 31]')
 scan.plot('axes', ['nroi_peak[31, 31]', 'fit'])
 print(scan.string('amplitude'))
 
-scan.plot.plot_image('sum', clim=[0, 100])
+scan = exp.scan(794940)  # multipeak
+scan.fit.multi_peak_fit(npeaks=2)
+scan.plot('axes', ['signal', 'fit', 'p1_fit', 'p2_fit', 'bkg_fit'])
 plt.show()
-
 
 print('\n\n################# MultiScan Tests ##################')
 scan_range = range(794932, 794947, 1)  # datadir, sperp, spara, eta scans
@@ -118,6 +121,16 @@ print('\n%r, %s' % (scan3, scan3.find_image()))
 print(volume3)
 print(np.max(volume3))
 print(volume3.peak_search())
+
+# Volume plot
+volume2.plot()
+am = np.array(volume2.argmax())
+print('Volume argmax:', am, am - (10, 10, 10), am + (10, 10, 10))
+from babelscan.plotting_matplotlib import create_axes, labels
+ax = create_axes()
+volume2.plot.cut(am-(10,10,10), am+(10,10,10), axes=ax)
+labels('Volume', 'pixels', 'value', legend=True, axes=ax)
+plt.show()
 
 
 print('\n\n#################### Time Tests ####################')
