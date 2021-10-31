@@ -39,6 +39,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Plotting" href="plotting/Plotting.html" />
     <link rel="prev" title="Usage" href="Usage.html" /> 
 </head>
 
@@ -88,7 +89,17 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Usage.html">Usage</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Code</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Code</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-babelscan.babelscan">babelscan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-babelscan.folder_monitor">folder_monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-babelscan.instrument">instrument</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-babelscan.volume">volume</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plotting/Plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fitting/Fitting.html">Fitting</a></li>
 </ul>
 
             
@@ -156,90 +167,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-babelscan">
-<span id="code"></span><h1>Code<a class="headerlink" href="#module-babelscan" title="Permalink to this headline">¶</a></h1>
-<p>BabelScan
-A generic class for reading many types of scan data that you don’t need to put in your ear.</p>
-<p>requirements: numpy, h5py, imageio
-Optional requirements: matplotlib, lmfit</p>
-<dl>
-<dt>Usage:</dt><dd><p>from babelscan import file_loader
-scan1 = file_loader(‘some/file.nxs’, <a href="#id1"><span class="problematic" id="id2">**</span></a>options)  # creates Scan class
-scan2 = file_loader(‘another/file.dat’, <a href="#id3"><span class="problematic" id="id4">**</span></a>options)
-scans = scan1 + scan2  # creates MultiScan class</p>
-<p># Folder monitor:
-from babelscan import FolderMonitor
-mon = FolderMonitor(‘/some/folder’, <a href="#id5"><span class="problematic" id="id6">**</span></a>options)
-scan = mon.scan(0)  # creates scan from latest file in folder</p>
-</dd>
-<dt>Scan class</dt><dd><p>Scan class contains an internal namespace where each dataset can contain multiple names. Calling the instantiated
-class searches the namespace (and then the file) for a dataset that matches the name given.</p>
-<blockquote>
-<div><p>output = scan(‘name’)</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Certain names are reserved and will automatically search the namespace and file for default values:</dt><dd><p>scan(‘axes’)  # returns default scanned dataset (x-axis)
-scan(‘signal’)  # returns default signal dataset (y-axis)</p>
-</dd>
-<dt>Operations will be evaluated*:</dt><dd><p>scan(‘name1 + name2’)  # returns the result of the operation</p>
-</dd>
-<dt>For scans with detector images, regions of interest can be generated:</dt><dd><p>scan(‘nroi[127,127,31,31]’)  # creates region of interest on image and returs array of sum of roi at each point</p>
-</dd>
-<dt>Functions</dt><dd><p>scan.title()  # returns str title of scan
-scan.label()  # returns short scan identifier
-scan.scan_command()  # returns definition of the scan command (if available)
-scan.value(‘name’)  # always returns a single value
-scan.string(‘name’)  # returns ‘name = value’ string
-scan.array([‘name1’, ‘name2’], array_length)  # returns square array of several datasets
-scan.image(idx)  # if available, returns detector image
-scan.string_format(‘format {name:fmt}’)  # returns string formated from namespace
-scan.get_plot_data(xname, yname)  # return data for plotting with errors and labels
-scan.plot(xname, yname)  # create plot**
-scan.fit(xname, yname)  # fit data to peak***</p>
-</dd>
-</dl>
-</dd>
-<dt>MultiScan class</dt><dd><dl class="simple">
-<dt>MultiScan class is a holder for multiple scans, allowing operations to be performed on all scans in the class.</dt><dd><p>scans = MultiScan([scan1, scan2], <a href="#id7"><span class="problematic" id="id8">**</span></a>options)
-scans = scan1 + scan2
-scans = babelscan.load_files([‘file1’, ‘file2’], <a href="#id9"><span class="problematic" id="id10">**</span></a>options)</p>
-</dd>
-<dt>Works in the same way as underlying scan class - calling the class will return a list of datasets from the scans.</dt><dd><p>[output1, output2] = scans(‘name’)</p>
-</dd>
-<dt>Functions</dt><dd><p>scans.add_variable(‘name’)  # add default parameter that changes between scans, displayed in print(scans)
-scans.array(‘name’)  # return 2D array of scan data
-scans.griddata(‘name’)  # generate 2D square grid of single values for each scan</p>
-</dd>
-</dl>
-</dd>
-<dt>FolderMonitor class</dt><dd><dl class="simple">
-<dt>FolderMonitor watches a folder (or several) and allows easy loading of files by scan number:</dt><dd><p>fm = FolderMonitor(‘/some/folder’, filename_format=’%d.nxs’)
-scan = fm.scan(12345) # loads ‘/some/folder/12345.nxs’
-scan = fm.scan(0)  # loads most recent file
-scans = fm.scans(range(12340, 12345))  # MultiScan of several files</p>
-</dd>
-<dt>Functions:</dt><dd><p>fm.allscanfiles()  # return list of all scan files in folder(s)
-fm.allscannumbers()  # list of all scan numbers in folder(s)
-fm.updating_scan(12345)  # the resulting Scan class will reload on each operation</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p><a href="#id11"><span class="problematic" id="id12">*</span></a>functions using eval only available when the “EVAL_MODE” setting is active.
-<a href="#id13"><span class="problematic" id="id14">**</span></a>functions using plot only available if “MATPLOTLIB_PLOTTING” setting is active and matplotlib installed
-<a href="#id15"><span class="problematic" id="id16">**</span></a><a href="#id17"><span class="problematic" id="id18">*</span></a>functions using fitting only available if lmfit installed</p>
-<p>By Dan Porter, PhD
-Diamond
-2021</p>
-<p>Version 0.3.0
-Last updated: 22/04/21</p>
-<p>Version History:
-13/04/21 0.1.0  Version History started.
-16/04/21 0.2.0  Added instrument and other additions to Scan, changed container.py to folder_monitor.py
-22/04/21 0.3.0  Changed _get_data search path and added _default_values dict, added volume.py, settings.py</p>
+  <div class="section" id="code">
+<h1>Code<a class="headerlink" href="#code" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="module-babelscan.babelscan">
+<span id="babelscan"></span><h2>babelscan<a class="headerlink" href="#module-babelscan.babelscan" title="Permalink to this headline">¶</a></h2>
+<p>babelscan object for holding many types of scan data</p>
 <dl class="class">
-<dt id="babelscan.Scan">
-<em class="property">class </em><code class="sig-prename descclassname">babelscan.</code><code class="sig-name descname">Scan</code><span class="sig-paren">(</span><em class="sig-param">namespace</em>, <em class="sig-param">alt_names=None</em>, <em class="sig-param">default_values=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan">
+<em class="property">class </em><code class="sig-prename descclassname">babelscan.babelscan.</code><code class="sig-name descname">Scan</code><span class="sig-paren">(</span><em class="sig-param">namespace</em>, <em class="sig-param">alt_names=None</em>, <em class="sig-param">default_values=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scan class
 Contains a namespace of data associated with names and a seperate dictionary of name associations,
 allowing multiple names to reference the same data.</p>
@@ -259,6 +196,7 @@ alt_names = {</p>
 dh = Scan(namespace, alt_names)
 dh(‘xaxis’) &gt;&gt; returns [1,2,3]</p>
 </div></blockquote>
+<p>Scan is usually inhereted by subclasses HdfScan, DatScan or CsvScan.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -298,13 +236,9 @@ add2namespace(name, data=None, other_names=None, hdf_address=None)</p>
 <dl class="simple">
 <dt>add2strlist(names)</dt><dd><p>Add to list of names in str output</p>
 </dd>
-<dt>address(name)</dt><dd><p>Return hdf address of namespace name</p>
-</dd>
 <dt>array(names, array_length=None)</dt><dd><p>Return numpy array of data with same length</p>
 </dd>
 <dt>axes()</dt><dd><p>Return default axes (xaxis) data</p>
-</dd>
-<dt>dataset(name)</dt><dd><p>Return dataset object</p>
 </dd>
 <dt>eval(operation)</dt><dd><p>Evaluate operation using names in dataset or in associated names</p>
 </dd>
@@ -324,11 +258,9 @@ add2namespace(name, data=None, other_names=None, hdf_address=None)</p>
 </dd>
 <dt>label(new_label=None)</dt><dd><p>Set or Return the scan label. The label is a short identifier for the scan, such as scan number</p>
 </dd>
-<dt>load()</dt><dd><p>Open and return hdf.File object</p>
-</dd>
 <dt>name(name)</dt><dd><p>Return corrected name from namespace</p>
 </dd>
-<dt>options(<a href="#id19"><span class="problematic" id="id20">**</span></a>kwargs)</dt><dd><p>Set or display options</p>
+<dt>options(<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs)</dt><dd><p>Set or display options</p>
 </dd>
 <dt>reload_mode(mode=None)</dt><dd><p>Turns on reload mode - reloads the dataset each time</p>
 </dd>
@@ -346,14 +278,12 @@ add2namespace(name, data=None, other_names=None, hdf_address=None)</p>
 </dd>
 <dt>title(new_title=None)</dt><dd><p>Set or Return the title</p>
 </dd>
-<dt>tree(detail=False, recursion_limit=100)</dt><dd><p>Return str of the full tree of data in a hdf object</p>
-</dd>
 <dt>value(names, array_function=None)</dt><dd><p>Return single value of data</p>
 </dd>
 </dl>
 <dl class="method">
-<dt id="babelscan.Scan.add2namespace">
-<code class="sig-name descname">add2namespace</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">data=None</em>, <em class="sig-param">other_names=None</em>, <em class="sig-param">default_value=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.add2namespace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.add2namespace" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.add2namespace">
+<code class="sig-name descname">add2namespace</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">data=None</em>, <em class="sig-param">other_names=None</em>, <em class="sig-param">default_value=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.add2namespace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.add2namespace" title="Permalink to this definition">¶</a></dt>
 <dd><p>set data in namespace
 :param name: str name or list of names (each name will store the same data)
 :param data: any or None, data to store in namespace (nothing stored if None)
@@ -363,14 +293,14 @@ add2namespace(name, data=None, other_names=None, hdf_address=None)</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.add2strlist">
-<code class="sig-name descname">add2strlist</code><span class="sig-paren">(</span><em class="sig-param">names</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.add2strlist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.add2strlist" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.add2strlist">
+<code class="sig-name descname">add2strlist</code><span class="sig-paren">(</span><em class="sig-param">names</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.add2strlist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.add2strlist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add to list of names in str output</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.array">
-<code class="sig-name descname">array</code><span class="sig-paren">(</span><em class="sig-param">names</em>, <em class="sig-param">array_length=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.array" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.array">
+<code class="sig-name descname">array</code><span class="sig-paren">(</span><em class="sig-param">names</em>, <em class="sig-param">array_length=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.array" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Return numpy array of data with same length</dt><dd><p>data with length 1 will be cast over the full length
 data with length &gt;1 and &lt; array_length will be filled with nans</p>
@@ -390,15 +320,15 @@ data with length &gt;1 and &lt; array_length will be filled with nans</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.axes">
-<code class="sig-name descname">axes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.axes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.axes" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.axes">
+<code class="sig-name descname">axes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.axes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.axes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return default axes (xaxis) data
 :return: array</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.duration">
-<code class="sig-name descname">duration</code><span class="sig-paren">(</span><em class="sig-param">start_time=None</em>, <em class="sig-param">end_time=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.duration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.duration" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.duration">
+<code class="sig-name descname">duration</code><span class="sig-paren">(</span><em class="sig-param">start_time=None</em>, <em class="sig-param">end_time=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.duration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.duration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate time difference between two times
 :param start_time: str name of date dataset or array of timestamps
 :param end_time: None or str name of date dataset
@@ -406,22 +336,16 @@ data with length &gt;1 and &lt; array_length will be filled with nans</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.eval">
-<code class="sig-name descname">eval</code><span class="sig-paren">(</span><em class="sig-param">operation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.eval" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.eval">
+<code class="sig-name descname">eval</code><span class="sig-paren">(</span><em class="sig-param">operation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.eval" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate operation using names in dataset or in associated names
 :param operation: str
 :return: output of operation</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.exposure_time">
-<code class="sig-name descname">exposure_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.exposure_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.exposure_time" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the exposure time</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="babelscan.Scan.get_plot_data">
-<code class="sig-name descname">get_plot_data</code><span class="sig-paren">(</span><em class="sig-param">xname=None</em>, <em class="sig-param">yname=None</em>, <em class="sig-param">signal_op=None</em>, <em class="sig-param">error_op=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.get_plot_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.get_plot_data" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.get_plot_data">
+<code class="sig-name descname">get_plot_data</code><span class="sig-paren">(</span><em class="sig-param">xname=None</em>, <em class="sig-param">yname=None</em>, <em class="sig-param">signal_op=None</em>, <em class="sig-param">error_op=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.get_plot_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.get_plot_data" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Return xdata, ydata, yerror, xname, yname</dt><dd><p>x, y, dy, xlabel, ylabel = scan.get_plot_data(‘axes’, ‘signal’, ‘/Transmission’, np.sqrt)</p>
 </dd>
@@ -454,25 +378,25 @@ data with length &gt;1 and &lt; array_length will be filled with nans</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.image">
-<code class="sig-name descname">image</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.image" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Return detector image</dt><dd><p>Overloaded in subclasses, this version does nothing interesting</p>
-</dd>
-</dl>
+<dt id="babelscan.babelscan.Scan.image">
+<code class="sig-name descname">image</code><span class="sig-paren">(</span><em class="sig-param">idx=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load image from hdf file, works with either image addresses or stored arrays
+:param idx: int image number, or:</p>
+<blockquote>
+<div><p>‘sum’ - returns vertical sum of all images
+‘max’ - returns image with bightest point
+‘peak’ - returns image at peak position (volume.peak_search)</p>
+</div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>idx</strong> – int index of image</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>2d array</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>numpy.array with ndim 2</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.image_roi">
-<code class="sig-name descname">image_roi</code><span class="sig-paren">(</span><em class="sig-param">cen_h=None</em>, <em class="sig-param">cen_v=None</em>, <em class="sig-param">wid_h=31</em>, <em class="sig-param">wid_v=31</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.image_roi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.image_roi" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.image_roi">
+<code class="sig-name descname">image_roi</code><span class="sig-paren">(</span><em class="sig-param">cen_h=None</em>, <em class="sig-param">cen_v=None</em>, <em class="sig-param">wid_h=31</em>, <em class="sig-param">wid_v=31</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.image_roi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.image_roi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create new region of interest from detector images
 :param cen_h: int or None
 :param cen_v: int or None
@@ -482,8 +406,8 @@ data with length &gt;1 and &lt; array_length will be filled with nans</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.image_roi_op">
-<code class="sig-name descname">image_roi_op</code><span class="sig-paren">(</span><em class="sig-param">operation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.image_roi_op"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.image_roi_op" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.image_roi_op">
+<code class="sig-name descname">image_roi_op</code><span class="sig-paren">(</span><em class="sig-param">operation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.image_roi_op"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.image_roi_op" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create new region of interest (roi) from image data and return sum and maxval
 The roi centre and size is defined by an operation:</p>
 <blockquote>
@@ -503,8 +427,8 @@ The roi centre and size is defined by an operation:</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.image_roi_sum">
-<code class="sig-name descname">image_roi_sum</code><span class="sig-paren">(</span><em class="sig-param">cen_h=None</em>, <em class="sig-param">cen_v=None</em>, <em class="sig-param">wid_h=31</em>, <em class="sig-param">wid_v=31</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.image_roi_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.image_roi_sum" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.image_roi_sum">
+<code class="sig-name descname">image_roi_sum</code><span class="sig-paren">(</span><em class="sig-param">cen_h=None</em>, <em class="sig-param">cen_v=None</em>, <em class="sig-param">wid_h=31</em>, <em class="sig-param">wid_v=31</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.image_roi_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.image_roi_sum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create new region of interest
 :param cen_h: int or None
 :param cen_v: int or None
@@ -514,51 +438,85 @@ The roi centre and size is defined by an operation:</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.image_size">
-<code class="sig-name descname">image_size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.image_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.image_size" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.image_size">
+<code class="sig-name descname">image_size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.image_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.image_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the image size
 :return: tuple</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.label">
-<code class="sig-name descname">label</code><span class="sig-paren">(</span><em class="sig-param">new_label=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.label"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.label" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.info">
+<code class="sig-name descname">info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#babelscan.babelscan.Scan.info" title="Permalink to this definition">¶</a></dt>
+<dd><p>return str of namespace</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.babelscan.Scan.isinnamespace">
+<code class="sig-name descname">isinnamespace</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.isinnamespace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.isinnamespace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if name is in namespcae (includes alt_names)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.babelscan.Scan.label">
+<code class="sig-name descname">label</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.label"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.label" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set or Return the scan label. The label is a short identifier for the scan, such as scan number
-:param new_label: str or None, if str sets the label as str, if None, returns automatic label
 :return: None or str</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.name">
-<code class="sig-name descname">name</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.name" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.load_config">
+<code class="sig-name descname">load_config</code><span class="sig-paren">(</span><em class="sig-param">config_file</em>, <em class="sig-param">run_formats=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.load_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.load_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load settings from config file, adds various parameters to the namespaces</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.babelscan.Scan.name">
+<code class="sig-name descname">name</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return corrected name from namespace
 :param name: str or list of str
 :return: str or list of str</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.options">
-<code class="sig-name descname">options</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.options" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set or display options</p>
+<dt id="babelscan.babelscan.Scan.options">
+<code class="sig-name descname">options</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.options" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Set, get or display options</dt><dd><p>scan.options() &gt;&gt; returns str of current options
+scan.options(‘name’) &gt;&gt; returns options[‘name’] or None
+scan.options(name=value) &gt;&gt; set option ‘name’ as value
+scan.options(<a href="#id3"><span class="problematic" id="id4">**</span></a>options_dict) &gt;&gt; set options using dict</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> – option to look for</p></li>
+<li><p><strong>kwargs</strong> – options to set</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.reload_mode">
-<code class="sig-name descname">reload_mode</code><span class="sig-paren">(</span><em class="sig-param">mode=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.reload_mode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.reload_mode" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.reload_mode">
+<code class="sig-name descname">reload_mode</code><span class="sig-paren">(</span><em class="sig-param">mode=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.reload_mode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.reload_mode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Turns on reload mode - reloads the dataset each time
 :param mode: Bool or None, True to turn on, None to return current mode
 :return: None or str</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.reset">
-<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.reset" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Regenerate data lists</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.save_plot_data">
-<code class="sig-name descname">save_plot_data</code><span class="sig-paren">(</span><em class="sig-param">filename=None</em>, <em class="sig-param">xname=None</em>, <em class="sig-param">yname=None</em>, <em class="sig-param">signal_op=None</em>, <em class="sig-param">error_op=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.save_plot_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.save_plot_data" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.save_plot_data">
+<code class="sig-name descname">save_plot_data</code><span class="sig-paren">(</span><em class="sig-param">filename=None</em>, <em class="sig-param">xname=None</em>, <em class="sig-param">yname=None</em>, <em class="sig-param">signal_op=None</em>, <em class="sig-param">error_op=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.save_plot_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.save_plot_data" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Return xdata, ydata, yerror, xname, yname</dt><dd><p>x, y, dy, xlabel, ylabel = scan.get_plot_data(‘axes’, ‘signal’, ‘/Transmission’, np.sqrt)</p>
 </dd>
@@ -592,35 +550,41 @@ The roi centre and size is defined by an operation:</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.scan_command">
-<code class="sig-name descname">scan_command</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.scan_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.scan_command" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.scan_command">
+<code class="sig-name descname">scan_command</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.scan_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.scan_command" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns scan command
 :return: str</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.scan_length">
-<code class="sig-name descname">scan_length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.scan_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.scan_length" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.scan_length">
+<code class="sig-name descname">scan_length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.scan_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.scan_length" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the number of points in the scan (length of ‘axes’)
 :return: int</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.show_namespace">
-<code class="sig-name descname">show_namespace</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.show_namespace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.show_namespace" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.set_error_operation">
+<code class="sig-name descname">set_error_operation</code><span class="sig-paren">(</span><em class="sig-param">operation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.set_error_operation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.set_error_operation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the default error operation using str e.g. ‘np.sqrt(x+1)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.babelscan.Scan.show_namespace">
+<code class="sig-name descname">show_namespace</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.show_namespace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.show_namespace" title="Permalink to this definition">¶</a></dt>
 <dd><p>return str of namespace</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.signal">
-<code class="sig-name descname">signal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.signal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.signal" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.signal">
+<code class="sig-name descname">signal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.signal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.signal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return default signal (yaxis) data
 :return: array</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.string">
-<code class="sig-name descname">string</code><span class="sig-paren">(</span><em class="sig-param">names</em>, <em class="sig-param">str_format=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.string" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.string">
+<code class="sig-name descname">string</code><span class="sig-paren">(</span><em class="sig-param">names</em>, <em class="sig-param">str_format=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return formated string of data
 :param names: str or list of str, key or associated key in namespace
 :param str_format: format to use, e.g. ‘%s:%s’
@@ -628,8 +592,8 @@ The roi centre and size is defined by an operation:</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.string_format">
-<code class="sig-name descname">string_format</code><span class="sig-paren">(</span><em class="sig-param">operation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.string_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.string_format" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.string_format">
+<code class="sig-name descname">string_format</code><span class="sig-paren">(</span><em class="sig-param">operation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.string_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.string_format" title="Permalink to this definition">¶</a></dt>
 <dd><p>Process a string with format specified in {} brackets, values will be returned.
 e.g.</p>
 <blockquote>
@@ -649,8 +613,8 @@ out = ‘the energy is 3.00 keV’</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.time">
-<code class="sig-name descname">time</code><span class="sig-paren">(</span><em class="sig-param">names</em>, <em class="sig-param">date_format=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.time" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.time">
+<code class="sig-name descname">time</code><span class="sig-paren">(</span><em class="sig-param">names</em>, <em class="sig-param">date_format=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.time" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return datetime object from data name
 :param names: str or list of str, key or associated key in namespace
 :param date_format: str format used in datetime.strptime (see <a class="reference external" href="https://strftime.org/">https://strftime.org/</a>)
@@ -658,30 +622,44 @@ out = ‘the energy is 3.00 keV’</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.time_end">
-<code class="sig-name descname">time_end</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.time_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.time_end" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.time_end">
+<code class="sig-name descname">time_end</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.time_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.time_end" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return scan end time
 :return: datetime</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.time_start">
-<code class="sig-name descname">time_start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.time_start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.time_start" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.time_start">
+<code class="sig-name descname">time_start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.time_start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.time_start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return scan time_start time
 :return: datetime</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.title">
-<code class="sig-name descname">title</code><span class="sig-paren">(</span><em class="sig-param">new_title=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.title" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.title">
+<code class="sig-name descname">title</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.title" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set or Return the title
-:param new_title: str or None, if str sets the title as str, if None, returns automatic title
 :return: None or str</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.value">
-<code class="sig-name descname">value</code><span class="sig-paren">(</span><em class="sig-param">names</em>, <em class="sig-param">array_function=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.value" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.toggle_signal_operation">
+<code class="sig-name descname">toggle_signal_operation</code><span class="sig-paren">(</span><em class="sig-param">use_signal_op=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.toggle_signal_operation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.toggle_signal_operation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn on/off signal operations (normalisation)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.babelscan.Scan.update_namespace">
+<code class="sig-name descname">update_namespace</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.update_namespace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.update_namespace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update internal datespace with dicts
+:param args: dict, namespace will be updated in order
+:param kwargs: keyword arguments will be added to namespace
+:return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.babelscan.Scan.value">
+<code class="sig-name descname">value</code><span class="sig-paren">(</span><em class="sig-param">names</em>, <em class="sig-param">array_function=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return single value of data
 :param names: str or list of str, key or associated key in namespace
 :param array_function: function to return a single value from an array
@@ -689,29 +667,38 @@ out = ‘the energy is 3.00 keV’</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.Scan.volume">
-<code class="sig-name descname">volume</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.Scan.volume" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.Scan.volume">
+<code class="sig-name descname">volume</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#Scan.volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan.volume" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rerturn volume
-:return:</p>
+:return: babelscan.volume.Volume object</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="babelscan.MultiScan">
-<em class="property">class </em><code class="sig-prename descclassname">babelscan.</code><code class="sig-name descname">MultiScan</code><span class="sig-paren">(</span><em class="sig-param">scan_list</em>, <em class="sig-param">variables=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.MultiScan" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class for holding multiple DataHolders</p>
+<dt id="babelscan.babelscan.MultiScan">
+<em class="property">class </em><code class="sig-prename descclassname">babelscan.babelscan.</code><code class="sig-name descname">MultiScan</code><span class="sig-paren">(</span><em class="sig-param">scan_list</em>, <em class="sig-param">variables=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.MultiScan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for holding multiple Scan objects</p>
 <dl class="method">
-<dt id="babelscan.MultiScan.add_variable">
-<code class="sig-name descname">add_variable</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan.add_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.MultiScan.add_variable" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.MultiScan.add_variable">
+<code class="sig-name descname">add_variable</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan.add_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.MultiScan.add_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add variable
 :param name: name of variable parameter between scans
 :return:</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.MultiScan.get_plot_lines">
-<code class="sig-name descname">get_plot_lines</code><span class="sig-paren">(</span><em class="sig-param">xname=None</em>, <em class="sig-param">yname=None</em>, <em class="sig-param">signal_op=None</em>, <em class="sig-param">error_op=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan.get_plot_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.MultiScan.get_plot_lines" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.MultiScan.get_plot_data">
+<code class="sig-name descname">get_plot_data</code><span class="sig-paren">(</span><em class="sig-param">xname</em>, <em class="sig-param">yname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan.get_plot_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.MultiScan.get_plot_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get plotting data - simple extraction of data field from each scan
+:param xname: str name of value to use as x-axis
+:param yname: str name of value to use as y-axis
+:return: xdata, ydata, xlabel, ylabel</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.babelscan.MultiScan.get_plot_lines">
+<code class="sig-name descname">get_plot_lines</code><span class="sig-paren">(</span><em class="sig-param">xname=None</em>, <em class="sig-param">yname=None</em>, <em class="sig-param">signal_op=None</em>, <em class="sig-param">error_op=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan.get_plot_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.MultiScan.get_plot_lines" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Get plotting data for plotting as series of lines</dt><dd><p>x, y, dy, labels, xlabel, ylabel = scans.get_plot_lines(‘axes’, ‘signal’, ‘/Transmission’, np.sqrt)</p>
 </dd>
@@ -755,8 +742,8 @@ plt.ylabel(ylabel)</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.MultiScan.get_plot_mesh">
-<code class="sig-name descname">get_plot_mesh</code><span class="sig-paren">(</span><em class="sig-param">xname=None</em>, <em class="sig-param">yname=None</em>, <em class="sig-param">signal_op=None</em>, <em class="sig-param">error_op=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan.get_plot_mesh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.MultiScan.get_plot_mesh" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.MultiScan.get_plot_mesh">
+<code class="sig-name descname">get_plot_mesh</code><span class="sig-paren">(</span><em class="sig-param">xname=None</em>, <em class="sig-param">yname=None</em>, <em class="sig-param">signal_op=None</em>, <em class="sig-param">error_op=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan.get_plot_mesh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.MultiScan.get_plot_mesh" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Return array data for plotting as mesh</dt><dd><p>x, y, z, xlabel, ylabel, zlabel = scans.get_plot_mesh(‘axes’, ‘signal’, ‘/Transmission’, np.sqrt)</p>
 </dd>
@@ -796,8 +783,8 @@ plt.ylabel(ylabel)</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.MultiScan.get_plot_variable">
-<code class="sig-name descname">get_plot_variable</code><span class="sig-paren">(</span><em class="sig-param">yname</em>, <em class="sig-param">variable=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan.get_plot_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.MultiScan.get_plot_variable" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.MultiScan.get_plot_variable">
+<code class="sig-name descname">get_plot_variable</code><span class="sig-paren">(</span><em class="sig-param">yname</em>, <em class="sig-param">variable=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan.get_plot_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.MultiScan.get_plot_variable" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Get plotting data for plotting data points from each scan</dt><dd><p>x, y, xlabel, ylabel = scans.get_plot_variable(‘signal’, ‘scanno’)</p>
 </dd>
@@ -838,8 +825,8 @@ plt.ylabel(ylabel)</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="babelscan.MultiScan.griddata">
-<code class="sig-name descname">griddata</code><span class="sig-paren">(</span><em class="sig-param">axes=None</em>, <em class="sig-param">signal='signal'</em>, <em class="sig-param">repeat_after=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan.griddata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.MultiScan.griddata" title="Permalink to this definition">¶</a></dt>
+<dt id="babelscan.babelscan.MultiScan.griddata">
+<code class="sig-name descname">griddata</code><span class="sig-paren">(</span><em class="sig-param">axes=None</em>, <em class="sig-param">signal='signal'</em>, <em class="sig-param">repeat_after=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan.griddata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.MultiScan.griddata" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate 2D square grid of single values for each scan
 Return x, y axis when taking single values from each scan
 :param axes: str or list of str, names of axes data
@@ -848,8 +835,293 @@ Return x, y axis when taking single values from each scan
 :return: xaxis, yaxis, zaxis square [n,m] arrays</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="babelscan.babelscan.MultiScan.labels">
+<code class="sig-name descname">labels</code><span class="sig-paren">(</span><em class="sig-param">variable_names=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan.labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.MultiScan.labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of str labels
+:param variable_names: str or list of str names
+:return: list</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="babelscan.babelscan.MultiScan.title">
+<code class="sig-name descname">title</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/babelscan.html#MultiScan.title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.MultiScan.title" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str title</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-babelscan.folder_monitor">
+<span id="folder-monitor"></span><h2>folder_monitor<a class="headerlink" href="#module-babelscan.folder_monitor" title="Permalink to this headline">¶</a></h2>
+<p>Folder Monitor</p>
+</div>
+<div class="section" id="module-babelscan.instrument">
+<span id="instrument"></span><h2>instrument<a class="headerlink" href="#module-babelscan.instrument" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Define Instrument class</dt><dd><p>An instrument is a generator of Scans and FolderMonitors (experiements) with specific default settings</p>
+</dd>
+</dl>
+<div class="section" id="module-babelscan.volume">
+<span id="volume"></span><h3>volume<a class="headerlink" href="#module-babelscan.volume" title="Permalink to this headline">¶</a></h3>
+<p>Lazy Volume class</p>
+<dl class="class">
+<dt id="babelscan.volume.Volume">
+<em class="property">class </em><code class="sig-prename descclassname">babelscan.volume.</code><code class="sig-name descname">Volume</code><a class="reference internal" href="_modules/babelscan/volume.html#Volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Volume functions</dt><dd><p>Contains various functions to operate on 3D volumes</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="babelscan.volume.Volume.argmax">
+<code class="sig-name descname">argmax</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.argmax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.argmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Numpy argmax, return i,j,k</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.array_argmax">
+<code class="sig-name descname">array_argmax</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.array_argmax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.array_argmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns [i,j = argmax(im) for im in self]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.array_max">
+<code class="sig-name descname">array_max</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.array_max"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.array_max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns [max(image) for image in volume]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.array_mean">
+<code class="sig-name descname">array_mean</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.array_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.array_mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns [mean(image) for image in volume]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.array_min">
+<code class="sig-name descname">array_min</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.array_min"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.array_min" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns [min(image) for image in volume]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.array_peak">
+<code class="sig-name descname">array_peak</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.array_peak"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.array_peak" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns [i,j = peak_search(im) for im in self]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.array_sum">
+<code class="sig-name descname">array_sum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.array_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.array_sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns [sum(image) for image in volume]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.background">
+<code class="sig-name descname">background</code><span class="sig-paren">(</span><em class="sig-param">background_percentile=50</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.background"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.background" title="Permalink to this definition">¶</a></dt>
+<dd><p>Average bottom percentile of elements to determine background value
+:param background_percentile: int from 0-100, percentile of volume to use as background
+:return: float</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.check_roi_op">
+<code class="sig-name descname">check_roi_op</code><span class="sig-paren">(</span><em class="sig-param">operation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.check_roi_op"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.check_roi_op" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new region of interest (roi) values from operation string
+The roi centre and size is defined by an operation:</p>
+<blockquote>
+<div><p>operation = ‘nroi[210, 97, 75, 61]’
+‘nroi’      -   creates a region of interest in the detector centre with size 31x31
+‘nroi[h,v]’ -   creates a roi in the detector centre with size hxv, where h is horizontal, v is vertical
+‘nroi[m,n,h,v] - create a roi with cen_h, cen_v, wid_h, wid_v = n, m, h, v</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>operation</strong> – str : operation string</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>cen_h, cen_v, wid_h, wid_v, operation</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.cut">
+<code class="sig-name descname">cut</code><span class="sig-paren">(</span><em class="sig-param">index1=(0</em>, <em class="sig-param">0</em>, <em class="sig-param">0)</em>, <em class="sig-param">index2=(-1</em>, <em class="sig-param">-1</em>, <em class="sig-param">-1)</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.cut"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.cut" title="Permalink to this definition">¶</a></dt>
+<dd><p>generate arbitary cut between two points in the volume
+:param index1: (i,j,k) start point in the volume
+:param index2: (i,j,k) end point in the volume
+:return: array, length=max difference between index1 and index2</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.peak_amplitude">
+<code class="sig-name descname">peak_amplitude</code><span class="sig-paren">(</span><em class="sig-param">background_percentile=50</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.peak_amplitude"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.peak_amplitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sum the volume with background removed
+:param background_percentile: int from 0-100, percentile of volume to use as background
+:return: float</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.peak_search">
+<code class="sig-name descname">peak_search</code><span class="sig-paren">(</span><em class="sig-param">peak_percentile=99</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.peak_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.peak_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>find average position of bright points in image
+:param peak_percentile: float from 0-100, percentile of image to use as peak area
+:return: i, j, k index of image[i,j,k]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.roi">
+<code class="sig-name descname">roi</code><span class="sig-paren">(</span><em class="sig-param">cen_h=None</em>, <em class="sig-param">cen_v=None</em>, <em class="sig-param">wid_h=31</em>, <em class="sig-param">wid_v=31</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.roi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.roi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new region of interest from detector images
+:param cen_h: int or None
+:param cen_v: int or None
+:param wid_h:  int or None
+:param wid_v:  int or None
+:return: l*wid_v*wid_h array</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.roi_op">
+<code class="sig-name descname">roi_op</code><span class="sig-paren">(</span><em class="sig-param">operation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.roi_op"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.roi_op" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new region of interest (roi) from image data and return sum and maxval
+The roi centre and size is defined by an operation:</p>
+<blockquote>
+<div><p>operation = ‘nroi[210, 97, 75, 61]’
+‘nroi’      -   creates a region of interest in the detector centre with size 31x31
+‘nroi[h,v]’ -   creates a roi in the detector centre with size hxv, where h is horizontal, v is vertical
+‘nroi[m,n,h,v] - create a roi with cen_h, cen_v, wid_h, wid_v = n, m, h, v</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>operation</strong> – str : operation string</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>l*wid_v*wid_h array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.roi_op_sum">
+<code class="sig-name descname">roi_op_sum</code><span class="sig-paren">(</span><em class="sig-param">operation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.roi_op_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.roi_op_sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new region of interest (roi) from image data and return sum and maxval
+The roi centre and size is defined by an operation:</p>
+<blockquote>
+<div><p>operation = ‘nroi[210, 97, 75, 61]’
+‘nroi’      -   creates a region of interest in the detector centre with size 31x31
+‘nroi[h,v]’ -   creates a roi in the detector centre with size hxv, where h is horizontal, v is vertical
+‘nroi[m,n,h,v] - create a roi with cen_h, cen_v, wid_h, wid_v = n, m, h, v</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>operation</strong> – str : operation string</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>sum, maxval : [o] length arrays</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.roi_sum">
+<code class="sig-name descname">roi_sum</code><span class="sig-paren">(</span><em class="sig-param">cen_h=None</em>, <em class="sig-param">cen_v=None</em>, <em class="sig-param">wid_h=31</em>, <em class="sig-param">wid_v=31</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.roi_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.roi_sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new region of interest from detector images, return sum and max of each image
+:param cen_h: int or None
+:param cen_v: int or None
+:param wid_h:  int or None
+:param wid_v:  int or None
+:return: roi_sum, roi_max</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="babelscan.volume.Volume.sum_flat">
+<code class="sig-name descname">sum_flat</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#Volume.sum_flat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume.sum_flat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return sum of images: np.sum(volume, axis=0)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="babelscan.volume.ArrayVolume">
+<em class="property">class </em><code class="sig-prename descclassname">babelscan.volume.</code><code class="sig-name descname">ArrayVolume</code><span class="sig-paren">(</span><em class="sig-param">array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#ArrayVolume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.ArrayVolume" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>ArrayVolume for 3D Numpy arrays</dt><dd><p>Contains additional functions for 3D arrays</p>
+</dd>
+<dt>Usage:</dt><dd><p>array = np.array([[[1,2],[3,4]],[[5,6],[7,8]]])
+lzvol = ArrayVolume(array)
+image = lzvol[0]</p>
+</dd>
+<dt>Supported indexing:</dt><dd><dl class="simple">
+<dt>single dimension indexing, as numpy array:</dt><dd><p>vol = lzvol[:3]
+vol = lzvol[slice(1,-1,2)]</p>
+</dd>
+<dt>multi-dimension indexing, as numpy array:</dt><dd><p>vol = lzvol[3, 100:200]
+vol = lzvol[1:-1, 100:200, 100:200]</p>
+</dd>
+<dt>array operations</dt><dd><p>len(lzvol), np.shape(lzvol), np.size(lzvol), np.ndim(lzvol)
+np.sum(lzvol), np.mean(lzvol), np.percentile(lzvol)</p>
+</dd>
+<dt>boolean array operations</dt><dd><p>lzvol &gt; 1 (&lt;, &lt;=, &gt;, &gt;=, ==, !=)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="babelscan.volume.ImageVolume">
+<em class="property">class </em><code class="sig-prename descclassname">babelscan.volume.</code><code class="sig-name descname">ImageVolume</code><span class="sig-paren">(</span><em class="sig-param">list_of_files</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#ImageVolume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.ImageVolume" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>ImageVolume for images</dt><dd><p>Only loads images when called, reducing memory requirements</p>
+</dd>
+<dt>Usage:</dt><dd><p>lzvol = ImageVolume([file1.tiff, file2.tiff, file3.tiff,…])
+image = lzvol[0]</p>
+</dd>
+<dt>Supported indexing:</dt><dd><dl class="simple">
+<dt>single dimension indexing, as numpy array:</dt><dd><p>vol = lzvol[:3]
+vol = lzvol[slice(1,-1,2)]</p>
+</dd>
+<dt>multi-dimension indexing, as numpy array:</dt><dd><p>vol = lzvol[3, 100:200]
+vol = lzvol[1:-1, 100:200, 100:200]</p>
+</dd>
+<dt>array operations</dt><dd><p>len(lzvol), np.shape(lzvol), np.size(lzvol), np.ndim(lzvol)
+np.sum(lzvol), np.mean(lzvol), np.percentile(lzvol)</p>
+</dd>
+<dt>boolean array operations</dt><dd><p>lzvol &gt; 1 (&lt;, &lt;=, &gt;, &gt;=, ==, !=)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="babelscan.volume.DatasetVolume">
+<em class="property">class </em><code class="sig-prename descclassname">babelscan.volume.</code><code class="sig-name descname">DatasetVolume</code><span class="sig-paren">(</span><em class="sig-param">dataset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/babelscan/volume.html#DatasetVolume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.DatasetVolume" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>DatasetVolume for 3D HDF datasets</dt><dd><p>Only loads images when called, reducing memory requirements</p>
+</dd>
+<dt>Usage:</dt><dd><p>dataset = hdf[‘/entry/group/name’]
+lzvol = DatasetVolume(dataset)
+image = lzvol[0]</p>
+</dd>
+<dt>Supported indexing:</dt><dd><dl class="simple">
+<dt>single dimension indexing, as numpy array:</dt><dd><p>vol = lzvol[:3]
+vol = lzvol[slice(1,-1,2)]</p>
+</dd>
+<dt>multi-dimension indexing, as numpy array:</dt><dd><p>vol = lzvol[3, 100:200]
+vol = lzvol[1:-1, 100:200, 100:200]</p>
+</dd>
+<dt>array operations</dt><dd><p>len(lzvol), np.shape(lzvol), np.size(lzvol), np.ndim(lzvol)
+np.sum(lzvol), np.mean(lzvol), np.percentile(lzvol)</p>
+</dd>
+<dt>boolean array operations</dt><dd><p>lzvol &gt; 1 (&lt;, &lt;=, &gt;, &gt;=, ==, !=)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
 </div>
 
 
@@ -858,6 +1130,7 @@ Return x, y axis when taking single values from each scan
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="plotting/Plotting.html" class="btn btn-neutral float-right" title="Plotting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
         <a href="Usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 

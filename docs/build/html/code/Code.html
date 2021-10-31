@@ -1,0 +1,375 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Code &mdash; BabelScan 0.3.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="babelscan.babelscan" href="babelscan.html" />
+    <link rel="prev" title="Usage" href="../Usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BabelScan
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Code</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="babelscan.html">babelscan.babelscan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="folder_monitor.html">babelscan.folder_monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instrument.html">babelscan.instrument</a></li>
+<li class="toctree-l2"><a class="reference internal" href="volume.html">babelscan.volume</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-babelscan">babelscan</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../plotting/Plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fitting/Fitting.html">Fitting</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BabelScan</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Code</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/code/Code.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="code">
+<h1>Code<a class="headerlink" href="#code" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="babelscan.html">babelscan.babelscan</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="babelscan.html#module-babelscan.babelscan">babelscan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="babelscan.html#class-scan">Class: Scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="babelscan.html#class-multiscan">Class: MultiScan</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="folder_monitor.html">babelscan.folder_monitor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="folder_monitor.html#module-babelscan.folder_monitor">folder_monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="folder_monitor.html#class-foldermonitor">Class: FolderMonitor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="instrument.html">babelscan.instrument</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="instrument.html#module-babelscan.instrument">instrument</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instrument.html#class-instrument">Class: Instrument</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="volume.html">babelscan.volume</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="volume.html#module-babelscan.volume">volume</a></li>
+<li class="toctree-l2"><a class="reference internal" href="volume.html#class-volume">Class: Volume</a></li>
+<li class="toctree-l2"><a class="reference internal" href="volume.html#class-arrayvolume">Class: ArrayVolume</a></li>
+<li class="toctree-l2"><a class="reference internal" href="volume.html#class-imagevolume">Class: ImageVolume</a></li>
+<li class="toctree-l2"><a class="reference internal" href="volume.html#class-datasetvolume">Class: DatasetVolume</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="module-babelscan">
+<span id="babelscan"></span><h2>babelscan<a class="headerlink" href="#module-babelscan" title="Permalink to this headline">¶</a></h2>
+<p>BabelScan
+A generic class for reading many types of scan data that you don’t need to put in your ear.</p>
+<p>requirements: numpy, h5py, imageio, python-dateutil
+Optional requirements: matplotlib, lmfit</p>
+<dl>
+<dt>Installation:</dt><dd><p>pip install git+https://github.com/DanPorter/babelscan.git</p>
+</dd>
+<dt>Usage:</dt><dd><p>from babelscan import file_loader
+scan1 = file_loader(‘some/file.nxs’, <a href="#id1"><span class="problematic" id="id2">**</span></a>options)  # creates Scan class
+scan2 = file_loader(‘another/file.dat’, <a href="#id3"><span class="problematic" id="id4">**</span></a>options)
+scans = scan1 + scan2  # creates MultiScan class</p>
+<p># Folder monitor:
+from babelscan import FolderMonitor
+mon = FolderMonitor(‘/some/folder’, <a href="#id5"><span class="problematic" id="id6">**</span></a>options)
+scan = mon.scan(0)  # creates scan from latest file in folder</p>
+<p># intrument configuration file
+from babelscan import instrument_from_config
+i16 = instrument_from_config(‘config_files/i16.config’)
+experiment = i16.experiment(‘/data/folder’)
+scan = experiment.scan(0)</p>
+</dd>
+<dt>Scan class</dt><dd><p>Scan class contains an internal namespace where each dataset can contain multiple names. Calling the instantiated
+class searches the namespace (and then the file) for a dataset that matches the name given.</p>
+<blockquote>
+<div><p>output = scan(‘name’)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Certain names are reserved and will automatically search the namespace and file for default values:</dt><dd><p>scan(‘axes’)  # returns default scanned dataset (x-axis)
+scan(‘signal’)  # returns default signal dataset (y-axis)</p>
+</dd>
+<dt>Operations will be evaluated*:</dt><dd><p>scan(‘name1 + name2’)  # returns the result of the operation</p>
+</dd>
+<dt>For scans with detector images, regions of interest can be generated:</dt><dd><p>scan(‘nroi[127,127,31,31]’)  # creates region of interest on image and returs array of sum of roi at each point</p>
+</dd>
+<dt>Functions</dt><dd><p>scan.title()  # returns str title of scan
+scan.label()  # returns short scan identifier
+scan.scan_command()  # returns definition of the scan command (if available)
+scan.value(‘name’)  # always returns a single value
+scan.string(‘name’)  # returns ‘name = value’ string
+scan.array([‘name1’, ‘name2’], array_length)  # returns square array of several datasets
+scan.image(idx)  # if available, returns detector image
+scan.string_format(‘format {name:fmt}’)  # returns string formated from namespace
+scan.get_plot_data(xname, yname)  # return data for plotting with errors and labels
+scan.plot(xname, yname)  # create plot**
+scan.fit(xname, yname)  # fit data to peak***</p>
+</dd>
+</dl>
+</dd>
+<dt>MultiScan class</dt><dd><dl class="simple">
+<dt>MultiScan class is a holder for multiple scans, allowing operations to be performed on all scans in the class.</dt><dd><p>scans = MultiScan([scan1, scan2], <a href="#id7"><span class="problematic" id="id8">**</span></a>options)
+scans = scan1 + scan2
+scans = babelscan.load_files([‘file1’, ‘file2’], <a href="#id9"><span class="problematic" id="id10">**</span></a>options)</p>
+</dd>
+<dt>Works in the same way as underlying scan class - calling the class will return a list of datasets from the scans.</dt><dd><p>[output1, output2] = scans(‘name’)</p>
+</dd>
+<dt>Functions</dt><dd><p>scans.add_variable(‘name’)  # add default parameter that changes between scans, displayed in print(scans)
+scans.array(‘name’)  # return 2D array of scan data
+scans.griddata(‘name’)  # generate 2D square grid of single values for each scan</p>
+</dd>
+</dl>
+</dd>
+<dt>FolderMonitor class</dt><dd><dl class="simple">
+<dt>FolderMonitor watches a folder (or several) and allows easy loading of files by scan number:</dt><dd><p>fm = FolderMonitor(‘/some/folder’, filename_format=’%d.nxs’)
+scan = fm.scan(12345) # loads ‘/some/folder/12345.nxs’
+scan = fm.scan(0)  # loads most recent file
+scans = fm.scans(range(12340, 12345))  # MultiScan of several files</p>
+</dd>
+<dt>Functions:</dt><dd><p>fm.allscanfiles()  # return list of all scan files in folder(s)
+fm.allscannumbers()  # list of all scan numbers in folder(s)
+fm.updating_scan(12345)  # the resulting Scan class will reload on each operation</p>
+</dd>
+</dl>
+</dd>
+<dt>Instrument class</dt><dd><dl class="simple">
+<dt>An instrument is a generator of Scans and FolderMonitors (experiements) with specific default settings</dt><dd><p>beamline = Instrument(‘name’, default_names, functions, filename_format)
+<em>or</em>
+beamline = instrument_from_config(‘../config_files/i16.config’)
+scan = beamline.scan(‘/some/folder/12345.nxs’)
+fm = beamline.experiment(‘/some/folder’)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p><a href="#id11"><span class="problematic" id="id12">*</span></a>functions using eval only available when the “EVAL_MODE” setting is active.
+<a href="#id13"><span class="problematic" id="id14">**</span></a>functions using plot only available if “MATPLOTLIB_PLOTTING” setting is active and matplotlib installed
+<a href="#id15"><span class="problematic" id="id16">**</span></a><a href="#id17"><span class="problematic" id="id18">*</span></a>functions using fitting only available if lmfit installed</p>
+<p>By Dan Porter, PhD
+Diamond Light Source Ltd.
+2021</p>
+<p>Version 0.6.2
+Last updated: 31/10/21</p>
+<p>Version History:
+13/04/21 0.1.0  Version History started.
+16/04/21 0.2.0  Added instrument and other additions to Scan, changed container.py to folder_monitor.py
+22/04/21 0.3.0  Changed _get_data search path and added _default_values dict, added volume.py, settings.py
+26/04/21 0.4.0  Various changes and fixes after testing with i06, i10 files
+04/05/21 0.4.1  Added names dict to axes/signal from cmd functions
+28/05/21 0.5.0  Tidied up code, various fixes
+01/06/21 0.5.1  Added additional hdf functions
+04/06/21 0.5.2  Added plot and fit functions for MultiScan
+05/08/21 0.5.3  Added __main__.py
+22/10/21 0.6.0  Various updates, included plotting in volume, removed automatic search any in scan(‘name’)
+29/10/21 0.6.1  Major update to lmfitting, general purpous multi-peak fitting
+31/10/21 0.6.2  Refactored fitting, added new functions, added plotly &amp; html output options to plotting</p>
+<blockquote>
+<div><blockquote>
+<div><p>Licensed under the Apache License, Version 2.0 (the “License”);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at</p>
+<blockquote>
+<div><p><a class="reference external" href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a></p>
+</div></blockquote>
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an “AS IS” BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+</div></blockquote>
+<p>Dr Daniel G Porter, <a class="reference external" href="mailto:dan&#46;porter&#37;&#52;&#48;diamond&#46;ac&#46;uk">dan<span>&#46;</span>porter<span>&#64;</span>diamond<span>&#46;</span>ac<span>&#46;</span>uk</a>
+www.diamond.ac.uk
+Diamond Light Source, Chilton, Didcot, Oxon, OX11 0DE, U.K.</p>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="babelscan.html" class="btn btn-neutral float-right" title="babelscan.babelscan" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../Usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Dan Porter.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

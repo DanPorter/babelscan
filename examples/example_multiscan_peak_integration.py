@@ -19,4 +19,4 @@ print(scans)
 
 scans.fit.multi_peak_fit(peak_distance_idx=5, print_result=True, plot_result=True)
 scans.plot.plot_simple('sperp', 'amplitude')
-scans.plot.multiplot(yaxis=['signal', 'fit'])
+scans.plot.multiplot(yaxis=['signal', 'yfit'])

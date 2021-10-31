@@ -1,3 +1,13 @@
+################################
+BabelScan
+################################
+
+.. rubric:: BabelScan: A format independent structure for scan data
+
+:Author: Dan Porter
+:Contact: dan.porter (at) diamond (dot) ac (dot) uk
+:Website: https://github.com/DanPorter/babelscan
+
 
 BabelScan documentation
 =======================
@@ -20,7 +30,9 @@ You don't even need to put it in your ear!
 
    Installation
    Usage
-   Code
+   code/Code
+   plotting/Plotting
+   fitting/Fitting
 
 
 

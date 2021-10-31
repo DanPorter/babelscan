@@ -2,7 +2,7 @@
 BabelScan
 A generic class for reading many types of scan data that you don't need to put in your ear.
 
-requirements: numpy, h5py, imageio
+requirements: numpy, h5py, imageio, python-dateutil
 Optional requirements: matplotlib, lmfit
 
 Installation:
@@ -75,6 +75,14 @@ FolderMonitor class
     fm.allscannumbers()  # list of all scan numbers in folder(s)
     fm.updating_scan(12345)  # the resulting Scan class will reload on each operation
 
+Instrument class
+  An instrument is a generator of Scans and FolderMonitors (experiements) with specific default settings
+    beamline = Instrument('name', default_names, functions, filename_format)
+    *or*
+    beamline = instrument_from_config('../config_files/i16.config')
+    scan = beamline.scan('/some/folder/12345.nxs')
+    fm = beamline.experiment('/some/folder')
+
 *functions using eval only available when the "EVAL_MODE" setting is active.
 **functions using plot only available if "MATPLOTLIB_PLOTTING" setting is active and matplotlib installed
 ***functions using fitting only available if lmfit installed
@@ -83,8 +91,8 @@ By Dan Porter, PhD
 Diamond Light Source Ltd.
 2021
 
-Version 0.6.1
-Last updated: 29/10/21
+Version 0.6.2
+Last updated: 31/10/21
 
 Version History:
 13/04/21 0.1.0  Version History started.
@@ -98,6 +106,7 @@ Version History:
 05/08/21 0.5.3  Added __main__.py
 22/10/21 0.6.0  Various updates, included plotting in volume, removed automatic search any in scan('name')
 29/10/21 0.6.1  Major update to lmfitting, general purpous multi-peak fitting
+31/10/21 0.6.2  Refactored fitting, added new functions, added plotly & html output options to plotting
 
 -----------------------------------------------------------------------------
    Copyright 2021 Diamond Light Source Ltd.

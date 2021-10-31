@@ -197,6 +197,23 @@ class Scan:
                 self._default_values[name] = default_value
                 self._debug('namespace', 'Add to default values: %s: %s' % (name, fn.data_string(data)))
 
+    def update_namespace(self, *args, **kwargs):
+        """
+        Update internal datespace with dicts
+        :param args: dict, namespace will be updated in order
+        :param kwargs: keyword arguments will be added to namespace
+        :return: None
+        """
+        for arg in args:
+            self._namespace.update(arg)
+        self._namespace.update(kwargs)
+
+    def isinnamespace(self, name):
+        """Check if name is in namespcae (includes alt_names)"""
+        if name in self._namespace:
+            return True
+        return name in self._alt_names
+
     def show_namespace(self):
         """return str of namespace"""
         out = 'Namespace %r:\n' % self
@@ -574,6 +591,12 @@ class Scan:
             format_namespace[name] = value
             operation = operation.replace(op, name)
         return operation.format(**format_namespace)
+
+    def set_error_operation(self, operation=None):
+        """Set the default error operation using str e.g. 'np.sqrt(x+1)"""
+        if operation is None:
+            operation = 'np.sqrt(np.abs(x)+1)'
+        self.options(error_function=operation)
 
     def _get_error(self, name, operation=None):
         """

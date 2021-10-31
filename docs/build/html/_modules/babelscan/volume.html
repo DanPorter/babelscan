@@ -1,0 +1,726 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>babelscan.volume &mdash; BabelScan 0.3.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BabelScan
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code/Code.html">Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../plotting/Plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fitting/Fitting.html">Fitting</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BabelScan</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>babelscan.volume</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for babelscan.volume</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Lazy Volume class</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">operator</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">from</span> <span class="nn">imageio</span> <span class="kn">import</span> <span class="n">imread</span>
+
+<span class="kn">from</span> <span class="nn">.settings</span> <span class="kn">import</span> <span class="n">init_vol_plot_manager</span>
+
+<span class="s2">&quot;----------------------------------------------------------------------------------------------------------------------&quot;</span>
+<span class="s2">&quot;------------------------------------------- Volume Functions ---------------------------------------------------------&quot;</span>
+<span class="s2">&quot;----------------------------------------------------------------------------------------------------------------------&quot;</span>
+
+<span class="n">re_findint</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\d+&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="pixel_peak_search"><a class="viewcode-back" href="../../code/volume.html#babelscan.volume.pixel_peak_search">[docs]</a><span class="k">def</span> <span class="nf">pixel_peak_search</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">peak_percentile</span><span class="o">=</span><span class="mi">99</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    find average position of bright points in image</span>
+<span class="sd">    :param data: numpy array with ndims 1,2,3</span>
+<span class="sd">    :param peak_percentile: float from 0-100, percentile of image to use as peak area</span>
+<span class="sd">    :return: i, j, k index of image[i,j,k]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># bright = data &gt; (peak_percentile/100.) * np.max(image)</span>
+    <span class="n">bright</span> <span class="o">=</span> <span class="n">data</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">peak_percentile</span><span class="p">)</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">bright</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">shi</span><span class="p">,</span> <span class="n">shj</span><span class="p">,</span> <span class="n">shk</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">shj</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">shi</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">shk</span><span class="p">))</span>
+        <span class="n">avi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="n">bright</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="n">avj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="n">bright</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="n">avk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="n">bright</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">avi</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">avj</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">avk</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">shi</span><span class="p">,</span> <span class="n">shj</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">j</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">shj</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">shi</span><span class="p">))</span>
+        <span class="n">avi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="n">bright</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="n">avj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="n">bright</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">avi</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">avj</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+        <span class="n">avi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="n">bright</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">avi</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;wrong data type&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="roi"><a class="viewcode-back" href="../../code/volume.html#babelscan.volume.roi">[docs]</a><span class="k">def</span> <span class="nf">roi</span><span class="p">(</span><span class="n">volume</span><span class="p">,</span> <span class="n">cen_h</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cen_v</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wid_h</span><span class="o">=</span><span class="mi">31</span><span class="p">,</span> <span class="n">wid_v</span><span class="o">=</span><span class="mi">31</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create new region of interest from detector images</span>
+<span class="sd">    :param volume: Volume object or numpy.array with ndim==3</span>
+<span class="sd">    :param cen_h: int or None</span>
+<span class="sd">    :param cen_v: int or None</span>
+<span class="sd">    :param wid_h:  int or None</span>
+<span class="sd">    :param wid_v:  int or None</span>
+<span class="sd">    :return: l*wid_v*wid_h array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">volume</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cen_h</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cen_h</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">cen_v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cen_v</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">volume</span><span class="p">[:,</span> <span class="n">cen_v</span> <span class="o">-</span> <span class="n">wid_v</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">cen_v</span> <span class="o">+</span> <span class="n">wid_v</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cen_h</span> <span class="o">-</span> <span class="n">wid_h</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">cen_h</span> <span class="o">+</span> <span class="n">wid_h</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="roi_sum"><a class="viewcode-back" href="../../code/volume.html#babelscan.volume.roi_sum">[docs]</a><span class="k">def</span> <span class="nf">roi_sum</span><span class="p">(</span><span class="n">volume</span><span class="p">,</span> <span class="n">cen_h</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cen_v</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wid_h</span><span class="o">=</span><span class="mi">31</span><span class="p">,</span> <span class="n">wid_v</span><span class="o">=</span><span class="mi">31</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create new region of interest from detector images, return sum and max of each image</span>
+<span class="sd">    :param volume: Volume object or numpy.array with ndim==3</span>
+<span class="sd">    :param cen_h: int or None</span>
+<span class="sd">    :param cen_v: int or None</span>
+<span class="sd">    :param wid_h:  int or None</span>
+<span class="sd">    :param wid_v:  int or None</span>
+<span class="sd">    :return: roi_sum, roi_max</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">volume</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cen_h</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cen_h</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">cen_v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cen_v</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">sum_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">im</span><span class="p">[</span><span class="n">cen_v</span> <span class="o">-</span> <span class="n">wid_v</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">cen_v</span> <span class="o">+</span> <span class="n">wid_v</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cen_h</span> <span class="o">-</span> <span class="n">wid_h</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">cen_h</span> <span class="o">+</span> <span class="n">wid_h</span> <span class="o">//</span> <span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">volume</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">max_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">im</span><span class="p">[</span><span class="n">cen_v</span> <span class="o">-</span> <span class="n">wid_v</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">cen_v</span> <span class="o">+</span> <span class="n">wid_v</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cen_h</span> <span class="o">-</span> <span class="n">wid_h</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">cen_h</span> <span class="o">+</span> <span class="n">wid_h</span> <span class="o">//</span> <span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">volume</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">sum_vals</span><span class="p">,</span> <span class="n">max_vals</span></div>
+
+
+<div class="viewcode-block" id="check_roi_op"><a class="viewcode-back" href="../../code/volume.html#babelscan.volume.check_roi_op">[docs]</a><span class="k">def</span> <span class="nf">check_roi_op</span><span class="p">(</span><span class="n">volume</span><span class="p">,</span> <span class="n">operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create new region of interest (roi) values from operation string</span>
+<span class="sd">    The roi centre and size is defined by an operation:</span>
+<span class="sd">      operation = &#39;nroi[210, 97, 75, 61]&#39;</span>
+<span class="sd">      &#39;nroi&#39;      -   creates a region of interest in the detector centre with size 31x31</span>
+<span class="sd">      &#39;nroi[h,v]&#39; -   creates a roi in the detector centre with size hxv, where h is horizontal, v is vertical</span>
+<span class="sd">      &#39;nroi[m,n,h,v] - create a roi with cen_h, cen_v, wid_h, wid_v = n, m, h, v</span>
+<span class="sd">    :param volume: Volume object or numpy.array with ndim==3</span>
+<span class="sd">    :param operation: str : operation string</span>
+<span class="sd">    :return: cen_h, cen_v, wid_h, wid_v, operation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">re_findint</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">operation</span><span class="p">)]</span>
+    <span class="n">nvals</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">volume</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;peak&#39;</span> <span class="ow">in</span> <span class="n">operation</span><span class="p">:</span>
+        <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">pixel_peak_search</span><span class="p">(</span><span class="n">volume</span><span class="p">)</span>
+        <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span> <span class="o">=</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">nvals</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span> <span class="o">=</span> <span class="n">vals</span>
+    <span class="k">elif</span> <span class="n">nvals</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span> <span class="o">=</span> <span class="n">vals</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span> <span class="o">=</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">31</span>
+    <span class="n">operation</span> <span class="o">=</span> <span class="s1">&#39;nroi[</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">,</span> <span class="n">operation</span></div>
+
+
+<div class="viewcode-block" id="roi_op"><a class="viewcode-back" href="../../code/volume.html#babelscan.volume.roi_op">[docs]</a><span class="k">def</span> <span class="nf">roi_op</span><span class="p">(</span><span class="n">volume</span><span class="p">,</span> <span class="n">operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create new region of interest (roi) values from operation string</span>
+<span class="sd">    The roi centre and size is defined by an operation:</span>
+<span class="sd">      operation = &#39;nroi[210, 97, 75, 61]&#39;</span>
+<span class="sd">      &#39;nroi&#39;      -   creates a region of interest in the detector centre with size 31x31</span>
+<span class="sd">      &#39;nroi[h,v]&#39; -   creates a roi in the detector centre with size hxv, where h is horizontal, v is vertical</span>
+<span class="sd">      &#39;nroi[m,n,h,v] - create a roi with cen_h, cen_v, wid_h, wid_v = n, m, h, v</span>
+<span class="sd">    :param volume: Volume object or numpy.array with ndim==3</span>
+<span class="sd">    :param operation:  str : operation string</span>
+<span class="sd">    :return: l*wid_v*wid_h array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">,</span> <span class="n">operation</span> <span class="o">=</span> <span class="n">check_roi_op</span><span class="p">(</span><span class="n">volume</span><span class="p">,</span> <span class="n">operation</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">roi</span><span class="p">(</span><span class="n">volume</span><span class="p">,</span> <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="roi_op_sum"><a class="viewcode-back" href="../../code/volume.html#babelscan.volume.roi_op_sum">[docs]</a><span class="k">def</span> <span class="nf">roi_op_sum</span><span class="p">(</span><span class="n">volume</span><span class="p">,</span> <span class="n">operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create new region of interest (roi) values from operation string</span>
+<span class="sd">    The roi centre and size is defined by an operation:</span>
+<span class="sd">      operation = &#39;nroi[210, 97, 75, 61]&#39;</span>
+<span class="sd">      &#39;nroi&#39;      -   creates a region of interest in the detector centre with size 31x31</span>
+<span class="sd">      &#39;nroi[h,v]&#39; -   creates a roi in the detector centre with size hxv, where h is horizontal, v is vertical</span>
+<span class="sd">      &#39;nroi[m,n,h,v] - create a roi with cen_h, cen_v, wid_h, wid_v = n, m, h, v</span>
+<span class="sd">    :param volume: Volume object or numpy.array with ndim==3</span>
+<span class="sd">    :param operation:  str : operation string</span>
+<span class="sd">    :return: roi_sum, roi_max</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">,</span> <span class="n">operation</span> <span class="o">=</span> <span class="n">check_roi_op</span><span class="p">(</span><span class="n">volume</span><span class="p">,</span> <span class="n">operation</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">roi_sum</span><span class="p">(</span><span class="n">volume</span><span class="p">,</span> <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">)</span></div>
+
+
+<span class="s2">&quot;----------------------------------------------------------------------------------------------------------------------&quot;</span>
+<span class="s2">&quot;-------------------------------------------- Volume Classes ----------------------------------------------------------&quot;</span>
+<span class="s2">&quot;----------------------------------------------------------------------------------------------------------------------&quot;</span>
+
+
+<div class="viewcode-block" id="Volume"><a class="viewcode-back" href="../../code/volume.html#babelscan.volume.Volume">[docs]</a><span class="k">class</span> <span class="nc">Volume</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Volume functions</span>
+<span class="sd">      Contains various functions to operate on 3D volumes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">ndim</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="k">def</span> <span class="nf">_lazy_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Lazy operation&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">issubclass</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">),</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="c1"># compare with value</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">operation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span> <span class="n">other</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;ArrayVolume </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> not implemented yet&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">operation</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;self &lt; other&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lazy_op</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">lt</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;self &lt;= other&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lazy_op</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">le</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;self &gt; other&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lazy_op</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">gt</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;self &gt; other&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lazy_op</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">ge</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;self == other&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lazy_op</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">eq</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;self != other&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lazy_op</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">ne</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Volume.cut"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.cut">[docs]</a>    <span class="k">def</span> <span class="nf">cut</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index1</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">index2</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        generate arbitary cut between two points in the volume</span>
+<span class="sd">        :param index1: (i,j,k) start point in the volume</span>
+<span class="sd">        :param index2: (i,j,k) end point in the volume</span>
+<span class="sd">        :return: array, length=max difference between index1 and index2</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">index1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">index1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">index2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">index2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="c1"># assign end values (-1)</span>
+        <span class="n">sh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">index1</span><span class="p">[</span><span class="n">index1</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">sh</span><span class="p">[</span><span class="n">index1</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">index1</span><span class="p">[</span><span class="n">index1</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">index2</span><span class="p">[</span><span class="n">index2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">sh</span><span class="p">[</span><span class="n">index2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">index2</span><span class="p">[</span><span class="n">index2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">index2</span> <span class="o">-</span> <span class="n">index1</span>
+        <span class="n">mx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+        <span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="n">index1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">n</span> <span class="o">*</span> <span class="n">diff</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">//</span> <span class="n">mx</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mx</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">indexes</span><span class="p">]</span>  <span class="c1"># uses numpy advanced indexing</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">idx</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Volume.sum_flat"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.sum_flat">[docs]</a>    <span class="k">def</span> <span class="nf">sum_flat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return sum of images: np.sum(volume, axis=0)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Volume.array_sum"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.array_sum">[docs]</a>    <span class="k">def</span> <span class="nf">array_sum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns [sum(image) for image in volume]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">im</span><span class="p">)</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Volume.array_max"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.array_max">[docs]</a>    <span class="k">def</span> <span class="nf">array_max</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns [max(image) for image in volume]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">im</span><span class="p">)</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Volume.array_min"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.array_min">[docs]</a>    <span class="k">def</span> <span class="nf">array_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns [min(image) for image in volume]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">im</span><span class="p">)</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Volume.array_mean"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.array_mean">[docs]</a>    <span class="k">def</span> <span class="nf">array_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns [mean(image) for image in volume]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">im</span><span class="p">)</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Volume.array_argmax"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.array_argmax">[docs]</a>    <span class="k">def</span> <span class="nf">array_argmax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns [i,j = argmax(im) for im in self]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">im</span><span class="p">),</span> <span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Volume.array_peak"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.array_peak">[docs]</a>    <span class="k">def</span> <span class="nf">array_peak</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns [i,j = peak_search(im) for im in self]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pixel_peak_search</span><span class="p">(</span><span class="n">im</span><span class="p">)</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Volume.argmax"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.argmax">[docs]</a>    <span class="k">def</span> <span class="nf">argmax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Numpy argmax, return i,j,k&quot;&quot;&quot;</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Volume.peak_search"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.peak_search">[docs]</a>    <span class="k">def</span> <span class="nf">peak_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peak_percentile</span><span class="o">=</span><span class="mi">99</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        find average position of bright points in image</span>
+<span class="sd">        :param peak_percentile: float from 0-100, percentile of image to use as peak area</span>
+<span class="sd">        :return: i, j, k index of image[i,j,k]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">shi</span><span class="p">,</span> <span class="n">shj</span><span class="p">,</span> <span class="n">shk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">shj</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">shi</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">shk</span><span class="p">))</span>
+        <span class="c1"># bright = image &gt; (peak_percentile/100.) * np.max(image)</span>
+        <span class="n">bright</span> <span class="o">=</span> <span class="bp">self</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peak_percentile</span><span class="p">)</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">bright</span><span class="p">]</span>
+        <span class="n">avi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="n">bright</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="n">avj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="n">bright</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="n">avk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="n">bright</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">avi</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">avj</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">avk</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Volume.background"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.background">[docs]</a>    <span class="k">def</span> <span class="nf">background</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">background_percentile</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Average bottom percentile of elements to determine background value</span>
+<span class="sd">        :param background_percentile: int from 0-100, percentile of volume to use as background</span>
+<span class="sd">        :return: float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bkg</span> <span class="o">=</span> <span class="bp">self</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">background_percentile</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">bkg</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Volume.peak_amplitude"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.peak_amplitude">[docs]</a>    <span class="k">def</span> <span class="nf">peak_amplitude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">background_percentile</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sum the volume with background removed</span>
+<span class="sd">        :param background_percentile: int from 0-100, percentile of volume to use as background</span>
+<span class="sd">        :return: float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bkg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="p">(</span><span class="n">background_percentile</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span> <span class="o">&gt;</span> <span class="n">bkg</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Volume.roi"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.roi">[docs]</a>    <span class="k">def</span> <span class="nf">roi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cen_h</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cen_v</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wid_h</span><span class="o">=</span><span class="mi">31</span><span class="p">,</span> <span class="n">wid_v</span><span class="o">=</span><span class="mi">31</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create new region of interest from detector images</span>
+<span class="sd">        :param cen_h: int or None</span>
+<span class="sd">        :param cen_v: int or None</span>
+<span class="sd">        :param wid_h:  int or None</span>
+<span class="sd">        :param wid_v:  int or None</span>
+<span class="sd">        :return: l*wid_v*wid_h array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cen_h</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cen_h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="n">cen_v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cen_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">ArrayVolume</span><span class="p">(</span><span class="bp">self</span><span class="p">[:,</span> <span class="n">cen_v</span> <span class="o">-</span> <span class="n">wid_v</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">cen_v</span> <span class="o">+</span> <span class="n">wid_v</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cen_h</span> <span class="o">-</span> <span class="n">wid_h</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">cen_h</span> <span class="o">+</span> <span class="n">wid_h</span> <span class="o">//</span> <span class="mi">2</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Volume.roi_sum"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.roi_sum">[docs]</a>    <span class="k">def</span> <span class="nf">roi_sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cen_h</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cen_v</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wid_h</span><span class="o">=</span><span class="mi">31</span><span class="p">,</span> <span class="n">wid_v</span><span class="o">=</span><span class="mi">31</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create new region of interest from detector images, return sum and max of each image</span>
+<span class="sd">        :param cen_h: int or None</span>
+<span class="sd">        :param cen_v: int or None</span>
+<span class="sd">        :param wid_h:  int or None</span>
+<span class="sd">        :param wid_v:  int or None</span>
+<span class="sd">        :return: roi_sum, roi_max</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cen_h</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cen_h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="n">cen_v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cen_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">sum_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">im</span><span class="p">[</span><span class="n">cen_v</span> <span class="o">-</span> <span class="n">wid_v</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">cen_v</span> <span class="o">+</span> <span class="n">wid_v</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cen_h</span> <span class="o">-</span> <span class="n">wid_h</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">cen_h</span> <span class="o">+</span> <span class="n">wid_h</span> <span class="o">//</span> <span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">max_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">im</span><span class="p">[</span><span class="n">cen_v</span> <span class="o">-</span> <span class="n">wid_v</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">cen_v</span> <span class="o">+</span> <span class="n">wid_v</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cen_h</span> <span class="o">-</span> <span class="n">wid_h</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">cen_h</span> <span class="o">+</span> <span class="n">wid_h</span> <span class="o">//</span> <span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sum_vals</span><span class="p">,</span> <span class="n">max_vals</span></div>
+
+<div class="viewcode-block" id="Volume.check_roi_op"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.check_roi_op">[docs]</a>    <span class="k">def</span> <span class="nf">check_roi_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create new region of interest (roi) values from operation string</span>
+<span class="sd">        The roi centre and size is defined by an operation:</span>
+<span class="sd">          operation = &#39;nroi[210, 97, 75, 61]&#39;</span>
+<span class="sd">          &#39;nroi&#39;      -   creates a region of interest in the detector centre with size 31x31</span>
+<span class="sd">          &#39;nroi[h,v]&#39; -   creates a roi in the detector centre with size hxv, where h is horizontal, v is vertical</span>
+<span class="sd">          &#39;nroi[m,n,h,v] - create a roi with cen_h, cen_v, wid_h, wid_v = n, m, h, v</span>
+<span class="sd">        :param operation: str : operation string</span>
+<span class="sd">        :return: cen_h, cen_v, wid_h, wid_v, operation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">re_findint</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">operation</span><span class="p">)]</span>
+        <span class="n">nvals</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="s1">&#39;peak&#39;</span> <span class="ow">in</span> <span class="n">operation</span><span class="p">:</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">peak_search</span><span class="p">()</span>
+            <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span> <span class="o">=</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="n">nvals</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span> <span class="o">=</span> <span class="n">vals</span>
+        <span class="k">elif</span> <span class="n">nvals</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span> <span class="o">=</span> <span class="n">vals</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span> <span class="o">=</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">31</span>
+        <span class="n">operation</span> <span class="o">=</span> <span class="s1">&#39;nroi[</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">,</span> <span class="n">operation</span></div>
+
+<div class="viewcode-block" id="Volume.roi_op"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.roi_op">[docs]</a>    <span class="k">def</span> <span class="nf">roi_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create new region of interest (roi) from image data and return sum and maxval</span>
+<span class="sd">        The roi centre and size is defined by an operation:</span>
+<span class="sd">          operation = &#39;nroi[210, 97, 75, 61]&#39;</span>
+<span class="sd">          &#39;nroi&#39;      -   creates a region of interest in the detector centre with size 31x31</span>
+<span class="sd">          &#39;nroi[h,v]&#39; -   creates a roi in the detector centre with size hxv, where h is horizontal, v is vertical</span>
+<span class="sd">          &#39;nroi[m,n,h,v] - create a roi with cen_h, cen_v, wid_h, wid_v = n, m, h, v</span>
+<span class="sd">        :param operation: str : operation string</span>
+<span class="sd">        :return: l*wid_v*wid_h array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">,</span> <span class="n">operation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_roi_op</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">roi</span><span class="p">(</span><span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Volume.roi_op_sum"><a class="viewcode-back" href="../../Code.html#babelscan.volume.Volume.roi_op_sum">[docs]</a>    <span class="k">def</span> <span class="nf">roi_op_sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create new region of interest (roi) from image data and return sum and maxval</span>
+<span class="sd">        The roi centre and size is defined by an operation:</span>
+<span class="sd">          operation = &#39;nroi[210, 97, 75, 61]&#39;</span>
+<span class="sd">          &#39;nroi&#39;      -   creates a region of interest in the detector centre with size 31x31</span>
+<span class="sd">          &#39;nroi[h,v]&#39; -   creates a roi in the detector centre with size hxv, where h is horizontal, v is vertical</span>
+<span class="sd">          &#39;nroi[m,n,h,v] - create a roi with cen_h, cen_v, wid_h, wid_v = n, m, h, v</span>
+<span class="sd">        :param operation: str : operation string</span>
+<span class="sd">        :return: sum, maxval : [o] length arrays</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">,</span> <span class="n">operation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_roi_op</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">roi_sum</span><span class="p">(</span><span class="n">cen_h</span><span class="p">,</span> <span class="n">cen_v</span><span class="p">,</span> <span class="n">wid_h</span><span class="p">,</span> <span class="n">wid_v</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ArrayVolume"><a class="viewcode-back" href="../../code/volume.html#babelscan.volume.ArrayVolume">[docs]</a><span class="k">class</span> <span class="nc">ArrayVolume</span><span class="p">(</span><span class="n">Volume</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ArrayVolume for 3D Numpy arrays</span>
+<span class="sd">      Contains additional functions for 3D arrays</span>
+<span class="sd">    Usage:</span>
+<span class="sd">      array = np.array([[[1,2],[3,4]],[[5,6],[7,8]]])</span>
+<span class="sd">      lzvol = ArrayVolume(array)</span>
+<span class="sd">      image = lzvol[0]</span>
+<span class="sd">    Supported indexing:</span>
+<span class="sd">     single dimension indexing, as numpy array:</span>
+<span class="sd">      vol = lzvol[:3]</span>
+<span class="sd">      vol = lzvol[slice(1,-1,2)]</span>
+<span class="sd">     multi-dimension indexing, as numpy array:</span>
+<span class="sd">      vol = lzvol[3, 100:200]</span>
+<span class="sd">      vol = lzvol[1:-1, 100:200, 100:200]</span>
+<span class="sd">     array operations</span>
+<span class="sd">      len(lzvol), np.shape(lzvol), np.size(lzvol), np.ndim(lzvol)</span>
+<span class="sd">      np.sum(lzvol), np.mean(lzvol), np.percentile(lzvol)</span>
+<span class="sd">     boolean array operations</span>
+<span class="sd">      lzvol &gt; 1 (&lt;, &lt;=, &gt;, &gt;=, ==, !=)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%r</span><span class="s1"> is not a volume&#39;</span> <span class="o">%</span> <span class="n">array</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">init_vol_plot_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;ArrayVolume(</span><span class="si">%r</span><span class="s1">, shape=</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImageVolume"><a class="viewcode-back" href="../../code/volume.html#babelscan.volume.ImageVolume">[docs]</a><span class="k">class</span> <span class="nc">ImageVolume</span><span class="p">(</span><span class="n">Volume</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ImageVolume for images</span>
+<span class="sd">      Only loads images when called, reducing memory requirements</span>
+<span class="sd">    Usage:</span>
+<span class="sd">      lzvol = ImageVolume([file1.tiff, file2.tiff, file3.tiff,...])</span>
+<span class="sd">      image = lzvol[0]</span>
+<span class="sd">    Supported indexing:</span>
+<span class="sd">     single dimension indexing, as numpy array:</span>
+<span class="sd">      vol = lzvol[:3]</span>
+<span class="sd">      vol = lzvol[slice(1,-1,2)]</span>
+<span class="sd">     multi-dimension indexing, as numpy array:</span>
+<span class="sd">      vol = lzvol[3, 100:200]</span>
+<span class="sd">      vol = lzvol[1:-1, 100:200, 100:200]</span>
+<span class="sd">     array operations</span>
+<span class="sd">      len(lzvol), np.shape(lzvol), np.size(lzvol), np.ndim(lzvol)</span>
+<span class="sd">      np.sum(lzvol), np.mean(lzvol), np.percentile(lzvol)</span>
+<span class="sd">     boolean array operations</span>
+<span class="sd">      lzvol &gt; 1 (&lt;, &lt;=, &gt;, &gt;=, ==, !=)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_of_files</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">list_of_files</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_image</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">im_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">),</span> <span class="n">im_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">im_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">init_vol_plot_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;ImageVolume([</span><span class="si">%s</span><span class="s1">,...], shape=</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_read_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">slice_i</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">slice_j</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)):</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">slice_i</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">im_op</span> <span class="o">=</span> <span class="n">slice_i</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">im_op</span> <span class="o">=</span> <span class="n">slice_i</span><span class="p">,</span> <span class="n">slice_j</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">files</span><span class="p">),</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">imread</span><span class="p">(</span><span class="n">files</span><span class="p">)[</span><span class="n">im_op</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">imread</span><span class="p">(</span><span class="n">file</span><span class="p">)[</span><span class="n">im_op</span><span class="p">]</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_image</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>
+            <span class="c1"># multidimensional. items seperated by ,</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_image</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_image</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c1"># Boolean mask array, e.g. vol[vol &gt; 1]</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_read_image</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">im</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">im</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">item</span><span class="p">)])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_image</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DatasetVolume"><a class="viewcode-back" href="../../Code.html#babelscan.volume.DatasetVolume">[docs]</a><span class="k">class</span> <span class="nc">DatasetVolume</span><span class="p">(</span><span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">Volume</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DatasetVolume for 3D HDF datasets</span>
+<span class="sd">      Only loads images when called, reducing memory requirements</span>
+<span class="sd">    Usage:</span>
+<span class="sd">      dataset = hdf[&#39;/entry/group/name&#39;]</span>
+<span class="sd">      lzvol = DatasetVolume(dataset)</span>
+<span class="sd">      image = lzvol[0]</span>
+<span class="sd">    Supported indexing:</span>
+<span class="sd">     single dimension indexing, as numpy array:</span>
+<span class="sd">      vol = lzvol[:3]</span>
+<span class="sd">      vol = lzvol[slice(1,-1,2)]</span>
+<span class="sd">     multi-dimension indexing, as numpy array:</span>
+<span class="sd">      vol = lzvol[3, 100:200]</span>
+<span class="sd">      vol = lzvol[1:-1, 100:200, 100:200]</span>
+<span class="sd">     array operations</span>
+<span class="sd">      len(lzvol), np.shape(lzvol), np.size(lzvol), np.ndim(lzvol)</span>
+<span class="sd">      np.sum(lzvol), np.mean(lzvol), np.percentile(lzvol)</span>
+<span class="sd">     boolean array operations</span>
+<span class="sd">      lzvol &gt; 1 (&lt;, &lt;=, &gt;, &gt;=, ==, !=)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">dataset</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%r</span><span class="s1"> is not a volume&#39;</span> <span class="o">%</span> <span class="n">dataset</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DatasetVolume</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">init_vol_plot_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;DatasetVolume(</span><span class="si">%r</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">DatasetVolume</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">())</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Dan Porter.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

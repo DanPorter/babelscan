@@ -8,7 +8,7 @@ def readme():
 
 setup(
     name='babelscan',
-    version='0.5.2',
+    version='0.6.2',
     packages=['babelscan'],
     url='https://github.com/DanPorter/babelscan',
     license='Apache 2.0',
@@ -29,5 +29,5 @@ setup(
         'Topic :: Scientific/Engineering :: Physics',
         'Development Status :: 3 - Alpha',
         ],
-    install_requires=['numpy', 'h5py', 'imageio']
+    install_requires=['numpy', 'h5py', 'imageio', 'python-dateutil']
 )

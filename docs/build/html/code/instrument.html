@@ -1,0 +1,277 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>babelscan.instrument &mdash; BabelScan 0.3.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="babelscan.volume" href="volume.html" />
+    <link rel="prev" title="babelscan.folder_monitor" href="folder_monitor.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BabelScan
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Code.html">Code</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="babelscan.html">babelscan.babelscan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="folder_monitor.html">babelscan.folder_monitor</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">babelscan.instrument</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-babelscan.instrument">instrument</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-instrument">Class: Instrument</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="volume.html">babelscan.volume</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Code.html#module-babelscan">babelscan</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../plotting/Plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fitting/Fitting.html">Fitting</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BabelScan</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="Code.html">Code</a> &raquo;</li>
+        
+      <li>babelscan.instrument</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/code/instrument.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="babelscan-instrument">
+<h1>babelscan.instrument<a class="headerlink" href="#babelscan-instrument" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="module-babelscan.instrument">
+<span id="instrument"></span><h2>instrument<a class="headerlink" href="#module-babelscan.instrument" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Define Instrument class</dt><dd><p>An instrument is a generator of Scans and FolderMonitors (experiements) with specific default settings</p>
+</dd>
+</dl>
+<dl class="function">
+<dt id="babelscan.instrument.instrument_from_config">
+<code class="sig-prename descclassname">babelscan.instrument.</code><code class="sig-name descname">instrument_from_config</code><span class="sig-paren">(</span><em class="sig-param">config_file</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/babelscan/instrument.html#instrument_from_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.instrument.instrument_from_config" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Create Instrument class from instrument.config file.</dt><dd><dl class="simple">
+<dt>.config files should be json files with the following keys:</dt><dd><p>‘name’: str
+‘default_names’: dict,
+‘formats’: dict,
+‘default_values’: dict,
+‘options’: dict</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config_file</strong> – str config filename</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Instrument</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="class-instrument">
+<h2>Class: Instrument<a class="headerlink" href="#class-instrument" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="babelscan.instrument.Instrument">
+<em class="property">class </em><code class="sig-prename descclassname">babelscan.instrument.</code><code class="sig-name descname">Instrument</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">default_names=None</em>, <em class="sig-param">formats=None</em>, <em class="sig-param">default_values=None</em>, <em class="sig-param">options=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/babelscan/instrument.html#Instrument"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.instrument.Instrument" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Instrument class</dt><dd><p>An instrument is a generator of Scans and FolderMonitors (experiements) with specific default settings</p>
+</dd>
+</dl>
+<p>beamline = Instrument(‘name’, default_names, functions, filename_format)
+:param name: str : name of instrument
+:param default_names: dict : Scan objects created will
+:param formats: dict :
+:param options: dict :</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="volume.html" class="btn btn-neutral float-right" title="babelscan.volume" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="folder_monitor.html" class="btn btn-neutral float-left" title="babelscan.folder_monitor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Dan Porter.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

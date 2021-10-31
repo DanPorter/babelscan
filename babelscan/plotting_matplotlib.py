@@ -368,6 +368,7 @@ def create_html_page(body_lines=(), header_lines=()):
       padding-left: 10px;
       width: 90pc;
       height: 400px;
+      resize: vertical;
     }
     .ScanDetails {
       float: left;
@@ -400,7 +401,8 @@ def create_figure_div(title, details, fig1_file, fig2_file=None):
     """
 
     detail_div = ["  <div class=\"ScanDetails\">"]
-    detail_div += ['    <p>%s</p>' % det for det in details.splitlines()]
+    # detail_div += ['    <p>%s</p>' % det for det in details.splitlines()]
+    detail_div += ['    %s' % details.replace('\n', '<br>')]
     detail_div += ["  </div>"]
 
     image1 = "  <img src=\"%s\" alt=\"%s\" class=\"ScanImage\">" % (
@@ -413,7 +415,7 @@ def create_figure_div(title, details, fig1_file, fig2_file=None):
 
     html = [
         "<div class=\"ScanBox\">",
-        "  <h3>%s</h3>" % title,
+        "  <h3>%s</h3>" % title.replace('\n', '<br>'),
     ]
     html = html + detail_div
     html += [
@@ -423,6 +425,57 @@ def create_figure_div(title, details, fig1_file, fig2_file=None):
         ""
     ]
     return html
+
+
+def create_plotly_blob(data_list, xlabel, ylabel, title):
+    """
+    Create plotly line plot object, useful for jupyter plots or generation of interactive html plots
+    E.G.
+      import plotly.graph_objects as go
+      blob = create_plotly_blob([(xdata1, ydata1, label1, True), (xdata2, ydata2, label2, False)], 'x', 'y', 'title')
+      fig = go.Figure(blob)
+      fig.show()
+
+    4 element tuples in data_list must follow (xdata, ydata, label, visible):
+       xdata: 1d array of x-axis data
+       ydata: 1d array of y-axis data
+       label: str label description
+       visible: bool, if False plot is only given in legend but not turned on
+    :param data_list: list of 4 element tuples (xdata, ydata, label, visible)
+    :param xlabel: str x-axis label
+    :param ylabel: str y-axis label
+    :param title: str plot title
+    :return: dict
+    """
+    # Convert title
+    title = title.replace('\n', '<br>')
+
+    # Create json blob
+    auto_blob = {
+        'data': [],
+        'layout': {'font': {'family': 'Courier New, monospace', 'size': 18},
+                   'legend': {'title': {'text': 'Scannables'}},
+                   'title': {'text': title},
+                   'xaxis': {'title': {'text': xlabel}},
+                   'yaxis': {'title': {'text': ylabel}}}
+    }
+
+    for item in data_list:
+        if not item[3]:
+            vis = 'legendonly'
+        else:
+            vis = True
+        trace = {
+            'mode': 'markers+lines',
+            'name': item[2],
+            'type': 'scatter',
+            'visible': vis,
+            'x': list(item[0]),
+            'y': list(item[1]),
+
+        }
+        auto_blob['data'] += [trace]
+    return auto_blob
 
 
 "----------------------------------------------------------------------------------------------------------------------"
@@ -558,7 +611,6 @@ class ScanPlotManager:
         # Top right - image plot
         try:
             self.plot_image(index, xaxis, cmap=cmap, axes=rt)
-
         except (FileNotFoundError, KeyError, TypeError):
             rt.text(0.5, 0.5, 'No Image')
             rt.set_axis_off()
@@ -573,6 +625,29 @@ class ScanPlotManager:
         if self.scan.options('plot_show'):
             plt.show()
         return fig
+
+    def plotly_blob(self, xaxis='axes', yaxis='signal'):
+        """
+        Create plotly line plot object, useful for jupyter plots or generation of interactive html plots
+        E.G.
+          import plotly.graph_objects as go
+          blob = scan.plot.plotly_blob('axes', ['signal', 'signal/2'])
+          fig = go.Figure(blob)
+          fig.show()
+        :param xaxis: str name or address of array to plot on x axis
+        :param yaxis: str name or address of array to plot on y axis, also accepts list of names for multiplt plots
+        :return: dict
+        """
+        # Check for multiple inputs on yaxis
+        ylist = fn.liststr(yaxis)
+
+        xname, yname = xaxis, yaxis
+        data_list = []
+        for yaxis in ylist:
+            xdata, ydata, yerror, xname, yname = self.scan.get_plot_data(xaxis, yaxis, None, None)
+            data_list += [(xdata, ydata, yname, True)]
+        ttl = self.scan.title()
+        return create_plotly_blob(data_list, xname, yname, ttl)
 
 
 "----------------------------------------------------------------------------------------------------------------------"
@@ -713,6 +788,7 @@ class MultiScanPlotManager:
         """
         if not os.path.isdir(folder_name):
             os.mkdir(folder_name)
+            print('Created Folder: %s' % folder_name)
 
         html = []
         for scan, label in zip(self.multiscan, self.multiscan.labels()):
@@ -720,11 +796,13 @@ class MultiScanPlotManager:
             fname1 = folder_name + '/%s.svg' %  scan.scan_number
             plt.savefig(fname1)
             plt.close()
+            fname1 = '%s.svg' % scan.scan_number
             try:
                 scan.plot.plot_image()
                 fname2 = folder_name + '/%s.png' % scan.scan_number
                 plt.savefig(fname2)
                 plt.close()
+                fname2 = '%s.png' % scan.scan_number
             except (FileNotFoundError, KeyError, TypeError):
                 fname2 = None
 
@@ -736,6 +814,27 @@ class MultiScanPlotManager:
         with open(folder_name + '/index.html', 'wt') as f:
             f.write(html_page)
         print('Scans written to %s' % (folder_name + '/index.html'))
+
+    def plotly_blob(self, xaxis='axes', yaxis='signal'):
+        """
+        Create plotly line plot object, useful for jupyter plots or generation of interactive html plots
+        E.G.
+          import plotly.graph_objects as go
+          blob = scans.plot.plotly_blob('axes', 'signal')
+          fig = go.Figure(blob)
+          fig.show()
+        :param xaxis: str name or address of array to plot on x axis
+        :param yaxis: str name or address of array to plot on y axis
+        :return: dict
+        """
+        xname, yname = xaxis, yaxis
+        data_list = []
+        scan_labels = self.multiscan.labels()
+        for n, scan in enumerate(self.multiscan):
+            xdata, ydata, yerror, xname, yname = scan.get_plot_data(xaxis, yaxis, None, None)
+            data_list += [(xdata, ydata, scan_labels[n], True)]
+        ttl = self.multiscan.title()
+        return create_plotly_blob(data_list, xname, yname, ttl)
 
 
 "----------------------------------------------------------------------------------------------------------------------"

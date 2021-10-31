@@ -1,0 +1,1195 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>babelscan.plotting_matplotlib &mdash; BabelScan 0.3.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BabelScan
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code/Code.html">Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../plotting/Plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fitting/Fitting.html">Fitting</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BabelScan</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>babelscan.plotting_matplotlib</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for babelscan.plotting_matplotlib</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Matplotlib plotting functions</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">Axes3D</span> <span class="c1"># 3D plotting</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">fn</span>
+
+
+<span class="n">DEFAULT_FONT</span> <span class="o">=</span> <span class="s1">&#39;Times New Roman&#39;</span>
+<span class="n">FIG_SIZE</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>
+<span class="n">FIG_DPI</span> <span class="o">=</span> <span class="mi">100</span>
+
+
+<span class="c1"># Setup matplotlib rc parameters</span>
+<span class="c1"># These handle the default look of matplotlib plots</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;figure&#39;</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">FIG_SIZE</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">FIG_DPI</span><span class="p">,</span> <span class="n">autolayout</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;lines&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;errorbar&#39;</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;legend&#39;</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">titleweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="s1">&#39;large&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;xtick&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="s1">&#39;large&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;ytick&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="s1">&#39;large&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;axes.formatter&#39;</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">offset_threshold</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="c1"># Note font values appear to only be set when plt.show is called</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;font&#39;</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="s1">&#39;serif&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;normal&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">serif</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Times New Roman&#39;</span><span class="p">,</span> <span class="s1">&#39;Times&#39;</span><span class="p">,</span> <span class="s1">&#39;DejaVu Serif&#39;</span><span class="p">])</span>
+<span class="c1">#plt.rcParams[&quot;savefig.directory&quot;] = os.path.dirname(__file__) # Default save directory for figures</span>
+<span class="c1">#plt.rcdefaults()</span>
+
+
+<span class="s1">&#39;----------------------------Plot manipulation--------------------------&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="n">ttl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xvar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yvar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zvar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+           <span class="n">colorbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">colorbar_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+           <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s1">&#39;Normal&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add formatted labels to current plot, also increases the tick size</span>
+<span class="sd">    :param ttl: title</span>
+<span class="sd">    :param xvar: x label</span>
+<span class="sd">    :param yvar: y label</span>
+<span class="sd">    :param zvar: z label (3D plots only)</span>
+<span class="sd">    :param legend: False/ True, adds default legend to plot</span>
+<span class="sd">    :param colorbar: False/ True, adds default colorbar to plot</span>
+<span class="sd">    :param colorbar_label: adds label to colorbar</span>
+<span class="sd">    :param axes: matplotlib axes to use, None for plt.gca()</span>
+<span class="sd">    :param size: &#39;Normal&#39; or &#39;Big&#39;</span>
+<span class="sd">    :param font: str font name, &#39;Times New Roman&#39;</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">size</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;big&#39;</span><span class="p">,</span> <span class="s1">&#39;large&#39;</span><span class="p">,</span> <span class="s1">&#39;xxl&#39;</span><span class="p">,</span> <span class="s1">&#39;xl&#39;</span><span class="p">]:</span>
+        <span class="n">tik</span> <span class="o">=</span> <span class="mi">30</span>
+        <span class="n">tit</span> <span class="o">=</span> <span class="mi">32</span>
+        <span class="n">lab</span> <span class="o">=</span> <span class="mi">35</span>
+    <span class="k">elif</span> <span class="n">size</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;small&#39;</span><span class="p">,</span> <span class="s1">&#39;tiny&#39;</span><span class="p">]:</span>
+        <span class="n">tik</span> <span class="o">=</span> <span class="mi">8</span>
+        <span class="n">tit</span> <span class="o">=</span> <span class="mi">12</span>
+        <span class="n">lab</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Normal</span>
+        <span class="n">tik</span> <span class="o">=</span> <span class="mi">16</span>
+        <span class="n">tit</span> <span class="o">=</span> <span class="mi">12</span>
+        <span class="n">lab</span> <span class="o">=</span> <span class="mi">14</span>
+
+    <span class="n">axes</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="n">tik</span><span class="p">)</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="n">tik</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">ttl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">ttl</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">tit</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">xvar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">xvar</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">lab</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">yvar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">yvar</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">lab</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">zvar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Don&#39;t think this works, use ax.set_zaxis</span>
+        <span class="n">axes</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="n">zvar</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">lab</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">legend</span><span class="p">:</span>
+        <span class="n">axes</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="n">lab</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">colorbar</span><span class="p">:</span>
+        <span class="n">mappables</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">images</span> <span class="o">+</span> <span class="n">axes</span><span class="o">.</span><span class="n">collections</span>
+        <span class="n">cb</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">mappables</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">colorbar_label</span><span class="p">:</span>
+            <span class="n">cb</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">colorbar_label</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">lab</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">colormap</span><span class="p">(</span><span class="n">clim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set colour limits and colormap on axes</span>
+<span class="sd">    :param clim: [min, max] color cut-offs</span>
+<span class="sd">    :param cmap: str name of colormap</span>
+<span class="sd">    :param axes: matplotlib axes or None for current axes</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="c1"># Get axes images</span>
+    <span class="n">mappables</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">images</span> <span class="o">+</span> <span class="n">axes</span><span class="o">.</span><span class="n">collections</span>
+    <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">mappables</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cmap</span><span class="p">:</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">set_cmap</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cmap</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">clim</span><span class="p">:</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="n">clim</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">saveplot</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">figure_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Saves current figure as a png in the home directory</span>
+<span class="sd">    :param name: filename, including or expluding directory and or extension</span>
+<span class="sd">    :param dpi: image resolution, higher means larger image size, default=matplotlib default</span>
+<span class="sd">    :param figure_number: figure number, default = plt.gcf()</span>
+<span class="sd">    :return: None</span>
+
+<span class="sd">    E.G.</span>
+<span class="sd">    ---select figure to save by clicking on it---</span>
+<span class="sd">    saveplot(&#39;test&#39;)</span>
+<span class="sd">    E.G.</span>
+<span class="sd">    saveplot(&#39;c:\somedir\apicture.jpg&#39;, dpi=600, figure=3)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">figure_number</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">gcf</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">gcf</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figure_number</span><span class="p">)</span>
+
+    <span class="n">filedir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">file</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">filedir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">filedir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="s1">&#39;.png&#39;</span>
+
+    <span class="n">savefile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filedir</span><span class="p">,</span> <span class="n">file</span> <span class="o">+</span> <span class="n">ext</span><span class="p">)</span>
+    <span class="n">gcf</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">savefile</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Saved Figure </span><span class="si">{}</span><span class="s1"> as </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gcf</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="n">savefile</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">create_axes</span><span class="p">(</span><span class="n">fig</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">subplot</span><span class="o">=</span><span class="mi">111</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create new plot axis</span>
+<span class="sd">    ax = create_axes(subplot=111)</span>
+
+<span class="sd">    for 3D plot, use: create_axes(projection=&#39;3d&#39;)</span>
+
+<span class="sd">    :param fig: matplotlib figure object, or None to create Figure</span>
+<span class="sd">    :param subplot: subplot input</span>
+<span class="sd">    :param *args, **kwargs: pass additional argments to fig.add_subplot</span>
+<span class="sd">    :return: axes object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">fig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">FIG_SIZE</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">FIG_DPI</span><span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">subplot</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ax</span>
+
+
+<span class="k">def</span> <span class="nf">create_multiplot</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create large figure with multiple plots</span>
+<span class="sd">    :param nrows: int number of figure rows</span>
+<span class="sd">    :param ncols: int number of figure columns</span>
+<span class="sd">    :param title: str suptitle</span>
+<span class="sd">    :param kwargs: arguments to pass to plt.subplots</span>
+<span class="sd">    :return: list of axes, len nrows*ncols</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;figsize&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;figsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">FIG_SIZE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">FIG_SIZE</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s1">&#39;dpi&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dpi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">FIG_DPI</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.32</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="mf">0.07</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.97</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">plot_line</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">yerrors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">line_spec</span><span class="o">=</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot line on given matplotlib axes subplot</span>
+<span class="sd">    Uses matplotlib.plot or matplotlib.errorbar if yerrors is not None</span>
+<span class="sd">    :param axes: matplotlib figure or subplot axes, None uses current axes</span>
+<span class="sd">    :param xdata: array data on x axis</span>
+<span class="sd">    :param ydata: array data on y axis</span>
+<span class="sd">    :param yerrors: array errors on y axis (or None)</span>
+<span class="sd">    :param line_spec: str matplotlib.plot line_spec</span>
+<span class="sd">    :param args: additional arguments</span>
+<span class="sd">    :param kwargs: additional arguments</span>
+<span class="sd">    :return: output of plt.plot [line], or plt.errorbar [line, xerrors, yerrors]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">yerrors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">line_spec</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">yerrors</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="n">line_spec</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">lines</span>
+
+
+<span class="k">def</span> <span class="nf">plot_lines</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">yerrors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cdata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">line_spec</span><span class="o">=</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot lines on given matplotlib axes subplot</span>
+<span class="sd">    Uses matplotlib.plot or matplotlib.errorbar if yerrors is not None</span>
+<span class="sd">    :param axes: matplotlib figure or subplot axes, None uses current axes</span>
+<span class="sd">    :param xdata: array[n] data on x axis</span>
+<span class="sd">    :param ydata: list[n] of array[n] data on y axis</span>
+<span class="sd">    :param yerrors: list[m] of array[n] errors on y axis (or None)</span>
+<span class="sd">    :param cdata: list[n] of values to define line colour</span>
+<span class="sd">    :param cmap: name of colormap to generate colour variation in lines</span>
+<span class="sd">    :param line_spec: str or list[m] of str matplotlib.plot line_spec</span>
+<span class="sd">    :param args: additional arguments</span>
+<span class="sd">    :param kwargs: additional arguments</span>
+<span class="sd">    :return: output of plt.plot [line], or plt.errorbar [line, xerrors, yerrors]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="n">nplots</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ydata</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">xdata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">xdata</span> <span class="o">=</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">ydata</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">xdata</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nplots</span><span class="p">:</span>
+        <span class="n">xdata</span> <span class="o">=</span> <span class="p">[</span><span class="n">xdata</span><span class="p">]</span> <span class="o">*</span> <span class="n">nplots</span>
+
+    <span class="k">if</span> <span class="n">yerrors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">yerrors</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">nplots</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">yerrors</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nplots</span><span class="p">:</span>
+        <span class="n">yerrors</span> <span class="o">=</span> <span class="p">[</span><span class="n">yerrors</span><span class="p">]</span> <span class="o">*</span> <span class="n">nplots</span>
+
+    <span class="k">if</span> <span class="n">cmap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cmap</span> <span class="o">=</span> <span class="s1">&#39;viridis&#39;</span>
+    <span class="k">if</span> <span class="n">cdata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nplots</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cdata</span><span class="p">)</span>
+    <span class="n">cnorm</span> <span class="o">=</span> <span class="n">cdata</span> <span class="o">-</span> <span class="n">cdata</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="n">cnorm</span> <span class="o">=</span> <span class="n">cnorm</span> <span class="o">/</span> <span class="n">cnorm</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cmap</span><span class="p">)(</span><span class="n">cnorm</span><span class="p">)</span>
+
+    <span class="n">line_spec</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">line_spec</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line_spec</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nplots</span><span class="p">:</span>
+        <span class="n">line_spec</span> <span class="o">=</span> <span class="n">line_spec</span> <span class="o">*</span> <span class="n">nplots</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xdata</span><span class="p">),</span> <span class="n">xdata</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ydata</span><span class="p">),</span> <span class="n">ydata</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">yerrors</span><span class="p">),</span> <span class="n">yerrors</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">line_spec</span><span class="p">),</span> <span class="n">line_spec</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="p">),</span> <span class="n">cols</span><span class="p">)</span>
+
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nplots</span><span class="p">):</span>
+        <span class="n">lines</span> <span class="o">+=</span> <span class="n">plot_line</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">xdata</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">ydata</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">yerrors</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">line_spec</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="n">cols</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">lines</span>
+
+
+<span class="k">def</span> <span class="nf">plot_detector_image</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">clim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot detector image</span>
+<span class="sd">    :param axes: matplotlib figure or subplot axes, None uses current axe</span>
+<span class="sd">    :param image: 2d array image data</span>
+<span class="sd">    :param clim: None or [min, max] values for color cutoff</span>
+<span class="sd">    :param args: additional arguments for plt.pcolormesh</span>
+<span class="sd">    :param kwargs: additional arguments for plt.pcolormesh</span>
+<span class="sd">    :return: axes object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="s1">&#39;shading&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;shading&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;gouraud&#39;</span>
+    <span class="k">if</span> <span class="n">clim</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;vmin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">clim</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;vmax&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">clim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">axes</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;image&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">axes</span>
+
+
+<span class="k">def</span> <span class="nf">plot_2d_surface</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">xdata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ydata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">clim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axlim</span><span class="o">=</span><span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot 2D data as colourmap surface</span>
+<span class="sd">    :param axes: matplotlib figure or subplot axes, None uses current axe</span>
+<span class="sd">    :param image: 2d array image data</span>
+<span class="sd">    :param xdata: array data, 2d or 1d</span>
+<span class="sd">    :param ydata: array data 2d or 1d</span>
+<span class="sd">    :param clim: None or [min, max] values for color cutoff from plt.clim</span>
+<span class="sd">    :param axlim: axis limits from plt.axis</span>
+<span class="sd">    :param kwargs: additional arguments for plt.pcolormesh</span>
+<span class="sd">    :return: output of plt.pcolormesh</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="s1">&#39;shading&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;shading&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;gouraud&#39;</span>
+    <span class="k">if</span> <span class="n">clim</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;vmin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">clim</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;vmax&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">clim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">xdata</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">ydata</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">ydata</span><span class="p">,</span> <span class="n">xdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">ydata</span><span class="p">,</span> <span class="n">xdata</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">xdata</span><span class="p">:</span>
+        <span class="n">surface</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">surface</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="n">axlim</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">surface</span>
+
+
+<span class="k">def</span> <span class="nf">plot_3d_surface</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">xdata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ydata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">clim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axlim</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot 2D image data as 3d surface</span>
+<span class="sd">    :param axes: matplotlib figure or subplot axes, None uses current axe</span>
+<span class="sd">    :param image: 2d array image data</span>
+<span class="sd">    :param xdata: array data, 2d or 1d</span>
+<span class="sd">    :param ydata: array data 2d or 1d</span>
+<span class="sd">    :param samples: max number of points to take in each direction, by default does not downsample</span>
+<span class="sd">    :param clim: None or [min, max] values for color cutoff from plt.clim</span>
+<span class="sd">    :param axlim: axis limits from plt.axis</span>
+<span class="sd">    :param kwargs: additional arguments for plt.plot_surface</span>
+<span class="sd">    :return: output of plt.plot_surface</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">samples</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;rcount&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">samples</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;ccount&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">samples</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># default in plot_surface is 50</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;rcount&#39;</span><span class="p">],</span>  <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;ccount&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">clim</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;vmin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">clim</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;vmax&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">clim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">xdata</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">ydata</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">ydata</span><span class="p">,</span> <span class="n">xdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">ydata</span><span class="p">,</span> <span class="n">xdata</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">xdata</span><span class="p">:</span>
+        <span class="n">surface</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">surface</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="n">axlim</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">surface</span>
+
+
+<span class="k">def</span> <span class="nf">create_html_page</span><span class="p">(</span><span class="n">body_lines</span><span class="o">=</span><span class="p">(),</span> <span class="n">header_lines</span><span class="o">=</span><span class="p">()):</span>
+    <span class="sd">&quot;&quot;&quot;Create html page&quot;&quot;&quot;</span>
+    <span class="n">css</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;&lt;style&gt;</span>
+<span class="s2">    .ScanBox {</span>
+<span class="s2">      border: 1px solid black;</span>
+<span class="s2">      padding-top: 10px;</span>
+<span class="s2">      padding-bottom: 10px;</span>
+<span class="s2">      padding-left: 10px;</span>
+<span class="s2">      width: 90pc;</span>
+<span class="s2">      height: 400px;</span>
+<span class="s2">      resize: vertical;</span>
+<span class="s2">    }</span>
+<span class="s2">    .ScanDetails {</span>
+<span class="s2">      float: left;</span>
+<span class="s2">      width: 40pc;</span>
+<span class="s2">    }</span>
+<span class="s2">    .ScanImage{</span>
+<span class="s2">      float: left:</span>
+<span class="s2">      padding-left:2px;</span>
+<span class="s2">      width: 22pc;</span>
+<span class="s2">    }</span>
+<span class="s2">  &lt;/style&gt;&quot;&quot;&quot;</span>
+    <span class="n">header_lines</span> <span class="o">=</span> <span class="n">css</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">header_lines</span><span class="p">)</span>
+
+    <span class="n">html</span> <span class="o">=</span> <span class="s2">&quot;&lt;!doctype html&gt;</span><span class="se">\n</span><span class="s2">&lt;html lang=</span><span class="se">\&quot;</span><span class="s2">en</span><span class="se">\&quot;</span><span class="s2">&gt;</span><span class="se">\n</span><span class="s2">&lt;html&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+    <span class="n">html</span> <span class="o">+=</span> <span class="s2">&quot;&lt;head&gt;</span><span class="se">\n</span><span class="s2">  </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&lt;/head&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">  &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">header_lines</span><span class="p">)</span>
+    <span class="n">html</span> <span class="o">+=</span> <span class="s2">&quot;&lt;body&gt;</span><span class="se">\n</span><span class="s2">  </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&lt;/body&gt;&quot;</span> <span class="o">%</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">  &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">body_lines</span><span class="p">)</span>
+    <span class="n">html</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&lt;/html&gt;</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="k">return</span> <span class="n">html</span>
+
+
+<span class="k">def</span> <span class="nf">create_figure_div</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">details</span><span class="p">,</span> <span class="n">fig1_file</span><span class="p">,</span> <span class="n">fig2_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create html code to generate scan details div</span>
+<span class="sd">    :param title: str title (single line)</span>
+<span class="sd">    :param details: str details of scan (multi-line)</span>
+<span class="sd">    :param fig1_file: str</span>
+<span class="sd">    :param fig2_file: str or None</span>
+<span class="sd">    :param class_name: str</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">detail_div</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;  &lt;div class=</span><span class="se">\&quot;</span><span class="s2">ScanDetails</span><span class="se">\&quot;</span><span class="s2">&gt;&quot;</span><span class="p">]</span>
+    <span class="c1"># detail_div += [&#39;    &lt;p&gt;%s&lt;/p&gt;&#39; % det for det in details.splitlines()]</span>
+    <span class="n">detail_div</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;    </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">details</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;br&gt;&#39;</span><span class="p">)]</span>
+    <span class="n">detail_div</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;  &lt;/div&gt;&quot;</span><span class="p">]</span>
+
+    <span class="n">image1</span> <span class="o">=</span> <span class="s2">&quot;  &lt;img src=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> alt=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> class=</span><span class="se">\&quot;</span><span class="s2">ScanImage</span><span class="se">\&quot;</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">fig1_file</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fig2_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">image2</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">image2</span> <span class="o">=</span> <span class="s2">&quot;  &lt;img src=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> alt=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2"> class=</span><span class="se">\&quot;</span><span class="s2">ScanImage</span><span class="se">\&quot;</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">fig2_file</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+
+    <span class="n">html</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;&lt;div class=</span><span class="se">\&quot;</span><span class="s2">ScanBox</span><span class="se">\&quot;</span><span class="s2">&gt;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;  &lt;h3&gt;</span><span class="si">%s</span><span class="s2">&lt;/h3&gt;&quot;</span> <span class="o">%</span> <span class="n">title</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;br&gt;&#39;</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">html</span> <span class="o">=</span> <span class="n">html</span> <span class="o">+</span> <span class="n">detail_div</span>
+    <span class="n">html</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">image1</span><span class="p">,</span>
+        <span class="n">image2</span><span class="p">,</span>
+        <span class="s2">&quot;&lt;/div&gt;&quot;</span>
+        <span class="s2">&quot;&quot;</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="n">html</span>
+
+
+<span class="k">def</span> <span class="nf">create_plotly_blob</span><span class="p">(</span><span class="n">data_list</span><span class="p">,</span> <span class="n">xlabel</span><span class="p">,</span> <span class="n">ylabel</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create plotly line plot object, useful for jupyter plots or generation of interactive html plots</span>
+<span class="sd">    E.G.</span>
+<span class="sd">      import plotly.graph_objects as go</span>
+<span class="sd">      blob = create_plotly_blob([(xdata1, ydata1, label1, True), (xdata2, ydata2, label2, False)], &#39;x&#39;, &#39;y&#39;, &#39;title&#39;)</span>
+<span class="sd">      fig = go.Figure(blob)</span>
+<span class="sd">      fig.show()</span>
+
+<span class="sd">    4 element tuples in data_list must follow (xdata, ydata, label, visible):</span>
+<span class="sd">       xdata: 1d array of x-axis data</span>
+<span class="sd">       ydata: 1d array of y-axis data</span>
+<span class="sd">       label: str label description</span>
+<span class="sd">       visible: bool, if False plot is only given in legend but not turned on</span>
+<span class="sd">    :param data_list: list of 4 element tuples (xdata, ydata, label, visible)</span>
+<span class="sd">    :param xlabel: str x-axis label</span>
+<span class="sd">    :param ylabel: str y-axis label</span>
+<span class="sd">    :param title: str plot title</span>
+<span class="sd">    :return: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Convert title</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">title</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;br&gt;&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Create json blob</span>
+    <span class="n">auto_blob</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s1">&#39;layout&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;font&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;family&#39;</span><span class="p">:</span> <span class="s1">&#39;Courier New, monospace&#39;</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">18</span><span class="p">},</span>
+                   <span class="s1">&#39;legend&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Scannables&#39;</span><span class="p">}},</span>
+                   <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">title</span><span class="p">},</span>
+                   <span class="s1">&#39;xaxis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">xlabel</span><span class="p">}},</span>
+                   <span class="s1">&#39;yaxis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">ylabel</span><span class="p">}}}</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+            <span class="n">vis</span> <span class="o">=</span> <span class="s1">&#39;legendonly&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">vis</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">trace</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;mode&#39;</span><span class="p">:</span> <span class="s1">&#39;markers+lines&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;scatter&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;visible&#39;</span><span class="p">:</span> <span class="n">vis</span><span class="p">,</span>
+            <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+
+        <span class="p">}</span>
+        <span class="n">auto_blob</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">trace</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">auto_blob</span>
+
+
+<span class="s2">&quot;----------------------------------------------------------------------------------------------------------------------&quot;</span>
+<span class="s2">&quot;----------------------------------------------- ScanPlotManager ------------------------------------------------------&quot;</span>
+<span class="s2">&quot;----------------------------------------------------------------------------------------------------------------------&quot;</span>
+
+
+<div class="viewcode-block" id="ScanPlotManager"><a class="viewcode-back" href="../../plotting/Code.html#babelscan.plotting_matplotlib.ScanPlotManager">[docs]</a><span class="k">class</span> <span class="nc">ScanPlotManager</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ScanPlotManager</span>
+<span class="sd">        scan.plot = ScanPlotManager(scan)</span>
+<span class="sd">        scan.plot() # plot default axes</span>
+<span class="sd">        scan.plot.plot(xaxis, yaxis)  # creates figure</span>
+<span class="sd">        scan.plot.plotline(xaxis, yaxis)  # plots line on current figure</span>
+<span class="sd">        scan.plot.plot_image()  # create figure and display detector image</span>
+
+<span class="sd">    Options called from babelscan.Scan:</span>
+<span class="sd">      &#39;plot_show&#39;: True &gt;&gt; automatically call &quot;plt.show&quot; after plot command</span>
+
+<span class="sd">    :param scan: babelscan.Scan</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scan</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan</span> <span class="o">=</span> <span class="n">scan</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calls ScanPlotManager.plot(...)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">plotline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xaxis</span><span class="o">=</span><span class="s1">&#39;axes&#39;</span><span class="p">,</span> <span class="n">yaxis</span><span class="o">=</span><span class="s1">&#39;signal&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot scanned datasets on matplotlib axes subplot</span>
+<span class="sd">        :param xaxis: str name or address of array to plot on x axis</span>
+<span class="sd">        :param yaxis: str name or address of array to plot on y axis</span>
+<span class="sd">        :param args: given directly to plt.plot(..., *args, **kwars)</span>
+<span class="sd">        :param axes: matplotlib.axes subplot, or None to use plt.gca()</span>
+<span class="sd">        :param kwargs: given directly to plt.plot(..., *args, **kwars)</span>
+<span class="sd">        :return: list lines object, output of plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">yerror</span><span class="p">,</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="o">.</span><span class="n">get_plot_data</span><span class="p">(</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;label&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="o">.</span><span class="n">label</span><span class="p">()</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="s1">&#39;axes&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">plot_line</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lines</span>
+
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xaxis</span><span class="o">=</span><span class="s1">&#39;axes&#39;</span><span class="p">,</span> <span class="n">yaxis</span><span class="o">=</span><span class="s1">&#39;signal&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create matplotlib figure with plot of the scan</span>
+<span class="sd">        :param axes: matplotlib.axes subplot</span>
+<span class="sd">        :param xaxis: str name or address of array to plot on x axis</span>
+<span class="sd">        :param yaxis: str name or address of array to plot on y axis, also accepts list of names for multiplt plots</span>
+<span class="sd">        :param args: given directly to plt.plot(..., *args, **kwars)</span>
+<span class="sd">        :param axes: matplotlib.axes subplot, or None to create a figure</span>
+<span class="sd">        :param kwargs: given directly to plt.plot(..., *args, **kwars)</span>
+<span class="sd">        :return: axes object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check for multiple inputs on yaxis</span>
+        <span class="n">ylist</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">yaxis</span><span class="p">)</span>
+
+        <span class="c1"># Create figure</span>
+        <span class="k">if</span> <span class="s1">&#39;axes&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">create_axes</span><span class="p">(</span><span class="n">subplot</span><span class="o">=</span><span class="mi">111</span><span class="p">)</span>
+
+        <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span> <span class="o">=</span> <span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span>
+        <span class="k">for</span> <span class="n">yaxis</span> <span class="ow">in</span> <span class="n">ylist</span><span class="p">:</span>
+            <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">yerror</span><span class="p">,</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="o">.</span><span class="n">get_plot_data</span><span class="p">(</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">plot_line</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">yname</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Add labels</span>
+        <span class="n">ttl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
+        <span class="n">labels</span><span class="p">(</span><span class="n">ttl</span><span class="p">,</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="s1">&#39;plot_show&#39;</span><span class="p">):</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">axes</span>
+
+    <span class="k">def</span> <span class="nf">plot_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xaxis</span><span class="o">=</span><span class="s1">&#39;axes&#39;</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">clim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">colorbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot image in matplotlib figure (if available)</span>
+<span class="sd">        :param index: int, detector image index, 0-length of scan, if None, use centre index</span>
+<span class="sd">        :param xaxis: name or address of xaxis dataset</span>
+<span class="sd">        :param axes: matplotlib axes to plot on (None to create figure)</span>
+<span class="sd">        :param clim: [min, max] colormap cut-offs (None for auto)</span>
+<span class="sd">        :param cmap: str colormap name (None for auto)</span>
+<span class="sd">        :param colorbar: False/ True add colorbar to plot</span>
+<span class="sd">        :param kwargs: additinoal arguments for plot_detector_image</span>
+<span class="sd">        :return: axes object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># x axis data</span>
+        <span class="n">xname</span><span class="p">,</span> <span class="n">xdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="o">.</span><span class="n">_name_eval</span><span class="p">(</span><span class="n">xaxis</span><span class="p">)</span>
+
+        <span class="c1"># image data</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">==</span> <span class="s1">&#39;sum&#39;</span><span class="p">:</span>
+            <span class="n">xvalue</span> <span class="o">=</span> <span class="n">xdata</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">xdata</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xvalue</span> <span class="o">=</span> <span class="n">xdata</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+        <span class="c1"># Create figure</span>
+        <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">create_axes</span><span class="p">(</span><span class="n">subplot</span><span class="o">=</span><span class="mi">111</span><span class="p">)</span>
+        <span class="n">plot_detector_image</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># labels</span>
+        <span class="n">ttl</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s1"> [</span><span class="si">%s</span><span class="s1">] = </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="o">.</span><span class="n">title</span><span class="p">(),</span> <span class="n">xname</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">xvalue</span><span class="p">)</span>
+        <span class="n">labels</span><span class="p">(</span><span class="n">ttl</span><span class="p">,</span> <span class="n">colorbar</span><span class="o">=</span><span class="n">colorbar</span><span class="p">,</span> <span class="n">colorbar_label</span><span class="o">=</span><span class="s1">&#39;Detector&#39;</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">)</span>
+        <span class="n">colormap</span><span class="p">(</span><span class="n">clim</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">axes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="s1">&#39;plot_show&#39;</span><span class="p">):</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">axes</span>
+
+    <span class="k">def</span> <span class="nf">detail_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xaxis</span><span class="o">=</span><span class="s1">&#39;axes&#39;</span><span class="p">,</span> <span class="n">yaxis</span><span class="o">=</span><span class="s1">&#39;signal&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create matplotlib figure with plot of the scan</span>
+<span class="sd">        :param axes: matplotlib.axes subplot</span>
+<span class="sd">        :param xaxis: str name or address of array to plot on x axis</span>
+<span class="sd">        :param yaxis: str name or address of array to plot on y axis, also accepts list of names for multiplt plots</span>
+<span class="sd">        :param args: given directly to plt.plot(..., *args, **kwars)</span>
+<span class="sd">        :param axes: matplotlib.axes subplot, or None to create a figure</span>
+<span class="sd">        :param kwargs: given directly to plt.plot(..., *args, **kwars)</span>
+<span class="sd">        :return: axes object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Create figure</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="p">((</span><span class="n">lt</span><span class="p">,</span> <span class="n">rt</span><span class="p">),</span> <span class="p">(</span><span class="n">lb</span><span class="p">,</span> <span class="n">rb</span><span class="p">))</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="n">FIG_SIZE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.2</span><span class="p">,</span> <span class="n">FIG_SIZE</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.2</span><span class="p">],</span> <span class="n">dpi</span><span class="o">=</span><span class="n">FIG_DPI</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+
+        <span class="c1"># Top left - line plot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">lt</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Top right - image plot</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot_image</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">xaxis</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">rt</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">rt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;No Image&#39;</span><span class="p">)</span>
+            <span class="n">rt</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+
+        <span class="c1"># Bottom-Left - details</span>
+        <span class="n">details</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="p">)</span>
+        <span class="n">lb</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">details</span><span class="p">,</span> <span class="n">multialignment</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">wrap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">lb</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+
+        <span class="n">rb</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="s1">&#39;plot_show&#39;</span><span class="p">):</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">fig</span>
+
+    <span class="k">def</span> <span class="nf">plotly_blob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xaxis</span><span class="o">=</span><span class="s1">&#39;axes&#39;</span><span class="p">,</span> <span class="n">yaxis</span><span class="o">=</span><span class="s1">&#39;signal&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create plotly line plot object, useful for jupyter plots or generation of interactive html plots</span>
+<span class="sd">        E.G.</span>
+<span class="sd">          import plotly.graph_objects as go</span>
+<span class="sd">          blob = scan.plot.plotly_blob(&#39;axes&#39;, [&#39;signal&#39;, &#39;signal/2&#39;])</span>
+<span class="sd">          fig = go.Figure(blob)</span>
+<span class="sd">          fig.show()</span>
+<span class="sd">        :param xaxis: str name or address of array to plot on x axis</span>
+<span class="sd">        :param yaxis: str name or address of array to plot on y axis, also accepts list of names for multiplt plots</span>
+<span class="sd">        :return: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check for multiple inputs on yaxis</span>
+        <span class="n">ylist</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">yaxis</span><span class="p">)</span>
+
+        <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span> <span class="o">=</span> <span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span>
+        <span class="n">data_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">yaxis</span> <span class="ow">in</span> <span class="n">ylist</span><span class="p">:</span>
+            <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">yerror</span><span class="p">,</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="o">.</span><span class="n">get_plot_data</span><span class="p">(</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">data_list</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">yname</span><span class="p">,</span> <span class="kc">True</span><span class="p">)]</span>
+        <span class="n">ttl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">create_plotly_blob</span><span class="p">(</span><span class="n">data_list</span><span class="p">,</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span><span class="p">,</span> <span class="n">ttl</span><span class="p">)</span></div>
+
+
+<span class="s2">&quot;----------------------------------------------------------------------------------------------------------------------&quot;</span>
+<span class="s2">&quot;-------------------------------------------- MultiScanPlotManager ----------------------------------------------------&quot;</span>
+<span class="s2">&quot;----------------------------------------------------------------------------------------------------------------------&quot;</span>
+
+
+<div class="viewcode-block" id="MultiScanPlotManager"><a class="viewcode-back" href="../../plotting/Code.html#babelscan.plotting_matplotlib.MultiScanPlotManager">[docs]</a><span class="k">class</span> <span class="nc">MultiScanPlotManager</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ScanPlotManager</span>
+<span class="sd">    :param scan: babelscan.Scan</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">multiscan</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span> <span class="o">=</span> <span class="n">multiscan</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">plot_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simple plot method, retrieves x,y data and plots using plt.plot</span>
+<span class="sd">        :param xname:</span>
+<span class="sd">        :param yname:</span>
+<span class="sd">        :param args, kwargs: same as plt.plot(x,y, ...)</span>
+<span class="sd">        :return: axis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Get data</span>
+        <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">xlabel</span><span class="p">,</span> <span class="n">ylabel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="o">.</span><span class="n">get_plot_data</span><span class="p">(</span><span class="n">xname</span><span class="p">,</span> <span class="n">yname</span><span class="p">)</span>
+
+        <span class="c1"># Create figure</span>
+        <span class="k">if</span> <span class="s1">&#39;axes&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">create_axes</span><span class="p">(</span><span class="n">subplot</span><span class="o">=</span><span class="mi">111</span><span class="p">)</span>
+
+        <span class="n">axes</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">axes</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">)</span>
+        <span class="n">axes</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ylabel</span><span class="p">)</span>
+        <span class="n">axes</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="o">.</span><span class="n">title</span><span class="p">())</span>
+
+        <span class="c1"># Add legend if multiple arrays added</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">xdata</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># xdata is a list of arrays</span>
+            <span class="n">scan_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="o">.</span><span class="n">labels</span><span class="p">()</span>
+            <span class="n">axes</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">scan_labels</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">axes</span>
+
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xaxis</span><span class="o">=</span><span class="s1">&#39;axes&#39;</span><span class="p">,</span> <span class="n">yaxis</span><span class="o">=</span><span class="s1">&#39;signal&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create matplotlib figure with plot of the scan</span>
+<span class="sd">        :param axes: matplotlib.axes subplot</span>
+<span class="sd">        :param xaxis: str name or address of array to plot on x axis</span>
+<span class="sd">        :param yaxis: str name or address of array to plot on y axis</span>
+<span class="sd">        :param args: given directly to plt.plot(..., *args, **kwars)</span>
+<span class="sd">        :param axes: matplotlib.axes subplot, or None to create a figure</span>
+<span class="sd">        :param kwargs: given directly to plt.plot(..., *args, **kwars)</span>
+<span class="sd">        :return: axes object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Create figure</span>
+        <span class="k">if</span> <span class="s1">&#39;axes&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">create_axes</span><span class="p">(</span><span class="n">subplot</span><span class="o">=</span><span class="mi">111</span><span class="p">)</span>
+
+        <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span> <span class="o">=</span> <span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span>
+        <span class="n">scan_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="o">.</span><span class="n">labels</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">scan</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="p">):</span>
+            <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">yerror</span><span class="p">,</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span> <span class="o">=</span> <span class="n">scan</span><span class="o">.</span><span class="n">get_plot_data</span><span class="p">(</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">plot_line</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">scan_labels</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Add labels</span>
+        <span class="n">ttl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
+        <span class="n">labels</span><span class="p">(</span><span class="n">ttl</span><span class="p">,</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="s1">&#39;plot_show&#39;</span><span class="p">):</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">axes</span>
+
+    <span class="k">def</span> <span class="nf">multiplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xaxis</span><span class="o">=</span><span class="s1">&#39;axes&#39;</span><span class="p">,</span> <span class="n">yaxis</span><span class="o">=</span><span class="s1">&#39;signal&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create matplotlib figure with plot of the scan</span>
+<span class="sd">        :param axes: matplotlib.axes subplot</span>
+<span class="sd">        :param xaxis: str name or address of array to plot on x axis</span>
+<span class="sd">        :param yaxis: str name or address of array to plot on y axis</span>
+<span class="sd">        :param size: (ncol, nrow) int values number of axes</span>
+<span class="sd">        :param kwargs: given directly to plt.plot(..., *args, **kwars)</span>
+<span class="sd">        :return: axes object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">n_axes</span> <span class="o">=</span> <span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">n_figs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">n_axes</span><span class="p">)))</span>
+        <span class="n">scan_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="o">.</span><span class="n">labels</span><span class="p">()</span>
+        <span class="n">yaxis_list</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">liststr</span><span class="p">(</span><span class="n">yaxis</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">figno</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_figs</span><span class="p">):</span>
+            <span class="n">scans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="p">[</span><span class="n">figno</span> <span class="o">*</span> <span class="n">n_axes</span><span class="p">:</span> <span class="p">(</span><span class="n">figno</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_axes</span><span class="p">]</span>
+            <span class="n">scan_labels</span> <span class="o">=</span> <span class="n">scan_labels</span><span class="p">[</span><span class="n">figno</span> <span class="o">*</span> <span class="n">n_axes</span><span class="p">:</span> <span class="p">(</span><span class="n">figno</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_axes</span><span class="p">]</span>
+
+            <span class="c1"># Create figure</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">create_multiplot</span><span class="p">(</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">scan</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scans</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">yaxis</span> <span class="ow">in</span> <span class="n">yaxis_list</span><span class="p">:</span>
+                    <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">yerror</span><span class="p">,</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span> <span class="o">=</span> <span class="n">scan</span><span class="o">.</span><span class="n">get_plot_data</span><span class="p">(</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="n">plot_line</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">yname</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="n">labels</span><span class="p">(</span><span class="n">scan_labels</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">xaxis</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="s1">&#39;tiny&#39;</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">plot_details_to_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create pdf file with scans</span>
+<span class="sd">        :param filename: str pdf filename</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">filename</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;.pdf&#39;</span>
+
+        <span class="kn">from</span> <span class="nn">matplotlib.backends.backend_pdf</span> <span class="kn">import</span> <span class="n">PdfPages</span>
+        <span class="k">with</span> <span class="n">PdfPages</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">pdf</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">scan</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="o">.</span><span class="n">labels</span><span class="p">()):</span>
+                <span class="n">fig</span> <span class="o">=</span> <span class="n">scan</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">detail_plot</span><span class="p">()</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+                <span class="n">pdf</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+            <span class="c1"># PDF metadata</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">pdf</span><span class="o">.</span><span class="n">infodict</span><span class="p">()</span>
+            <span class="n">d</span><span class="p">[</span><span class="s1">&#39;Title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
+            <span class="n">d</span><span class="p">[</span><span class="s1">&#39;Author&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;BabelScan&#39;</span>
+            <span class="n">d</span><span class="p">[</span><span class="s1">&#39;Subject&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Created in BabelScan.MultiScan.MultiScanPlotManager.plot_details_to_pdf&#39;</span>
+            <span class="n">d</span><span class="p">[</span><span class="s1">&#39;Keywords&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;BabelScan&#39;</span>
+            <span class="n">d</span><span class="p">[</span><span class="s1">&#39;CreationDate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+            <span class="n">d</span><span class="p">[</span><span class="s1">&#39;ModDate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">plot_details_to_html</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create html file with scans</span>
+<span class="sd">        :param filename: str name of folder to create</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">folder_name</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">folder_name</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Created Folder: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">folder_name</span><span class="p">)</span>
+
+        <span class="n">html</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">scan</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="o">.</span><span class="n">labels</span><span class="p">()):</span>
+            <span class="n">scan</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+            <span class="n">fname1</span> <span class="o">=</span> <span class="n">folder_name</span> <span class="o">+</span> <span class="s1">&#39;/</span><span class="si">%s</span><span class="s1">.svg&#39;</span> <span class="o">%</span>  <span class="n">scan</span><span class="o">.</span><span class="n">scan_number</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fname1</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">fname1</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.svg&#39;</span> <span class="o">%</span> <span class="n">scan</span><span class="o">.</span><span class="n">scan_number</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">scan</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_image</span><span class="p">()</span>
+                <span class="n">fname2</span> <span class="o">=</span> <span class="n">folder_name</span> <span class="o">+</span> <span class="s1">&#39;/</span><span class="si">%s</span><span class="s1">.png&#39;</span> <span class="o">%</span> <span class="n">scan</span><span class="o">.</span><span class="n">scan_number</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fname2</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="n">fname2</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.png&#39;</span> <span class="o">%</span> <span class="n">scan</span><span class="o">.</span><span class="n">scan_number</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="n">fname2</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="n">title</span> <span class="o">=</span> <span class="n">scan</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
+            <span class="n">details</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">scan</span><span class="p">)</span>
+            <span class="n">html</span> <span class="o">+=</span> <span class="n">create_figure_div</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">details</span><span class="p">,</span> <span class="n">fname1</span><span class="p">,</span> <span class="n">fname2</span><span class="p">)</span>
+
+        <span class="n">html_page</span> <span class="o">=</span> <span class="n">create_html_page</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">folder_name</span> <span class="o">+</span> <span class="s1">&#39;/index.html&#39;</span><span class="p">,</span> <span class="s1">&#39;wt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">html_page</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Scans written to </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">folder_name</span> <span class="o">+</span> <span class="s1">&#39;/index.html&#39;</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">plotly_blob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xaxis</span><span class="o">=</span><span class="s1">&#39;axes&#39;</span><span class="p">,</span> <span class="n">yaxis</span><span class="o">=</span><span class="s1">&#39;signal&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create plotly line plot object, useful for jupyter plots or generation of interactive html plots</span>
+<span class="sd">        E.G.</span>
+<span class="sd">          import plotly.graph_objects as go</span>
+<span class="sd">          blob = scans.plot.plotly_blob(&#39;axes&#39;, &#39;signal&#39;)</span>
+<span class="sd">          fig = go.Figure(blob)</span>
+<span class="sd">          fig.show()</span>
+<span class="sd">        :param xaxis: str name or address of array to plot on x axis</span>
+<span class="sd">        :param yaxis: str name or address of array to plot on y axis</span>
+<span class="sd">        :return: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span> <span class="o">=</span> <span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span>
+        <span class="n">data_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">scan_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="o">.</span><span class="n">labels</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">scan</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="p">):</span>
+            <span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">yerror</span><span class="p">,</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span> <span class="o">=</span> <span class="n">scan</span><span class="o">.</span><span class="n">get_plot_data</span><span class="p">(</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">yaxis</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">data_list</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="n">scan_labels</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="kc">True</span><span class="p">)]</span>
+        <span class="n">ttl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiscan</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">create_plotly_blob</span><span class="p">(</span><span class="n">data_list</span><span class="p">,</span> <span class="n">xname</span><span class="p">,</span> <span class="n">yname</span><span class="p">,</span> <span class="n">ttl</span><span class="p">)</span></div>
+
+
+<span class="s2">&quot;----------------------------------------------------------------------------------------------------------------------&quot;</span>
+<span class="s2">&quot;----------------------------------------------- VolumePlotManager ----------------------------------------------------&quot;</span>
+<span class="s2">&quot;----------------------------------------------------------------------------------------------------------------------&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">VolumePlotManager</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    VolumePlotManager</span>
+<span class="sd">        vol.plot = VolumePlotManager(vol)</span>
+<span class="sd">        vol.plot() #</span>
+<span class="sd">        vol.plot.plot_image()  # create figure and display detector image</span>
+
+<span class="sd">    Options called from babelscan.volume.Volume:</span>
+<span class="sd">      &#39;plot_show&#39;: True &gt;&gt; automatically call &quot;plt.show&quot; after plot command</span>
+
+<span class="sd">    :param vol: babelscan.volume.Volume</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vol</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vol</span> <span class="o">=</span> <span class="n">vol</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calls ScanPlotManager.plot(...)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">clim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">colorbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot image in matplotlib figure (if available)</span>
+<span class="sd">        :param index: int, image index, 0-length of scan, if None, use centre index</span>
+<span class="sd">        :param axis: int, axis to index (0-2)</span>
+<span class="sd">        :param plot_axes: matplotlib axes to plot on (None to create figure)</span>
+<span class="sd">        :param clim: [min, max] colormap cut-offs (None for auto)</span>
+<span class="sd">        :param cmap: str colormap name (None for auto)</span>
+<span class="sd">        :param colorbar: False/ True add colorbar to plot</span>
+<span class="sd">        :param kwargs: additinoal arguments for plot_detector_image</span>
+<span class="sd">        :return: axes object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+
+        <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="s1">&#39;sum&#39;</span><span class="p">:</span>
+            <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vol</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">im</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol</span><span class="p">[:,</span> <span class="n">index</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="k">elif</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">im</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">index</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">im</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+        <span class="c1"># Create figure</span>
+        <span class="n">show</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="s1">&#39;axes&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">show</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">create_axes</span><span class="p">(</span><span class="n">subplot</span><span class="o">=</span><span class="mi">111</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">)</span>
+        <span class="n">plot_detector_image</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># labels</span>
+        <span class="n">ttl</span> <span class="o">=</span> <span class="s1">&#39;volume[</span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="n">index</span>
+        <span class="n">xlab</span> <span class="o">=</span> <span class="s1">&#39;[</span><span class="si">%s</span><span class="s1">, 0, :]&#39;</span> <span class="o">%</span> <span class="n">index</span>  <span class="c1"># might be wrong way around</span>
+        <span class="n">ylab</span> <span class="o">=</span> <span class="s1">&#39;[</span><span class="si">%s</span><span class="s1">, :, 0]&#39;</span> <span class="o">%</span> <span class="n">index</span>  <span class="c1"># might be wrong way around</span>
+        <span class="n">labels</span><span class="p">(</span><span class="n">ttl</span><span class="p">,</span> <span class="n">xlab</span><span class="p">,</span> <span class="n">ylab</span><span class="p">,</span> <span class="n">colorbar</span><span class="o">=</span><span class="n">colorbar</span><span class="p">,</span> <span class="n">colorbar_label</span><span class="o">=</span><span class="s1">&#39;Detector&#39;</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">)</span>
+        <span class="n">colormap</span><span class="p">(</span><span class="n">clim</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">axes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">axes</span>
+
+    <span class="k">def</span> <span class="nf">axis_sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sum_axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot cut along axis, summed in other 2 axes</span>
+<span class="sd">        :param sum_axis: axis to plot (0-2), summed in other axes</span>
+<span class="sd">        :param args: given directly to plt.plot(..., *args, **kwars)</span>
+<span class="sd">        :param axes: matplotlib.axes subplot, or None to create a figure</span>
+<span class="sd">        :param kwargs: given directly to plt.plot(..., *args, **kwars)</span>
+<span class="sd">        :return: axes object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">sum_axis</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vol</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">sum_axis</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vol</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vol</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;label&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;axis </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">sum_axis</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="s1">&#39;axes&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">plot_line</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)),</span> <span class="n">out</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lines</span>
+
+    <span class="k">def</span> <span class="nf">cut</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index1</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">index2</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot arbitary cut through the volume from index1 to index2</span>
+<span class="sd">        :param index1: (i,j,k) start point in the volume</span>
+<span class="sd">        :param index2: (i,j,k) end point in the volume</span>
+<span class="sd">        :param args: given directly to plt.plot(..., *args, **kwars)</span>
+<span class="sd">        :param axes: matplotlib.axes subplot, or None to create a figure</span>
+<span class="sd">        :param kwargs: given directly to plt.plot(..., *args, **kwars)</span>
+<span class="sd">        :return: axes object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">volcut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">index1</span><span class="p">,</span> <span class="n">index2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;label&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">index1</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">index2</span><span class="p">))</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="s1">&#39;axes&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">plot_line</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">volcut</span><span class="p">)),</span> <span class="n">volcut</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lines</span>
+
+    <span class="k">def</span> <span class="nf">array_sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots [sum(image) for image in volume]&quot;&quot;&quot;</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol</span><span class="o">.</span><span class="n">array_sum</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s1">&#39;label&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;array sum&#39;</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="s1">&#39;axes&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">plot_line</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)),</span> <span class="n">out</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lines</span>
+
+    <span class="k">def</span> <span class="nf">array_max</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots [max(image) for image in volume]&quot;&quot;&quot;</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol</span><span class="o">.</span><span class="n">array_max</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s1">&#39;label&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;array max&#39;</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="s1">&#39;axes&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">plot_line</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)),</span> <span class="n">out</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lines</span>
+
+    <span class="k">def</span> <span class="nf">array_min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots [min(image) for image in volume]&quot;&quot;&quot;</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol</span><span class="o">.</span><span class="n">array_min</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s1">&#39;label&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;array min&#39;</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="s1">&#39;axes&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">plot_line</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)),</span> <span class="n">out</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lines</span>
+
+    <span class="k">def</span> <span class="nf">array_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots [mean(image) for image in volume]&quot;&quot;&quot;</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vol</span><span class="o">.</span><span class="n">array_mean</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s1">&#39;label&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;array mean&#39;</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="s1">&#39;axes&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">plot_line</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)),</span> <span class="n">out</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lines</span>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Dan Porter.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

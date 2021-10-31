@@ -94,9 +94,10 @@ def gen_weights(yerrors=None):
     if yerrors is None or np.all(np.abs(yerrors) < 0.001):
         weights = None
     else:
-        weights = 1 / np.array(yerrors, dtype=float)
+        yerrors = np.asarray(yerrors, dtype=float)
+        yerrors[yerrors < 1] = 1.0
+        weights = 1 / yerrors
         weights = np.abs(np.nan_to_num(weights))
-        weights[weights < 1] = 1.0
     return weights
 
 
@@ -270,6 +271,49 @@ def find_peaks(y, yerror=None, min_peak_power=None, peak_distance_idx=6):
     return peaks_idx[power_sort], peak_power[power_sort]
 
 
+def peak_results(res):
+    """
+    Generate totals dict
+    :param res: lmfit_result
+    :return: {totals: (value, error)}
+    """
+    peak_prefx = [mod.prefix for mod in res.components if 'bkg' not in mod.prefix]
+    npeaks = len(peak_prefx)
+    nn = 1 / len(peak_prefx) if len(peak_prefx) > 0 else 1
+    comps = res.eval_components()
+    fit_dict = {
+        'lmfit': res,
+        'npeaks': npeaks,
+        'chisqr': res.chisqr,
+        'xdata': res.userkws['x'],
+        'ydata': res.data,
+        'weights': res.weights,
+        'yerror': 1 / res.weights if res.weights is not None else 0 * res.data,
+        'yfit': res.best_fit,
+    }
+    for comp_prefx, comp in comps.items():
+        fit_dict['%sfit' % comp_prefx] = comp
+    for pname, param in res.params.items():
+        ename = 'stderr_' + pname
+        fit_dict[pname] = param.value
+        fit_dict[ename] = param.stderr
+    totals = {
+        'amplitude': np.sum([res.params['%samplitude' % pfx].value for pfx in peak_prefx]),
+        'center': np.mean([res.params['%scenter' % pfx].value for pfx in peak_prefx]),
+        'sigma': np.mean([res.params['%ssigma' % pfx].value for pfx in peak_prefx]),
+        'height': np.mean([res.params['%sheight' % pfx].value for pfx in peak_prefx]),
+        'fwhm': np.mean([res.params['%sfwhm' % pfx].value for pfx in peak_prefx]),
+        'background': np.mean(comps['bkg_']),
+        'stderr_amplitude': np.sqrt(np.sum([res.params['%samplitude' % pfx].stderr ** 2 for pfx in peak_prefx])),
+        'stderr_center': np.sqrt(np.sum([res.params['%scenter' % pfx].stderr ** 2 for pfx in peak_prefx])) * nn,
+        'stderr_sigma': np.sqrt(np.sum([res.params['%ssigma' % pfx].stderr ** 2 for pfx in peak_prefx])) * nn,
+        'stderr_height': np.sqrt(np.sum([res.params['%sheight' % pfx].stderr ** 2 for pfx in peak_prefx])) * nn,
+        'stderr_fwhm': np.sqrt(np.sum([res.params['%sfwhm' % pfx].stderr ** 2 for pfx in peak_prefx])) * nn,
+    }
+    fit_dict.update(totals)
+    return fit_dict
+
+
 def modelfit(xvals, yvals, yerrors=None, model=None, initial_parameters=None, fix_parameters=None,
              method='leastsq', print_result=False, plot_result=False):
     """
@@ -439,6 +483,188 @@ def peak2dfit(xdata, ydata, image_data, initial_parameters=None, fix_parameters=
     pass
 
 
+def generate_model(xvals, yvals, yerrors=None,
+                   npeaks=None, min_peak_power=None, peak_distance_idx=6,
+                   model='Gaussian', background='slope', initial_parameters=None, fix_parameters=None):
+    """
+    Generate lmfit profile models
+    See: https://lmfit.github.io/lmfit-py/builtin_models.html#example-3-fitting-multiple-peaks-and-using-prefixes
+    E.G.:
+      mod, pars = generate_model(x, y, npeaks=1, model='Gauss', backgroud='slope')
+
+    Peak Search:
+     The number of peaks and initial peak centers will be estimated using the find_peaks function. If npeaks is given,
+     the largest npeaks will be used initially. 'min_peak_power' and 'peak_distance_idx' can be input to tailor the
+     peak search results.
+     If the peak search returns < npeaks, fitting parameters will initially choose npeaks equally distributed points
+
+    Peak Models:
+     Choice of peak model: 'Gaussian', 'Lorentzian', 'Voight',' PseudoVoight'
+    Background Models:
+     Choice of background model: 'slope', 'exponential'
+
+    :param xvals: array(n) position data
+    :param yvals: array(n) intensity data
+    :param yerrors: None or array(n) - error data to pass to fitting function as weights: 1/errors^2
+    :param npeaks: None or int number of peaks to fit. None will guess the number of peaks
+    :param min_peak_power: float, only return peaks with power greater than this. If None compare against std(y)
+    :param peak_distance_idx: int, group adjacent maxima if closer in index than this
+    :param model: str or lmfit.Model, specify the peak model 'Gaussian','Lorentzian','Voight'
+    :param background: str, specify the background model: 'slope', 'exponential'
+    :param initial_parameters: None or dict of initial values for parameters
+    :param fix_parameters: None or dict of parameters to fix at positions
+    :return: lmfit.model.ModelResult < fit results object
+    """
+    xvals = np.asarray(xvals, dtype=float).reshape(-1)
+    yvals = np.asarray(yvals, dtype=float).reshape(-1)
+
+    # Find peaks
+    peak_idx, peak_pow = find_peaks(yvals, yerrors, min_peak_power, peak_distance_idx)
+    peak_centers = {'p%d_center' % (n+1): xvals[peak_idx[n]] for n in range(len(peak_idx))}
+    if npeaks is None:
+        npeaks = len(peak_centers)
+
+    if initial_parameters is None:
+        initial_parameters = {}
+    if fix_parameters is None:
+        fix_parameters = {}
+
+    peak_mod = None
+    bkg_mod = None
+    for model_name, names in PEAK_MODELS.items():
+        if model.lower() in names:
+            peak_mod = MODELS[model_name]
+    for model_name, names in BACKGROUND_MODELS.items():
+        if background.lower() in names:
+            bkg_mod = MODELS[model_name]
+
+    mod = bkg_mod(prefix='bkg_')
+    for n in range(npeaks):
+        mod += peak_mod(prefix='p%d_' % (n+1))
+
+    pars = mod.make_params()
+
+    # initial parameters
+    min_wid = np.mean(np.diff(xvals))
+    max_wid = xvals.max() - xvals.min()
+    area = (yvals.max() - yvals.min()) * (3 * min_wid)
+    percentile = np.linspace(0, 100, npeaks + 2)
+    for n in range(1, npeaks+1):
+        pars['p%d_amplitude' % n].set(value=area/npeaks, min=0)
+        pars['p%d_sigma' % n].set(value=3*min_wid, min=min_wid, max=max_wid)
+        pars['p%d_center' % n].set(value=np.percentile(xvals, percentile[n]), min=xvals.min(), max=xvals.max())
+    # find_peak centers
+    for ipar, ival in peak_centers.items():
+        if ipar in pars:
+            pars[ipar].set(value=ival, vary=True)
+    # user input parameters
+    for ipar, ival in initial_parameters.items():
+        if ipar in pars:
+            pars[ipar].set(value=ival, vary=True)
+    for ipar, ival in fix_parameters.items():
+        if ipar in pars:
+            pars[ipar].set(value=ival, vary=False)
+    return mod, pars
+
+
+def generate_model_script(xvals, yvals, yerrors=None,
+                          npeaks=None, min_peak_power=None, peak_distance_idx=6,
+                          model='Gaussian', background='slope', initial_parameters=None, fix_parameters=None,
+                          include_babelscan=True):
+    """
+    Generate script to create lmfit profile models
+    E.G.:
+      string = generate_mode_stringl(x, y, npeaks=1, model='Gauss', backgroud='slope')
+
+    :param xvals: array(n) position data
+    :param yvals: array(n) intensity data
+    :param yerrors: None or array(n) - error data to pass to fitting function as weights: 1/errors^2
+    :param npeaks: None or int number of peaks to fit. None will guess the number of peaks
+    :param min_peak_power: float, only return peaks with power greater than this. If None compare against std(y)
+    :param peak_distance_idx: int, group adjacent maxima if closer in index than this
+    :param model: str or lmfit.Model, specify the peak model 'Gaussian','Lorentzian','Voight'
+    :param background: str, specify the background model: 'slope', 'exponential'
+    :param initial_parameters: None or dict of initial values for parameters
+    :param fix_parameters: None or dict of parameters to fix at positions
+    :param include_babelscan: if False, only include lmfit imports
+    :return: str
+    """
+
+    data = "xdata = np.array(%s)\n" % list(xvals)
+    data += "ydata = np.array(%s)\n" % list(yvals)
+    if yerrors is None or np.all(np.abs(yerrors) < 0.001):
+        data += 'yerrors = None\n'
+        data += 'weights = None\n\n'
+    else:
+        data += "yerrors = np.array(%s)\n" % list(yerrors)
+        data += "yerrors[yerrors < 1] = 1.0\n"
+        data += "weights = 1 / yerrors\n\n"
+
+    if initial_parameters is None:
+        initial_parameters = {}
+    if fix_parameters is None:
+        fix_parameters = {}
+    params = "initial = %s\nfixed = %s\n" % (initial_parameters, fix_parameters)
+
+    if include_babelscan:
+        out = "import numpy as np\nfrom babelscan import fitting\n\n"
+        out += data
+        out += '%s\n' % params
+        out += "mod, pars = fitting.generate_model(xdata, ydata, yerrors,\n" \
+               "                                   npeaks=%s, min_peak_power=%s, peak_distance_idx=%s,\n" \
+               "                                   model='%s', background='%s',\n" \
+               "                                   initial_parameters=initial, fix_parameters=fixed)\n" % (
+                   npeaks, min_peak_power, peak_distance_idx, model, background
+               )
+    else:
+        # Find peaks
+        peak_idx, peak_pow = find_peaks(yvals, yerrors, min_peak_power, peak_distance_idx)
+        peak_centers = {'p%d_center' % (n + 1): xvals[peak_idx[n]] for n in range(len(peak_idx))}
+        for model_name, names in PEAK_MODELS.items():
+            if model.lower() in names:
+                peak_mod = MODELS[model_name]
+        for model_name, names in BACKGROUND_MODELS.items():
+            if background.lower() in names:
+                bkg_mod = MODELS[model_name]
+        peak_name = peak_mod.__name__
+        bkg_name = bkg_mod.__name__
+
+        out = "import numpy as np\nfrom lmfit import models\n\n"
+        out += data
+        out += "%speak_centers = %s\n\n" % (params, peak_centers)
+        out += "mod = models.%s(prefix='bkg_')\n" % bkg_name
+        out += "for n in range(len(peak_centers)):\n    mod += models.%s(prefix='p%%d_' %% (n+1))\n" % peak_name
+        out += "pars = mod.make_params()\n\n"
+        out += "# initial parameters\n"
+        out += "min_wid = np.mean(np.diff(xdata))\n"
+        out += "max_wid = xdata.max() - xdata.min()\n"
+        out += "area = (ydata.max() - ydata.min()) * (3 * min_wid)\n"
+        out += "for n in range(1, len(peak_centers)+1):\n"
+        out += "    pars['p%d_amplitude' % n].set(value=area/len(peak_centers), min=0)\n"
+        out += "    pars['p%d_sigma' % n].set(value=3*min_wid, min=min_wid, max=max_wid)\n"
+        out += "# find_peak centers\n"
+        out += "for ipar, ival in peak_centers.items():\n"
+        out += "    if ipar in pars:\n"
+        out += "        pars[ipar].set(value=ival, vary=True)\n"
+        out += "# user input parameters\n"
+        out += "for ipar, ival in initial.items():\n"
+        out += "    if ipar in pars:\n"
+        out += "        pars[ipar].set(value=ival, vary=True)\n"
+        out += "for ipar, ival in fixed.items():\n"
+        out += "    if ipar in pars:\n"
+        out += "        pars[ipar].set(value=ival, vary=False)\n\n"
+    out += "# Fit data\n"
+    out += "res = mod.fit(ydata, pars, x=xdata, weights=weights, method='leastsqr')\n"
+    out += "print(res.fit_report())\n\n"
+    out += "fig, grid = res.plot()\n"
+    out += "ax1, ax2 = fig.axes\n"
+    out += "comps = res.eval_components()\n"
+    out += "for component in comps.keys():\n"
+    out += "    ax2.plot(xdata, comps[component], label=component)\n"
+    out += "    ax2.legend()\n\n"
+    return out
+
+
 def multipeakfit(xvals, yvals, yerrors=None,
                  npeaks=None, min_peak_power=None, peak_distance_idx=10,
                  model='Gaussian', background='slope', initial_parameters=None, fix_parameters=None, method='leastsq',
@@ -447,11 +673,9 @@ def multipeakfit(xvals, yvals, yerrors=None,
     Fit x,y data to a model with multiple peaks using lmfit
     See: https://lmfit.github.io/lmfit-py/builtin_models.html#example-3-fitting-multiple-peaks-and-using-prefixes
     E.G.:
-      res = peakfit(x, y, model='Gauss')
-      print(res.fit_report())
-      res.plot()
-      val = res.params['amplitude'].value
-      err = res.params['amplitude'].stderr
+      res = multipeakfit(x, y, npeaks=None, model='Gauss', plot_result=True)
+      val = res.params['p1_amplitude'].value
+      err = res.params['p1_amplitude'].stderr
 
     Peak Search:
      The number of peaks and initial peak centers will be estimated using the find_peaks function. If npeaks is given,
@@ -496,53 +720,10 @@ def multipeakfit(xvals, yvals, yerrors=None,
     yvals = np.asarray(yvals, dtype=float).reshape(-1)
     weights = gen_weights(yerrors)
 
-    # Find peaks
-    peak_idx, peak_pow = find_peaks(yvals, yerrors, min_peak_power, peak_distance_idx)
-    peak_centers = {'p%d_center' % (n+1): xvals[peak_idx[n]] for n in range(len(peak_idx))}
-    if npeaks is None:
-        npeaks = len(peak_centers)
-        print('Fitting %d peaks:' % npeaks)
-
-    if initial_parameters is None:
-        initial_parameters = {}
-    if fix_parameters is None:
-        fix_parameters = {}
-
-    peak_mod = None
-    bkg_mod = None
-    for model_name, names in PEAK_MODELS.items():
-        if model.lower() in names:
-            peak_mod = MODELS[model_name]
-    for model_name, names in BACKGROUND_MODELS.items():
-        if background.lower() in names:
-            bkg_mod = MODELS[model_name]
-
-    mod = bkg_mod(prefix='bkg_')
-    for n in range(npeaks):
-        mod += peak_mod(prefix='p%d_' % (n+1))
-
-    pars = mod.make_params()
-
-    # initial parameters
-    min_wid = np.mean(np.diff(xvals))
-    max_wid = xvals.max() - xvals.min()
-    area = (yvals.max() - yvals.min()) * (3 * min_wid)
-    percentile = np.linspace(0, 100, npeaks + 2)
-    for n in range(1, npeaks+1):
-        pars['p%d_amplitude' % n].set(value=area/npeaks, min=0)
-        pars['p%d_sigma' % n].set(value=3*min_wid, min=min_wid, max=max_wid)
-        pars['p%d_center' % n].set(value=np.percentile(xvals, percentile[n]), min=xvals.min(), max=xvals.max())
-    # find_peak centers
-    for ipar, ival in peak_centers.items():
-        if ipar in pars:
-            pars[ipar].set(value=ival, vary=True)
-    # user input parameters
-    for ipar, ival in initial_parameters.items():
-        if ipar in pars:
-            pars[ipar].set(value=ival, vary=True)
-    for ipar, ival in fix_parameters.items():
-        if ipar in pars:
-            pars[ipar].set(value=ival, vary=False)
+    mod, pars = generate_model(xvals, yvals, yerrors,
+                               npeaks=npeaks, min_peak_power=min_peak_power, peak_distance_idx=peak_distance_idx,
+                               model=model, background=background,
+                               initial_parameters=initial_parameters, fix_parameters=fix_parameters)
 
     # Fit data against model using choosen method
     res = mod.fit(yvals, pars, x=xvals, weights=weights, method=method)
@@ -570,6 +751,18 @@ class ScanFitManager:
     ScanFitManager
      Holds several functions for automatically fitting scan data
 
+    fit = ScanFitManager(scan)
+    fit.peak_ratio(yaxis)  # calculates peak power
+    fit.find_peaks(xaxis, yaxis)  # automated peak finding routine
+    fit.fit(xaxis, yaxis)  # estimate & fit data against a peak profile model using lmfit
+    fit.multi_peak_fit(xaxis, yaxis)  # find peaks & fit multiprofile model using lmfit
+    fit.model_fit(xaxis, yaxis, model, pars)  # fit supplied model against data
+    fit.fit_results()  # return lmfit.ModelResult for last fit
+    fit.fit_values()  # return dict of fit values for last fit
+    fit.fit_report()  # return str of fit report
+    fit.plot()  # plot last lmfit results
+    * xaxis, yaxis are str names of arrays in the scan namespace
+
     :param scan: babelscan.Scan
     """
 
@@ -594,7 +787,7 @@ class ScanFitManager:
         xdata, ydata, yerror, xname, yname = self.scan.get_plot_data('axes', yaxis, None, None)
         return peak_ratio(ydata, yerror)
 
-    def find_peaks(self, xaxis='axes', yaxis='signal', min_peak_power=None, peak_distance_idx=10):
+    def find_peaks(self, xaxis='axes', yaxis='signal', min_peak_power=None, peak_distance_idx=6):
         """
         Find peak shaps in linear-spaced 1d arrays with poisson like numerical values
         E.G.
@@ -653,39 +846,29 @@ class ScanFitManager:
         xdata, ydata, yerror, xname, yname = self.scan.get_plot_data(xaxis, yaxis, None, None)
 
         # lmfit
-        out = peakfit(xdata, ydata, yerror, model=model, background=background,
+        res = peakfit(xdata, ydata, yerror, model=model, background=background,
                       initial_parameters=initial_parameters, fix_parameters=fix_parameters, method=method)
 
-        self.scan.add2namespace('lmfit', out, 'fit_result')
-        fit_dict = {}
-        for pname, param in out.params.items():
-            ename = 'stderr_' + pname
-            fit_dict[pname] = param.value
-            fit_dict[ename] = param.stderr
-        for name, value in fit_dict.items():
-            self.scan.add2namespace(name, value)
-        self.scan.add2namespace('fit', out.best_fit, other_names=['fit_%s' % yname])
-        comps = out.eval_components(x=xdata)
-        for component in comps:
-            self.scan.add2namespace('%sfit' % component, comps[component])
-        # Background
-        self.scan.add2namespace('background', np.mean(comps['bkg_']))
+        output = peak_results(res)
+        self.scan.update_namespace(output)
+        self.scan.add2namespace('lmfit', res, 'fit_result')
+        self.scan.add2namespace('fit', res.best_fit, other_names=['fit_%s' % yname])
 
         if print_result:
             print(self.scan.title())
-            print(out.fit_report())
+            print(res.fit_report())
         if plot_result:
-            fig, grid = out.plot()
+            fig, grid = res.plot()
             fig.suptitle(self.scan.title(), fontsize=12)
             # plt.subplots_adjust(top=0.85, left=0.15)
             ax1, ax2 = fig.axes
             ax1.set_title('')
             ax2.set_xlabel(xname)
             ax2.set_ylabel(yname)
-        return out
+        return res
 
     def multi_peak_fit(self, xaxis='axes', yaxis='signal',
-                       npeaks=None, min_peak_power=None, peak_distance_idx=10,
+                       npeaks=None, min_peak_power=None, peak_distance_idx=6,
                        model='Gaussian', background='slope',
                        initial_parameters=None, fix_parameters=None, method='leastsq',
                        print_result=False, plot_result=False):
@@ -740,61 +923,33 @@ class ScanFitManager:
         xdata, ydata, yerror, xname, yname = self.scan.get_plot_data(xaxis, yaxis, None, None)
 
         # lmfit
-        out = multipeakfit(xdata, ydata, yerror, npeaks=npeaks, min_peak_power=min_peak_power,
+        res = multipeakfit(xdata, ydata, yerror, npeaks=npeaks, min_peak_power=min_peak_power,
                            peak_distance_idx=peak_distance_idx, model=model, background=background,
                            initial_parameters=initial_parameters, fix_parameters=fix_parameters, method=method)
 
-        self.scan.add2namespace('lmfit', out, 'fit_result')
-        fit_dict = {}
-        for pname, param in out.params.items():
-            ename = 'stderr_' + pname
-            fit_dict[pname] = param.value
-            fit_dict[ename] = param.stderr
-        for name, value in fit_dict.items():
-            self.scan.add2namespace(name, value)
-        self.scan.add2namespace('fit', out.best_fit, other_names=['fit_%s' % yname])
-        # Add peak components
-        comps = out.eval_components(x=xdata)
-        for component in comps:
-            self.scan.add2namespace('%sfit' % component, comps[component])
-        # Totals
-        peak_prefx = [mod.prefix for mod in out.components if 'bkg' not in mod.prefix]
-        self.scan.add2namespace('npeaks', len(peak_prefx))
-        nn = 1/len(peak_prefx) if len(peak_prefx) > 0 else 1
-        totals = {
-            'amplitude': np.sum([out.params['%samplitude' % pfx].value for pfx in peak_prefx]),
-            'center': np.mean([out.params['%scenter' % pfx].value for pfx in peak_prefx]),
-            'sigma': np.mean([out.params['%ssigma' % pfx].value for pfx in peak_prefx]),
-            'height': np.mean([out.params['%sheight' % pfx].value for pfx in peak_prefx]),
-            'fwhm': np.mean([out.params['%sfwhm' % pfx].value for pfx in peak_prefx]),
-            'stderr_amplitude': np.sqrt(np.sum([out.params['%samplitude' % pfx].stderr**2 for pfx in peak_prefx])),
-            'stderr_center': np.sqrt(np.sum([out.params['%scenter' % pfx].stderr**2 for pfx in peak_prefx])) * nn,
-            'stderr_sigma': np.sqrt(np.sum([out.params['%ssigma' % pfx].stderr**2 for pfx in peak_prefx])) * nn,
-            'stderr_height': np.sqrt(np.sum([out.params['%sheight' % pfx].stderr**2 for pfx in peak_prefx])) * nn,
-            'stderr_fwhm': np.sqrt(np.sum([out.params['%sfwhm' % pfx].stderr**2 for pfx in peak_prefx])) * nn,
-        }
-        for total in totals:
-            self.scan.add2namespace(total, totals[total])
-        # Background
-        self.scan.add2namespace('background', np.mean(comps['bkg_']))
+        output = peak_results(res)
+        self.scan.update_namespace(output)
+        self.scan.add2namespace('lmfit', res, 'fit_result')
+        self.scan.add2namespace('fit', res.best_fit, other_names=['fit_%s' % yname])
 
         if print_result:
             print(self.scan.title())
-            print(out.fit_report())
+            print(res.fit_report())
             print('Totals:')
             print('\n'.join(self.scan.string(['amplitude', 'center', 'height', 'sigma', 'fwhm', 'background'])))
         if plot_result:
-            fig, grid = out.plot()
+            fig, grid = res.plot()
             fig.suptitle(self.scan.title(), fontsize=12)
             # plt.subplots_adjust(top=0.85, left=0.15)
             ax1, ax2 = fig.axes
             ax1.set_title('')
             ax2.set_xlabel(xname)
             ax2.set_ylabel(yname)
+            comps = res.eval_components()
             for component in comps.keys():
                 ax2.plot(xdata, comps[component], label=component)
                 ax2.legend()
-        return out
+        return res
 
     def modelfit(self, xaxis='axis', yaxis='signal', model=None, pars=None, method='leastsq',
                  print_result=False, plot_result=False):
@@ -839,6 +994,7 @@ class ScanFitManager:
         res = model.fit(ydata, pars, x=xdata, weights=weights, method=method)
 
         self.scan.add2namespace('lmfit', res, 'fit_result')
+        self.scan.add2namespace('fit', res.best_fit, other_names=['fit_%s' % yname])
         fit_dict = {}
         for pname, param in res.params.items():
             ename = 'stderr_' + pname
@@ -846,7 +1002,6 @@ class ScanFitManager:
             fit_dict[ename] = param.stderr
         for name, value in fit_dict.items():
             self.scan.add2namespace(name, value)
-        self.scan.add2namespace('fit', res.best_fit, other_names=['fit_%s' % yname])
         # Add peak components
         comps = res.eval_components(x=xdata)
         for component in comps.keys():
@@ -864,6 +1019,57 @@ class ScanFitManager:
             ax2.set_ylabel(yname)
         return res
 
+    def gen_model(self, xaxis='axes', yaxis='signal',
+                       npeaks=None, min_peak_power=None, peak_distance_idx=6,
+                       model='Gaussian', background='slope',
+                       initial_parameters=None, fix_parameters=None):
+        """
+        Generate lmfit model and parameters
+        :param xaxis: str name or address of array to plot on x axis
+        :param yaxis: str name or address of array to plot on y axis
+        :param npeaks: None or int number of peaks to fit. None will guess the number of peaks
+        :param min_peak_power: float, only return peaks with power greater than this. If None compare against std(y)
+        :param peak_distance_idx: int, group adjacent maxima if closer in index than this
+        :param model: str, specify the peak model 'Gaussian','Lorentzian','Voight'
+        :param background: str, specify the background model: 'slope', 'exponential'
+        :param initial_parameters: None or dict of initial values for parameters
+        :param fix_parameters: None or dict of parameters to fix at positions
+        :return: model, pars
+        """
+        xdata, ydata, yerror, xname, yname = self.scan.get_plot_data(xaxis, yaxis, None, None)
+        mod, pars = generate_model(xdata, ydata,
+                                   npeaks=npeaks, min_peak_power=min_peak_power, peak_distance_idx=peak_distance_idx,
+                                   model=model, background=background,
+                                   initial_parameters=initial_parameters, fix_parameters=fix_parameters)
+        return mod, pars
+
+    def gen_model_script(self, xaxis='axes', yaxis='signal',
+                         npeaks=None, min_peak_power=None, peak_distance_idx=6,
+                         model='Gaussian', background='slope',
+                         initial_parameters=None, fix_parameters=None, include_babelscan=True):
+        """
+        Generate script string of
+        :param xaxis: str name or address of array to plot on x axis
+        :param yaxis: str name or address of array to plot on y axis
+        :param npeaks: None or int number of peaks to fit. None will guess the number of peaks
+        :param min_peak_power: float, only return peaks with power greater than this. If None compare against std(y)
+        :param peak_distance_idx: int, group adjacent maxima if closer in index than this
+        :param model: str, specify the peak model 'Gaussian','Lorentzian','Voight'
+        :param background: str, specify the background model: 'slope', 'exponential'
+        :param initial_parameters: None or dict of initial values for parameters
+        :param fix_parameters: None or dict of parameters to fix at positions
+        :param include_babelscan: if False, only include imports for lmfit
+        :return: str
+        """
+        xdata, ydata, yerror, xname, yname = self.scan.get_plot_data(xaxis, yaxis, None, None)
+        out = generate_model_script(xdata, ydata, yerror,
+                                    npeaks=npeaks, min_peak_power=min_peak_power,
+                                    peak_distance_idx=peak_distance_idx,
+                                    model=model, background=background,
+                                    initial_parameters=initial_parameters, fix_parameters=fix_parameters,
+                                    include_babelscan=include_babelscan)
+        return out
+
     def fit_result(self, parameter_name=None):
         """
         Returns parameter, error from the last run fit
@@ -871,7 +1077,7 @@ class ScanFitManager:
         :param
         :return:
         """
-        if 'lmfit' not in self.scan._namespace:
+        if not self.scan.isinnamespace('lmfit'):
             self.fit()
         lmfit = self.scan('lmfit')
         if parameter_name is None:
@@ -879,18 +1085,22 @@ class ScanFitManager:
         param = lmfit.params[parameter_name]
         return param.value, param.stderr
 
-    def fit_report(self):
+    def fit_values(self, fit_result=None):
+        """Return dict of values from last fit"""
+        if fit_result is None:
+            lmfit = self.fit_result()
+        return peak_results(lmfit)
+
+    def fit_report(self, fit_result=None):
         """Return lmfit.ModelResult.fit_report()"""
-        if 'lmfit' not in self.scan._namespace:
-            self.fit()
-        lmfit = self.scan('lmfit')
+        if fit_result is None:
+            lmfit = self.fit_result()
         return lmfit.fit_report()
 
-    def plot(self):
+    def plot(self, fit_result=None):
         """Plot fit results"""
-        if 'lmfit' not in self.scan._namespace:
-            self.fit()
-        lmfit = self.scan('lmfit')
+        if fit_result is None:
+            lmfit = self.fit_result()
 
         fig, grid = lmfit.plot()
         fig.suptitle(self.scan.title(), fontsize=12)
@@ -908,6 +1118,18 @@ class ScanFitManager:
 class MultiScanFitManager:
     """
     MultiScanFitManager
+    Enables fitting across multiple scans in a multiscan object
+
+    fit = MultiScanFitManager(scans)
+    fit.fit(xaxis, yaxis)  # estimate & fit data against a peak profile model using lmfit
+    fit.multi_peak_fit(xaxis, yaxis)  # find peaks & fit multiprofile model using lmfit
+    fit.model_fit(xaxis, yaxis, model, pars)  # fit supplied model against data
+    fit.fit_results()  # return lmfit.ModelResult for last fit
+    fit.fit_values()  # return dict of fit values for last fit
+    fit.fit_report()  # return str of fit report
+    fit.plot()  # plot last lmfit results
+    * xaxis, yaxis are str names of arrays in the scan namespace
+
     :param scan: babelscan.MultiScan
     """
 
@@ -930,7 +1152,7 @@ class MultiScanFitManager:
         out = [
             scan.fit(xaxis, yaxis, model, background, initial_parameters, fix_parameters, method,
                      print_result, plot_result)
-            for scan in self.multiscan._scan_list
+            for scan in self.multiscan
         ]
         return out
 
@@ -952,7 +1174,19 @@ class MultiScanFitManager:
                                     model=model, background=background, initial_parameters=initial_parameters,
                                     fix_parameters=fix_parameters, method=method,
                                     print_result=print_result, plot_result=plot_result)
-            for scan in self.multiscan._scan_list
+            for scan in self.multiscan
+        ]
+        return out
+
+    def model_fit(self, xaxis='axis', yaxis='signal', model=None, pars=None, method='leastsq',
+                  print_result=False, plot_result=False):
+        """
+        Automatic fitting of scan against given lmfit Model
+        """
+        out = [
+            scan.fit.model_fit(xaxis, yaxis, model=model, pars=pars, method=method,
+                               print_result=print_result, plot_result=plot_result)
+            for scan in self.multiscan
         ]
         return out
 

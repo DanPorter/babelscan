@@ -1,0 +1,355 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>babelscan.babelscan &mdash; BabelScan 0.3.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="babelscan.folder_monitor" href="folder_monitor.html" />
+    <link rel="prev" title="Code" href="Code.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BabelScan
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Code.html">Code</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">babelscan.babelscan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-babelscan.babelscan">babelscan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-scan">Class: Scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-multiscan">Class: MultiScan</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="folder_monitor.html">babelscan.folder_monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instrument.html">babelscan.instrument</a></li>
+<li class="toctree-l2"><a class="reference internal" href="volume.html">babelscan.volume</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Code.html#module-babelscan">babelscan</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../plotting/Plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fitting/Fitting.html">Fitting</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BabelScan</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="Code.html">Code</a> &raquo;</li>
+        
+      <li>babelscan.babelscan</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/code/babelscan.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="babelscan-babelscan">
+<h1>babelscan.babelscan<a class="headerlink" href="#babelscan-babelscan" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="module-babelscan.babelscan">
+<span id="babelscan"></span><h2>babelscan<a class="headerlink" href="#module-babelscan.babelscan" title="Permalink to this headline">¶</a></h2>
+<p>babelscan object for holding many types of scan data</p>
+</div>
+<div class="section" id="class-scan">
+<h2>Class: Scan<a class="headerlink" href="#class-scan" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="babelscan.babelscan.Scan">
+<em class="property">class </em><code class="sig-prename descclassname">babelscan.babelscan.</code><code class="sig-name descname">Scan</code><span class="sig-paren">(</span><em class="sig-param">namespace</em>, <em class="sig-param">alt_names=None</em>, <em class="sig-param">default_values=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/babelscan/babelscan.html#Scan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.Scan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scan class
+Contains a namespace of data associated with names and a seperate dictionary of name associations,
+allowing multiple names to reference the same data.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>namespace = {</dt><dd><p>‘data1’: [1,2,3],
+‘data2’: [10,20,30]</p>
+</dd>
+</dl>
+<p>}
+alt_names = {</p>
+<blockquote>
+<div><p>‘xaxis’: ‘data1’,
+‘yaxis’: ‘data2’,</p>
+</div></blockquote>
+<p>}
+dh = Scan(namespace, alt_names)
+dh(‘xaxis’) &gt;&gt; returns [1,2,3]</p>
+</div></blockquote>
+<p>Scan is usually inhereted by subclasses HdfScan, DatScan or CsvScan.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>namespace</strong> – dict : dict of names and data {name: data}</p></li>
+<li><p><strong>alt_names</strong> – dict or None* : dict of alternative names to names in namespace</p></li>
+<li><p><strong>kwargs</strong> – key-word-argments as options shwon below, keywords and argmuents will be added to the namespace.</p></li>
+</ul>
+</dd>
+</dl>
+<dl>
+<dt>Options:</dt><dd><p>reload - True/False*, if True, reload mode is activated, reloading data on each operation
+label_name - str, add a name to use to automatically find the label
+label_command - str, format specifier for label, e.g. ‘{scan_number}’
+title_name - str, add a name to use to automatically find the title
+title_command - str, format specifier for title, e.g. ‘#{scan_number} Energy={en:5.2f} keV’
+scan_command_name - str, add a name to use to automatically find the scan command
+start_time_name - str, add a name to use to automatically find the start_time
+end_time_name - str, add a name to use to automatically find the end_time
+axes_name - str, add a name to use to automatically find the axes (xaxis)
+signal_name - str, add a name to use to automatically find the signal (yaxis)
+image_name - str, add a name to use to automatically find the detector image
+str_list - list of str, list of names to display when print(self)
+signal_operation - str, operation to perform on signal, e.g. ‘/Transmission’
+error_function - func., operation to perform on signal to generate errors. e.g. np.sqrt
+debug - str or list of str, options for debugging, options:</p>
+<blockquote>
+<div><p>‘namespace’ - displays when items are added to the namespace
+‘eval’ - displays when eval operations are used</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>Functions
+add2namespace(name, data=None, other_names=None, hdf_address=None)</p>
+<blockquote>
+<div><p>set data in namespace</p>
+</div></blockquote>
+<dl class="simple">
+<dt>add2strlist(names)</dt><dd><p>Add to list of names in str output</p>
+</dd>
+<dt>array(names, array_length=None)</dt><dd><p>Return numpy array of data with same length</p>
+</dd>
+<dt>axes()</dt><dd><p>Return default axes (xaxis) data</p>
+</dd>
+<dt>eval(operation)</dt><dd><p>Evaluate operation using names in dataset or in associated names</p>
+</dd>
+<dt>find_image(multiple=False)</dt><dd><p>Return address of image data in hdf file</p>
+</dd>
+<dt>get_plot_data(xname=None, yname=None, signal_op=None, error_op=None)</dt><dd><p>Return xdata, ydata, yerror, xname, yname</p>
+</dd>
+<dt>image(idx=None, image_address=None)</dt><dd><p>Load image from hdf file, works with either image addresses or stored arrays</p>
+</dd>
+<dt>image_roi(cen_h=None, cen_v=None, wid_h=31, wid_v=31)</dt><dd><p>Create new region of interest from detector images</p>
+</dd>
+<dt>image_roi_op(operation)</dt><dd><p>Create new region of interest (roi) from image data and return sum and maxval</p>
+</dd>
+<dt>image_roi_sum(cen_h=None, cen_v=None, wid_h=31, wid_v=31)</dt><dd><p>Create new region of interest</p>
+</dd>
+<dt>image_size()</dt><dd><p>Returns the image size</p>
+</dd>
+<dt>label(new_label=None)</dt><dd><p>Set or Return the scan label. The label is a short identifier for the scan, such as scan number</p>
+</dd>
+<dt>name(name)</dt><dd><p>Return corrected name from namespace</p>
+</dd>
+<dt>options(<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs)</dt><dd><p>Set or display options</p>
+</dd>
+<dt>reload_mode(mode=None)</dt><dd><p>Turns on reload mode - reloads the dataset each time</p>
+</dd>
+<dt>reset()</dt><dd><p>Reset the namespace</p>
+</dd>
+<dt>scan_command()</dt><dd><p>Returns scan command</p>
+</dd>
+<dt>show_namespace()</dt><dd><p>return str of namespace</p>
+</dd>
+<dt>signal()</dt><dd><p>Return default signal (yaxis) data</p>
+</dd>
+<dt>string(names, str_format=None)</dt><dd><p>Return formated string of data</p>
+</dd>
+<dt>string_format(operation)</dt><dd><p>Process a string with format specified in {} brackets, values will be returned.</p>
+</dd>
+<dt>title(new_title=None)</dt><dd><p>Set or Return the title</p>
+</dd>
+<dt>value(names, array_function=None)</dt><dd><p>Return single value of data</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="class-multiscan">
+<h2>Class: MultiScan<a class="headerlink" href="#class-multiscan" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="babelscan.babelscan.MultiScan">
+<em class="property">class </em><code class="sig-prename descclassname">babelscan.babelscan.</code><code class="sig-name descname">MultiScan</code><span class="sig-paren">(</span><em class="sig-param">scan_list</em>, <em class="sig-param">variables=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/babelscan/babelscan.html#MultiScan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.babelscan.MultiScan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for holding multiple Scan objects</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="folder_monitor.html" class="btn btn-neutral float-right" title="babelscan.folder_monitor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Code.html" class="btn btn-neutral float-left" title="Code" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Dan Porter.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

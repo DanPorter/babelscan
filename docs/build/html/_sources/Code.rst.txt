@@ -1,7 +1,31 @@
-
+****
 Code
-====
+****
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Modules:
 
-.. automodule:: babelscan
+babelscan
+=========
+
+.. automodule:: babelscan.babelscan
     :members: Scan, MultiScan
+
+folder_monitor
+==============
+
+.. automodule:: babelscan.folder_monitor
+
+instrument
+==========
+
+.. automodule:: babelscan.instrument
+
+volume
+######
+
+.. automodule:: babelscan.volume
+    :members: Volume, ArrayVolume, ImageVolume, DatasetVolume
+
+

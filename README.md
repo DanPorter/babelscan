@@ -43,7 +43,7 @@ print(scan)  # displays I16 metadata by default
 ```
 
 ### Installation
-**requirements:** *numpy, h5py, imageio*, [**optional:** *matplotlib, lmfit*]
+**requirements:** *numpy, h5py, imageio, python-dateutil*, [**optional:** *matplotlib, lmfit*]
 
 **available from: https://github.com/DanPorter/babelscan**
 
@@ -87,7 +87,8 @@ scan.plot.plot_image(index)  # creates figure and plots detector image
 # If lmfit is installed, fitting behaviour is enabled:
 scan.fit()  # fits a gaussian peak to the default axes
 scan.fit.fit('axes', 'signal')  # Fits a gaussian peak to choosen axes
+scan.fit.multi_peak_fit('axes', 'signal')  # Automatically runs a peak search and fits multiple peaks
 # The resulting parameters are stored in the namespace:
-scan('area')
+scan('amplitude, stderr_amplitude')
 ```
 See the included example_*.py files for more examples.

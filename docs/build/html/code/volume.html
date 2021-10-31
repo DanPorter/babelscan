@@ -1,0 +1,424 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>babelscan.volume &mdash; BabelScan 0.3.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Plotting" href="../plotting/Plotting.html" />
+    <link rel="prev" title="babelscan.instrument" href="instrument.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BabelScan
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Code.html">Code</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="babelscan.html">babelscan.babelscan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="folder_monitor.html">babelscan.folder_monitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instrument.html">babelscan.instrument</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">babelscan.volume</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-babelscan.volume">volume</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-volume">Class: Volume</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-arrayvolume">Class: ArrayVolume</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-imagevolume">Class: ImageVolume</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-datasetvolume">Class: DatasetVolume</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Code.html#module-babelscan">babelscan</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../plotting/Plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fitting/Fitting.html">Fitting</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BabelScan</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="Code.html">Code</a> &raquo;</li>
+        
+      <li>babelscan.volume</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/code/volume.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="babelscan-volume">
+<h1>babelscan.volume<a class="headerlink" href="#babelscan-volume" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="module-babelscan.volume">
+<span id="volume"></span><h2>volume<a class="headerlink" href="#module-babelscan.volume" title="Permalink to this headline">¶</a></h2>
+<p>Lazy Volume class</p>
+<dl class="function">
+<dt id="babelscan.volume.pixel_peak_search">
+<code class="sig-prename descclassname">babelscan.volume.</code><code class="sig-name descname">pixel_peak_search</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">peak_percentile=99</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/babelscan/volume.html#pixel_peak_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.pixel_peak_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>find average position of bright points in image
+:param data: numpy array with ndims 1,2,3
+:param peak_percentile: float from 0-100, percentile of image to use as peak area
+:return: i, j, k index of image[i,j,k]</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="babelscan.volume.roi">
+<code class="sig-prename descclassname">babelscan.volume.</code><code class="sig-name descname">roi</code><span class="sig-paren">(</span><em class="sig-param">volume</em>, <em class="sig-param">cen_h=None</em>, <em class="sig-param">cen_v=None</em>, <em class="sig-param">wid_h=31</em>, <em class="sig-param">wid_v=31</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/babelscan/volume.html#roi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.roi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new region of interest from detector images
+:param volume: Volume object or numpy.array with ndim==3
+:param cen_h: int or None
+:param cen_v: int or None
+:param wid_h:  int or None
+:param wid_v:  int or None
+:return: l*wid_v*wid_h array</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="babelscan.volume.roi_sum">
+<code class="sig-prename descclassname">babelscan.volume.</code><code class="sig-name descname">roi_sum</code><span class="sig-paren">(</span><em class="sig-param">volume</em>, <em class="sig-param">cen_h=None</em>, <em class="sig-param">cen_v=None</em>, <em class="sig-param">wid_h=31</em>, <em class="sig-param">wid_v=31</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/babelscan/volume.html#roi_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.roi_sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new region of interest from detector images, return sum and max of each image
+:param volume: Volume object or numpy.array with ndim==3
+:param cen_h: int or None
+:param cen_v: int or None
+:param wid_h:  int or None
+:param wid_v:  int or None
+:return: roi_sum, roi_max</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="babelscan.volume.check_roi_op">
+<code class="sig-prename descclassname">babelscan.volume.</code><code class="sig-name descname">check_roi_op</code><span class="sig-paren">(</span><em class="sig-param">volume</em>, <em class="sig-param">operation</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/babelscan/volume.html#check_roi_op"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.check_roi_op" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new region of interest (roi) values from operation string
+The roi centre and size is defined by an operation:</p>
+<blockquote>
+<div><p>operation = ‘nroi[210, 97, 75, 61]’
+‘nroi’      -   creates a region of interest in the detector centre with size 31x31
+‘nroi[h,v]’ -   creates a roi in the detector centre with size hxv, where h is horizontal, v is vertical
+‘nroi[m,n,h,v] - create a roi with cen_h, cen_v, wid_h, wid_v = n, m, h, v</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>volume</strong> – Volume object or numpy.array with ndim==3</p></li>
+<li><p><strong>operation</strong> – str : operation string</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>cen_h, cen_v, wid_h, wid_v, operation</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="babelscan.volume.roi_op">
+<code class="sig-prename descclassname">babelscan.volume.</code><code class="sig-name descname">roi_op</code><span class="sig-paren">(</span><em class="sig-param">volume</em>, <em class="sig-param">operation</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/babelscan/volume.html#roi_op"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.roi_op" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new region of interest (roi) values from operation string
+The roi centre and size is defined by an operation:</p>
+<blockquote>
+<div><p>operation = ‘nroi[210, 97, 75, 61]’
+‘nroi’      -   creates a region of interest in the detector centre with size 31x31
+‘nroi[h,v]’ -   creates a roi in the detector centre with size hxv, where h is horizontal, v is vertical
+‘nroi[m,n,h,v] - create a roi with cen_h, cen_v, wid_h, wid_v = n, m, h, v</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>volume</strong> – Volume object or numpy.array with ndim==3</p></li>
+<li><p><strong>operation</strong> – str : operation string</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>l*wid_v*wid_h array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="babelscan.volume.roi_op_sum">
+<code class="sig-prename descclassname">babelscan.volume.</code><code class="sig-name descname">roi_op_sum</code><span class="sig-paren">(</span><em class="sig-param">volume</em>, <em class="sig-param">operation</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/babelscan/volume.html#roi_op_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.roi_op_sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new region of interest (roi) values from operation string
+The roi centre and size is defined by an operation:</p>
+<blockquote>
+<div><p>operation = ‘nroi[210, 97, 75, 61]’
+‘nroi’      -   creates a region of interest in the detector centre with size 31x31
+‘nroi[h,v]’ -   creates a roi in the detector centre with size hxv, where h is horizontal, v is vertical
+‘nroi[m,n,h,v] - create a roi with cen_h, cen_v, wid_h, wid_v = n, m, h, v</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>volume</strong> – Volume object or numpy.array with ndim==3</p></li>
+<li><p><strong>operation</strong> – str : operation string</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>roi_sum, roi_max</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="class-volume">
+<h2>Class: Volume<a class="headerlink" href="#class-volume" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="babelscan.volume.Volume">
+<em class="property">class </em><code class="sig-prename descclassname">babelscan.volume.</code><code class="sig-name descname">Volume</code><a class="reference internal" href="../_modules/babelscan/volume.html#Volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.Volume" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Volume functions</dt><dd><p>Contains various functions to operate on 3D volumes</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="class-arrayvolume">
+<h2>Class: ArrayVolume<a class="headerlink" href="#class-arrayvolume" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="babelscan.volume.ArrayVolume">
+<em class="property">class </em><code class="sig-prename descclassname">babelscan.volume.</code><code class="sig-name descname">ArrayVolume</code><span class="sig-paren">(</span><em class="sig-param">array</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/babelscan/volume.html#ArrayVolume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.ArrayVolume" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>ArrayVolume for 3D Numpy arrays</dt><dd><p>Contains additional functions for 3D arrays</p>
+</dd>
+<dt>Usage:</dt><dd><p>array = np.array([[[1,2],[3,4]],[[5,6],[7,8]]])
+lzvol = ArrayVolume(array)
+image = lzvol[0]</p>
+</dd>
+<dt>Supported indexing:</dt><dd><dl class="simple">
+<dt>single dimension indexing, as numpy array:</dt><dd><p>vol = lzvol[:3]
+vol = lzvol[slice(1,-1,2)]</p>
+</dd>
+<dt>multi-dimension indexing, as numpy array:</dt><dd><p>vol = lzvol[3, 100:200]
+vol = lzvol[1:-1, 100:200, 100:200]</p>
+</dd>
+<dt>array operations</dt><dd><p>len(lzvol), np.shape(lzvol), np.size(lzvol), np.ndim(lzvol)
+np.sum(lzvol), np.mean(lzvol), np.percentile(lzvol)</p>
+</dd>
+<dt>boolean array operations</dt><dd><p>lzvol &gt; 1 (&lt;, &lt;=, &gt;, &gt;=, ==, !=)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="class-imagevolume">
+<h2>Class: ImageVolume<a class="headerlink" href="#class-imagevolume" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="babelscan.volume.ImageVolume">
+<em class="property">class </em><code class="sig-prename descclassname">babelscan.volume.</code><code class="sig-name descname">ImageVolume</code><span class="sig-paren">(</span><em class="sig-param">list_of_files</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/babelscan/volume.html#ImageVolume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#babelscan.volume.ImageVolume" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>ImageVolume for images</dt><dd><p>Only loads images when called, reducing memory requirements</p>
+</dd>
+<dt>Usage:</dt><dd><p>lzvol = ImageVolume([file1.tiff, file2.tiff, file3.tiff,…])
+image = lzvol[0]</p>
+</dd>
+<dt>Supported indexing:</dt><dd><dl class="simple">
+<dt>single dimension indexing, as numpy array:</dt><dd><p>vol = lzvol[:3]
+vol = lzvol[slice(1,-1,2)]</p>
+</dd>
+<dt>multi-dimension indexing, as numpy array:</dt><dd><p>vol = lzvol[3, 100:200]
+vol = lzvol[1:-1, 100:200, 100:200]</p>
+</dd>
+<dt>array operations</dt><dd><p>len(lzvol), np.shape(lzvol), np.size(lzvol), np.ndim(lzvol)
+np.sum(lzvol), np.mean(lzvol), np.percentile(lzvol)</p>
+</dd>
+<dt>boolean array operations</dt><dd><p>lzvol &gt; 1 (&lt;, &lt;=, &gt;, &gt;=, ==, !=)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="class-datasetvolume">
+<h2>Class: DatasetVolume<a class="headerlink" href="#class-datasetvolume" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">babelscan.volume.</code><code class="sig-name descname">Volume</code><a class="reference internal" href="../_modules/babelscan/volume.html#Volume"><span class="viewcode-link">[source]</span></a></dt>
+<dd><dl class="simple">
+<dt>Volume functions</dt><dd><p>Contains various functions to operate on 3D volumes</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../plotting/Plotting.html" class="btn btn-neutral float-right" title="Plotting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="instrument.html" class="btn btn-neutral float-left" title="babelscan.instrument" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Dan Porter.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
