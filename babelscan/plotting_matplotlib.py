@@ -546,6 +546,8 @@ class ScanPlotManager:
         """Calls ScanPlotManager.plot(...)"""
         return self.plot(*args, **kwargs)
 
+    show = plt.show
+
     def plotline(self, xaxis='axes', yaxis='signal', *args, **kwargs):
         """
         Plot scanned datasets on matplotlib axes subplot
@@ -742,6 +744,8 @@ class MultiScanPlotManager:
     def __call__(self, *args, **kwargs):
         return self.plot(*args, **kwargs)
 
+    show = plt.show
+
     def plot_simple(self, xname, yname, *args, **kwargs):
         """
         Simple plot method, retrieves x,y data and plots using plt.plot
@@ -936,6 +940,8 @@ class VolumePlotManager:
     def __call__(self, *args, **kwargs):
         """Calls ScanPlotManager.plot(...)"""
         return self.image(*args, **kwargs)
+
+    show = plt.show
 
     def image(self, index=None, axis=0, clim=None, cmap=None, colorbar=False, **kwargs):
         """
