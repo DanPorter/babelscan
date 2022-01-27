@@ -1071,17 +1071,19 @@ class HdfScan(Scan):
             hdf_file = self.filename
         
         if image_file_list is None and image_address is not None:
-            with load(hdf_file) as hdf:
-                dataset = hdf.get(image_address)
+            hdf = load(hdf_file)
+            dataset = hdf.get(image_address)
 
-                # if array - return array
-                if len(dataset.shape) > 1:
-                    # array data
-                    self._volume = DatasetVolume(dataset)
-                    return
-                else:
-                    # image_address points to a list of filenames
-                    image_file_list = [fn.bytestr2str(file) for file in dataset]
+            # if array - return array
+            if dataset.ndim > 1:
+                # array data
+                print(dataset)
+                self._volume = DatasetVolume(dataset)
+                return
+            else:
+                # image_address points to a list of filenames
+                image_file_list = [fn.bytestr2str(file) for file in dataset]
+                hdf.close()
         
         if image_file_list is not None:
             # e.g. list of tiff files
@@ -1107,7 +1109,9 @@ class HdfScan(Scan):
         """
         if self._volume and image_address is None and image_file_list is None and array is None:
             return self._volume
-        if image_address:
+        if hdf_file:
+            self._image_name = image_address
+        elif image_address:
             image_address = self.address(image_address)
             self._image_name = image_address
         elif self._image_name:
