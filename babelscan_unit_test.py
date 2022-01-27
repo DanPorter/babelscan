@@ -73,7 +73,7 @@ plt.xlabel(xlab)
 plt.ylabel(ylab)
 plt.title(scan.title())
 
-scan.plot.plot_image('sum', clim=[0, 100])
+scan.plot.image('sum', clim=[0, 100])
 plt.show()
 
 print('\n\n##################### Fit Tests ###################')

@@ -22,6 +22,6 @@ print(scan)
 
 scan.plot()
 
-scan.plot.plot_image()
+scan.plot.image()
 
 

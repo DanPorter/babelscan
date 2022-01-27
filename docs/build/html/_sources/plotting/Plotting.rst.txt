@@ -32,7 +32,7 @@ You can also easily plot detector images from scan objects:
     import babelscan
     scan = babelscan.file_loader('12345.nxs')
 
-    scan.plot.plot_image(index='sum')
+    scan.plot.image(index='sum')
 
 .. image:: ../images/example_scan_image.png
     :width: 400

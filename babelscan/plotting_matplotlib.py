@@ -1,5 +1,14 @@
 """
 Matplotlib plotting functions
+
+e.g.
+>> set_plot_defaults()
+>> axs = create_multiplot(2, 2, title='New figure')
+>> plot_line(axs[0], x, y)
+>> plot_line(axs[1], x2, y2, label='data 2')
+>> plot_lines(ax[2], x, [y, y2])
+>> plot_detector_image(ax[3], image)
+>> labels('title', 'x', 'y', legend=True, axes=axs[0])
 """
 
 import os
@@ -12,32 +21,51 @@ from . import functions as fn
 
 
 DEFAULT_FONT = 'Times New Roman'
-FIG_SIZE = [8, 6]
-FIG_DPI = 100
-
-
-# Setup matplotlib rc parameters
-# These handle the default look of matplotlib plots
-plt.rc('figure', figsize=FIG_SIZE, dpi=FIG_DPI, autolayout=False)
-plt.rc('lines', marker='o', color='r', linewidth=2, markersize=6)
-plt.rc('errorbar', capsize=2)
-plt.rc('legend', loc='best', frameon=False, fontsize=16)
-plt.rc('axes', linewidth=2, titleweight='bold', labelsize='large')
-plt.rc('xtick', labelsize='large')
-plt.rc('ytick', labelsize='large')
-plt.rc('axes.formatter', limits=(-3, 3), offset_threshold=6)
-# Note font values appear to only be set when plt.show is called
-plt.rc('font', family='serif', style='normal', weight='bold', size=12, serif=['Times New Roman', 'Times', 'DejaVu Serif'])
-#plt.rcParams["savefig.directory"] = os.path.dirname(__file__) # Default save directory for figures
-#plt.rcdefaults()
+DEFAULT_FONTSIZE = 14
+FIG_SIZE = [12, 8]
+FIG_DPI = 80
 
 
 '----------------------------Plot manipulation--------------------------'
 
 
+def set_plot_defaults(rcdefaults=False):
+    """
+    Set custom matplotlib rcparams, or revert to matplotlib defaults
+    These handle the default look of matplotlib plots
+    See: https://matplotlib.org/stable/tutorials/introductory/customizing.html#the-default-matplotlibrc-file
+    :param rcdefaults: False*/ True, if True, revert to matplotlib defaults
+    :return: None
+    """
+    if rcdefaults:
+        print('Return matplotlib rcparams to default settings.')
+        plt.rcdefaults()
+        return
+
+    plt.rc('figure', figsize=FIG_SIZE, dpi=FIG_DPI, autolayout=False)
+    plt.rc('lines', marker='o', color='r', linewidth=2, markersize=6)
+    plt.rc('errorbar', capsize=2)
+    plt.rc('legend', loc='best', frameon=False, fontsize=DEFAULT_FONTSIZE)
+    plt.rc('axes', linewidth=2, titleweight='bold', labelsize='large')
+    plt.rc('xtick', labelsize='large')
+    plt.rc('ytick', labelsize='large')
+    plt.rc('axes.formatter', limits=(-3, 3), offset_threshold=6)
+    plt.rc('image', cmap='viridis')  # default colourmap, see https://matplotlib.org/stable/gallery/color/colormap_reference.html
+    # Note font values appear to only be set when plt.show is called
+    plt.rc(
+        'font',
+        family='serif',
+        style='normal',
+        weight='bold',
+        size=DEFAULT_FONTSIZE,
+        serif=['Times New Roman', 'Times', 'DejaVu Serif']
+    )
+    # plt.rcParams["savefig.directory"] = os.path.dirname(__file__) # Default save directory for figures
+
+
 def labels(ttl=None, xvar=None, yvar=None, zvar=None, legend=False,
            colorbar=False, colorbar_label=None,
-           axes=None, size='Normal'):
+           axes=None, size=None):
     """
     Add formatted labels to current plot, also increases the tick size
     :param ttl: title
@@ -48,26 +76,27 @@ def labels(ttl=None, xvar=None, yvar=None, zvar=None, legend=False,
     :param colorbar: False/ True, adds default colorbar to plot
     :param colorbar_label: adds label to colorbar
     :param axes: matplotlib axes to use, None for plt.gca()
-    :param size: 'Normal' or 'Big'
+    :param size: None, 'Normal' or 'Big'
     :param font: str font name, 'Times New Roman'
     :return: None
     """
     if axes is None:
         axes = plt.gca()
 
-    if size.lower() in ['big', 'large', 'xxl', 'xl']:
-        tik = 30
-        tit = 32
-        lab = 35
-    elif size.lower() in ['small', 'tiny']:
-        tik = 8
-        tit = 12
-        lab = 8
+    if size is not None:
+        if size.lower() in ['big', 'large', 'xxl', 'xl']:
+            tik = 30
+            tit = 32
+            lab = 35
+        elif size.lower() in ['small', 'tiny']:
+            tik = 8
+            tit = 12
+            lab = 8
     else:
         # Normal
-        tik = 16
-        tit = 12
-        lab = 14
+        tik = None
+        tit = None
+        lab = None
 
     axes.tick_params(axis="x", labelsize=tik)
     axes.tick_params(axis="y", labelsize=tik)
@@ -99,7 +128,7 @@ def colormap(clim=None, cmap=None, axes=None):
     """
     Set colour limits and colormap on axes
     :param clim: [min, max] color cut-offs
-    :param cmap: str name of colormap
+    :param cmap: str name of colormap. e.g. 'viridis' or 'spectral'
     :param axes: matplotlib axes or None for current axes
     :return: None
     """
@@ -160,8 +189,9 @@ def create_axes(fig=None, subplot=111, *args, **kwargs):
     :param *args, **kwargs: pass additional argments to fig.add_subplot
     :return: axes object
     """
+    set_plot_defaults()
     if fig is None:
-        fig = plt.figure(figsize=FIG_SIZE, dpi=FIG_DPI)
+        fig = plt.figure()
     ax = fig.add_subplot(subplot, *args, **kwargs)
     return ax
 
@@ -175,6 +205,7 @@ def create_multiplot(nrows=5, ncols=5, title=None, **kwargs):
     :param kwargs: arguments to pass to plt.subplots
     :return: list of axes, len nrows*ncols
     """
+    set_plot_defaults()
     if 'figsize' not in kwargs:
         kwargs['figsize'] = [FIG_SIZE[0] * 2, FIG_SIZE[1] * 2]
     if 'dpi' not in kwargs:
@@ -358,6 +389,17 @@ def plot_3d_surface(axes, image, xdata=None, ydata=None, samples=None, clim=None
     return surface
 
 
+def plot_image_slider(image=None, yerrors=None, clim=None):
+    """
+    Create matplotlib figure with x,y plot on left and detector image on write
+    :param image:
+    :param yerrors:
+    :param clim:
+    :return:
+    """
+    pass
+
+
 def create_html_page(body_lines=(), header_lines=()):
     """Create html page"""
     css = """<style>
@@ -490,7 +532,7 @@ class ScanPlotManager:
         scan.plot() # plot default axes
         scan.plot.plot(xaxis, yaxis)  # creates figure
         scan.plot.plotline(xaxis, yaxis)  # plots line on current figure
-        scan.plot.plot_image()  # create figure and display detector image
+        scan.plot.image()  # create figure and display detector image
 
     Options called from babelscan.Scan:
       'plot_show': True >> automatically call "plt.show" after plot command
@@ -554,7 +596,7 @@ class ScanPlotManager:
             plt.show()
         return axes
 
-    def plot_image(self, index=None, xaxis='axes', axes=None, clim=None, cmap=None, colorbar=False, **kwargs):
+    def image(self, index=None, xaxis='axes', axes=None, clim=None, cmap=None, colorbar=False, **kwargs):
         """
         Plot image in matplotlib figure (if available)
         :param index: int, detector image index, 0-length of scan, if None, use centre index
@@ -589,14 +631,48 @@ class ScanPlotManager:
             plt.show()
         return axes
 
-    def detail_plot(self, xaxis='axes', yaxis='signal', index=None, cmap=None, **kwargs):
+    def image_slider(self, index=None, xaxis='axes', axes=None, clim=None, cmap=None, colorbar=False, **kwargs):
         """
-        Create matplotlib figure with plot of the scan
+        Plot image in matplotlib figure (if available)
+        :param index: int, detector image index, 0-length of scan, if None, use centre index
+        :param xaxis: name or address of xaxis dataset
+        :param axes: matplotlib axes to plot on (None to create figure)
+        :param clim: [min, max] colormap cut-offs (None for auto)
+        :param cmap: str colormap name (None for auto)
+        :param colorbar: False/ True add colorbar to plot
+        :param kwargs: additinoal arguments for plot_detector_image
+        :return: axes object
+        """
+        # x axis data
+        xname, xdata = self.scan._name_eval(xaxis)
+
+        # image data
+        vol = self.scan.volume()
+
+        # Create figure
+        if axes is None:
+            axes = create_axes(subplot=111)
+
+        vol.plot.image_slider(index=index, axes=axes, clim=clim, cmap=cmap, colorbar=colorbar, **kwargs)
+
+        # labels
+        ttl = '%s\n%s' % (self.scan.title(), xname)
+        labels(ttl, colorbar=colorbar, colorbar_label='Detector', axes=axes)
+        colormap(clim, cmap, axes)
+        if self.scan.options('plot_show'):
+            plt.show()
+        return axes
+
+    def detail(self, xaxis='axes', yaxis='signal', index=None, clim=None, cmap=None, **kwargs):
+        """
+        Create matplotlib figure with plot of the scan and detector image
         :param axes: matplotlib.axes subplot
         :param xaxis: str name or address of array to plot on x axis
         :param yaxis: str name or address of array to plot on y axis, also accepts list of names for multiplt plots
-        :param args: given directly to plt.plot(..., *args, **kwars)
-        :param axes: matplotlib.axes subplot, or None to create a figure
+        :param index: int, detector image index, 0-length of scan, if None, use centre index
+        :param xaxis: name or address of xaxis dataset
+        :param clim: [min, max] colormap cut-offs (None for auto)
+        :param cmap: str colormap name (None for auto)
         :param kwargs: given directly to plt.plot(..., *args, **kwars)
         :return: axes object
         """
@@ -610,7 +686,7 @@ class ScanPlotManager:
 
         # Top right - image plot
         try:
-            self.plot_image(index, xaxis, cmap=cmap, axes=rt)
+            self.image(index, xaxis, cmap=cmap, clim=clim, axes=rt)
         except (FileNotFoundError, KeyError, TypeError):
             rt.text(0.5, 0.5, 'No Image')
             rt.set_axis_off()
@@ -767,7 +843,7 @@ class MultiScanPlotManager:
         from matplotlib.backends.backend_pdf import PdfPages
         with PdfPages(filename) as pdf:
             for scan, label in zip(self.multiscan, self.multiscan.labels()):
-                fig = scan.plot.detail_plot()
+                fig = scan.plot.detail()
                 fig.suptitle(label)
                 pdf.savefig(fig)
                 plt.close(fig)
@@ -798,7 +874,7 @@ class MultiScanPlotManager:
             plt.close()
             fname1 = '%s.svg' % scan.scan_number
             try:
-                scan.plot.plot_image()
+                scan.plot.image()
                 fname2 = folder_name + '/%s.png' % scan.scan_number
                 plt.savefig(fname2)
                 plt.close()
@@ -847,7 +923,7 @@ class VolumePlotManager:
     VolumePlotManager
         vol.plot = VolumePlotManager(vol)
         vol.plot() #
-        vol.plot.plot_image()  # create figure and display detector image
+        vol.plot.image()  # create figure and display detector image
 
     Options called from babelscan.volume.Volume:
       'plot_show': True >> automatically call "plt.show" after plot command
@@ -866,7 +942,6 @@ class VolumePlotManager:
         Plot image in matplotlib figure (if available)
         :param index: int, image index, 0-length of scan, if None, use centre index
         :param axis: int, axis to index (0-2)
-        :param plot_axes: matplotlib axes to plot on (None to create figure)
         :param clim: [min, max] colormap cut-offs (None for auto)
         :param cmap: str colormap name (None for auto)
         :param colorbar: False/ True add colorbar to plot
@@ -901,6 +976,62 @@ class VolumePlotManager:
         ylab = '[%s, :, 0]' % index  # might be wrong way around
         labels(ttl, xlab, ylab, colorbar=colorbar, colorbar_label='Detector', axes=axes)
         colormap(clim, cmap, axes)
+        if show:
+            plt.show()
+        return axes
+
+    def image_slider(self, index=None, axis=0, clim=None, cmap=None, colorbar=False, **kwargs):
+        """
+        Plot image in matplotlib figure with a slider (if available)
+        :param index: int, image index, 0-length of scan, if None, use centre index
+        :param axis: int, axis to index (0-2)
+        :param clim: [min, max] colormap cut-offs (None for auto)
+        :param cmap: str colormap name (None for auto)
+        :param colorbar: False/ True add colorbar to plot
+        :param kwargs: additinoal arguments for plot_detector_image
+        :return: axes object
+        """
+        if index is None:
+            index = self.vol.shape[axis] // 2
+
+        # Create figure
+        show = False
+        if 'axes' not in kwargs:
+            show = True
+            axes = create_axes(subplot=111)
+            kwargs['axes'] = axes
+        axes = self.image(index, axis, clim, cmap, colorbar, **kwargs)
+
+        # pcolormesh object
+        pcolor = axes.collections[0]
+
+        # Move axes for slider
+        bbox = axes.get_position()
+        left, bottom, width, height = bbox.x0, bbox.y0, bbox.width, bbox.height
+        change_in_height = height * 0.1
+        new_position = [left, bottom + 2 * change_in_height, width, height - 2 * change_in_height]
+        new_axes_position = [left, bottom, width, change_in_height]
+
+        axes.set_position(new_position, 'original')
+        new_axes = axes.figure.add_axes(new_axes_position)
+
+        sldr = plt.Slider(new_axes, 'Volume', 0, self.vol.shape[axis], valinit=index, valfmt='%0.0f')
+
+        def update(val):
+            """Update function for pilatus image"""
+            imgno = int(round(sldr.val))
+            if axis == 1:
+                im = self.vol[:, imgno, :]
+            elif axis == 2:
+                im = self.vol[:, :, imgno]
+            else:
+                im = self.vol[imgno]
+            pcolor.set_array(im.flatten())
+            plt.draw()
+            # fig.canvas.draw()
+
+        sldr.on_changed(update)
+
         if show:
             plt.show()
         return axes

@@ -326,4 +326,4 @@ class FolderMonitor:
 
     def plot_image(self, scan_number=0):
         scan = self.scan(scan_number)
-        scan.plot.plot_image()
+        scan.plot.image()

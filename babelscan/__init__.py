@@ -91,8 +91,8 @@ By Dan Porter, PhD
 Diamond Light Source Ltd.
 2021
 
-Version 0.6.2
-Last updated: 31/10/21
+Version 0.7.0
+Last updated: 27/01/22
 
 Version History:
 13/04/21 0.1.0  Version History started.
@@ -107,6 +107,7 @@ Version History:
 22/10/21 0.6.0  Various updates, included plotting in volume, removed automatic search any in scan('name')
 29/10/21 0.6.1  Major update to lmfitting, general purpous multi-peak fitting
 31/10/21 0.6.2  Refactored fitting, added new functions, added plotly & html output options to plotting
+27/01/22 0.7.0  Added _set_volume and allowed manual settting of volume location
 
 -----------------------------------------------------------------------------
    Copyright 2021 Diamond Light Source Ltd.
@@ -129,8 +130,8 @@ Version History:
 """
 
 
-__version__ = "0.6.1"
-__date__ = "2021/10/29"
+__version__ = "0.7.0"
+__date__ = "2022/01/27"
 
 
 from .__settings__ import EVAL_MODE

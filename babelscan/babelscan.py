@@ -7,7 +7,7 @@ from . import functions as fn
 from . import EVAL_MODE
 from .settings import init_scan_plot_manager, init_multiscan_plot_manager
 from .settings import init_scan_fit_manager, init_multiscan_fit_manager
-from .volume import ArrayVolume
+from .volume import ArrayVolume, ImageVolume
 
 
 "----------------------------------------------------------------------------------------------------------------------"
@@ -823,7 +823,7 @@ class Scan:
         xdata, ydata, yerror, xlabel, ylabel = self.get_plot_data(xname, yname, signal_op, error_op)
 
         if filename is None:
-            filename = 'Scan_%s_%s_%s.csv' % (self.label(), xname, yname)
+            filename = 'Scan_%s_%s_%s.csv' % (self.label(), xlabel, ylabel)
 
         with open(filename, 'wt') as f:
             f.write('# %r\n' % self)
@@ -859,6 +859,20 @@ class Scan:
             return volume[i]
         return volume[idx]
 
+    def _set_volume(self, array=None, image_file_list=None):
+        """
+        Set the scan file volume
+        :param array: None or [scan_len, i, j] size array
+        :param image_file_list: list of str path locations for [scan_len] image files
+        :return: None, sets self._volume
+        """
+        if array is not None:
+            self._volume = ArrayVolume(array)
+        elif image_file_list is not None:
+            self._volume = ImageVolume(image_file_list)
+        else:
+            self._volume = None
+
     def volume(self):
         """
         Rerturn volume
@@ -867,7 +881,7 @@ class Scan:
         if self._volume is None:
             scanlen = self.scan_length()
             vol = np.zeros([scanlen, 100, 100])
-            self._volume = ArrayVolume(vol)
+            self._set_volume(vol)
         return self._volume
 
     def image_size(self):

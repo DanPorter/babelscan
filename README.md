@@ -58,8 +58,10 @@ pip install babelscan
 
 
 ### Examples
+
 ```python
 import babelscan
+
 scan = babelscan.file_loader('12345.nxs')
 
 print(scan)  # prints scan information
@@ -82,7 +84,7 @@ x, y, dy, xlab, ylab = scan.get_plot_data('axes', 'nroi_peak[31,31]', '/count_ti
 # If matplotlib is installed, plotting behaviour is enabled:
 scan.plot()  # creates a figure and plots the default axes
 scan.plot.plotline('axes', 'signal', 'b-')  # command similar to plt.plot
-scan.plot.plot_image(index)  # creates figure and plots detector image
+scan.plot.image(index)  # creates figure and plots detector image
 
 # If lmfit is installed, fitting behaviour is enabled:
 scan.fit()  # fits a gaussian peak to the default axes

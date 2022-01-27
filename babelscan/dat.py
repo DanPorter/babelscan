@@ -189,21 +189,41 @@ class DatScan(Scan):
         return s
     info = tree
 
-    def volume(self):
+    def _set_volume(self, array=None, image_file_list=None):
+        """
+        Set the scan file volume
+        :param array: None or [scan_len, i, j] size array
+        :param image_file_list: list of str path locations for [scan_len] image files
+        :return: None, sets self._volume
+        """
+
+        if image_file_list is not None:
+            # e.g. list of tiff files
+            image_file_list = fn.liststr(image_file_list)
+            # Check filenames
+            if not os.path.isfile(image_file_list[0]):
+                # filename maybe absolute, just take the final folder
+                abs_filepath = os.path.dirname(self.filename)
+                f = ['/'.join(os.path.abspath(filename).replace('\\', '/').split('/')[-2:]) for filename in
+                     image_file_list]
+                image_file_list = [os.path.join(abs_filepath, file) for file in f]
+
+        super(DatScan, self)._set_volume(array, image_file_list)
+
+    def volume(self, path_template=None, image_file_list=None, array=None):
         """
         Load image as ImageVolume
+        :param path_template: str template of detector images e.g. 'folder/%d.tiff'
+        :param image_file_list: list of str path locations for [scan_len] image files
+        :param array: None or [scan_len, i, j] size array
         :return: ImageVolume
         """
-        if self._volume:
+        if self._volume and image_file_list is None and array is None:
             return self._volume
-        path_spec = self._get_data("_path_template")  # image folder path tempalte e.g. folder/%d.tiff
+        if path_template is None:
+            path_template = self._get_data("_path_template")  # image folder path tempalte e.g. folder/%d.tiff
         pointers = self._get_data('path')  # list of image numbers in dat files
 
-        # add dat file path
-        abs_filepath = os.path.dirname(self.filename)
-        f = '/'.join(os.path.abspath(path_spec).replace('\\', '/').split('/')[-2:])
-        path_spec = os.path.join(abs_filepath, f)
-
-        filenames = [path_spec % pointer for pointer in pointers]
-        self._volume = ImageVolume(filenames)
+        filenames = [path_template % pointer for pointer in pointers]
+        self._set_volume(image_file_list=filenames)
         return self._volume

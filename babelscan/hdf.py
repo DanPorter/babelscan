@@ -10,7 +10,7 @@ import h5py
 
 from . import functions as fn
 from .babelscan import Scan
-from .volume import ImageVolume, DatasetVolume
+from .volume import ImageVolume, DatasetVolume, ArrayVolume
 
 
 "----------------------------LOAD FUNCTIONS---------------------------------"
@@ -856,6 +856,7 @@ class HdfScan(Scan):
         d = HdfScan('hdf_file.nxs')
         d('entry1/data/sum') >> finds dataset at this location, returns the array
         d('eta') >> finds dataset called 'eta' in hdf file, returns the array
+        d.string_format('eta = {eta:5.4f}') >> return formatted string
         d.tree() >> returns str of hdf structure
         d.address('name') >> returns hdf address of 'name'
         d.find_name('name') >> returns list of hdf addresses matching 'name'
@@ -863,6 +864,10 @@ class HdfScan(Scan):
         d.axes() >> automatically finds the default xaxis, returns the array
         d.signal() >> automatically finds the default yaxis, returns the array
         d.image(idx) >> finds the image location if available and returns a detector image
+        d.array('name') >> returns array of data item 'name'
+        d.value('name') >> returns averaged value of data item 'name'
+        d.string('name') >> returns formatted string of data item 'name'
+        d.time('name') >> returns datetime object
     """
     def __init__(self, filename, **kwargs):
         self.filename = filename
@@ -1053,13 +1058,54 @@ class HdfScan(Scan):
             out = find_image(hdf, address_list, multiple)
         return out
 
-    def volume(self, image_address=None):
+    def _set_volume(self, array=None, image_file_list=None, image_address=None, hdf_file=None):
+        """
+        Set the scan file volume
+        :param array: None or [scan_len, i, j] size array
+        :param image_file_list: list of str path locations for [scan_len] image files
+        :param image_address: str hdf address of image location
+        :param hdf_file: str path location of a hdf file (None to use current file)
+        :return: None, sets self._volume
+        """
+        if hdf_file is None:
+            hdf_file = self.filename
+        
+        if image_file_list is None and image_address is not None:
+            with load(hdf_file) as hdf:
+                dataset = hdf.get(image_address)
+
+                # if array - return array
+                if len(dataset.shape) > 1:
+                    # array data
+                    self._volume = DatasetVolume(dataset)
+                    return
+                else:
+                    # image_address points to a list of filenames
+                    image_file_list = [fn.bytestr2str(file) for file in dataset]
+        
+        if image_file_list is not None:
+            # e.g. list of tiff files
+            image_file_list = fn.liststr(image_file_list)
+            # Check filenames
+            if not os.path.isfile(image_file_list[0]):
+                # filename maybe absolute, just take the final folder
+                abs_filepath = os.path.dirname(self.filename)
+                f = ['/'.join(os.path.abspath(filename).replace('\\', '/').split('/')[-2:]) for filename in
+                     image_file_list]
+                image_file_list = [os.path.join(abs_filepath, file) for file in f]
+
+        super(HdfScan, self)._set_volume(array, image_file_list)
+
+    def volume(self, image_address=None, hdf_file=None, image_file_list=None, array=None):
         """
         Load image from hdf file, works with either image addresses or stored arrays
         :param image_address: str hdf address of image location
+        :param hdf_file: str path location of a hdf file (None to use current file)
+        :param image_file_list: list of str path locations for [scan_len] image files
+        :param array: None or [scan_len, i, j] size array
         :return: ImageVolume or HdfVolume
         """
-        if self._volume and image_address is None:
+        if self._volume and image_address is None and image_file_list is None and array is None:
             return self._volume
         if image_address:
             image_address = self.address(image_address)
@@ -1072,28 +1118,7 @@ class HdfScan(Scan):
                 raise KeyError('image path template not found in %r' % self)
             self._image_name = image_address
 
-        hdf = load(self.filename)
-        dataset = hdf.get(image_address)
-
-        # if array - return array
-        if len(dataset.shape) > 1:
-            # array data
-            self._volume = DatasetVolume(dataset)
-            return self._volume
-
-        # if file - load file with imread, return array
-        filenames = [fn.bytestr2str(file) for file in dataset]
-        hdf.close()
-
-        try:
-            return ImageVolume(filenames)
-        except FileNotFoundError:
-            pass
-        # filename maybe absolute, just take the final folder
-        abs_filepath = os.path.dirname(self.filename)
-        f = ['/'.join(os.path.abspath(filename).replace('\\', '/').split('/')[-2:]) for filename in filenames]
-        filenames = [os.path.join(abs_filepath, file) for file in f]
-        self._volume = ImageVolume(filenames)
+        self._set_volume(array, image_file_list, image_address, hdf_file)
         return self._volume
 
     def _prep_operation(self, operation):
