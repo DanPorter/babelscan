@@ -695,10 +695,46 @@ class ScanPlotManager:
 
         # Bottom-Left - details
         details = str(self.scan)
-        lb.text(-0.1, 0.8, details, multialignment="left", fontsize=12, wrap=True)
-        lb.set_axis_off()
-
+        rb.text(-0.2, 1, details, ha='left', va='top', multialignment="left", fontsize=12, wrap=True)
         rb.set_axis_off()
+
+        # Bottom-Right - fit results
+        lb.set_axis_off()
+        if 'fit' in yaxis and self.scan.isinnamespace('fit'):
+            fit_report = str(self.scan.fit)
+            lb.text(-0.2, 1, fit_report, ha='left', va='top',  multialignment="left", fontsize=12, wrap=True)
+
+        if self.scan.options('plot_show'):
+            plt.show()
+        return fig
+
+    def scananddetector(self, xaxis='axes', yaxis='signal', index=None, clim=None, cmap=None, **kwargs):
+        """
+        Create matplotlib figure with plot of the scan and detector image
+        :param axes: matplotlib.axes subplot
+        :param xaxis: str name or address of array to plot on x axis
+        :param yaxis: str name or address of array to plot on y axis, also accepts list of names for multiplt plots
+        :param index: int, detector image index, 0-length of scan, if None, use centre index
+        :param xaxis: name or address of xaxis dataset
+        :param clim: [min, max] colormap cut-offs (None for auto)
+        :param cmap: str colormap name (None for auto)
+        :param kwargs: given directly to plt.plot(..., *args, **kwars)
+        :return: axes object
+        """
+
+        # Create figure
+        fig, (lt, rt) = plt.subplots(1, 2, figsize=[FIG_SIZE[0] * 1.5, FIG_SIZE[1]], dpi=FIG_DPI)
+        fig.subplots_adjust(hspace=0.35, left=0.1, right=0.95)
+
+        # left - line plot
+        self.plot(xaxis, yaxis, axes=lt, **kwargs)
+
+        # right - image plot
+        try:
+            self.image(index, xaxis, cmap=cmap, clim=clim, axes=rt)
+        except (FileNotFoundError, KeyError, TypeError):
+            rt.text(0.5, 0.5, 'No Image')
+            rt.set_axis_off()
 
         if self.scan.options('plot_show'):
             plt.show()

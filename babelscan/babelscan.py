@@ -585,9 +585,9 @@ class Scan:
             op = op.split(':')[0]  # remove format specifier
             name, data = self._name_eval(op)
             try:
-                value = fn.VALUE_FUNCTION(data)
+                value = fn.VALUE_FUNCTION(data)  # handles numbers, arrays of numbers
             except TypeError:
-                value = data
+                value = fn.data_string(data)  # anything else
             format_namespace[name] = value
             operation = operation.replace(op, name)
         return operation.format(**format_namespace)

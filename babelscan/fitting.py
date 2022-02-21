@@ -1102,7 +1102,10 @@ class ScanFitManager:
         if fit_result is None:
             lmfit = self.fit_result()
 
-        fig, grid = lmfit.plot()
+        try:
+            fig, grid = lmfit.plot()
+        except TypeError:
+            fig = lmfit.plot()
         fig.suptitle(self.scan.title(), fontsize=12)
         # plt.subplots_adjust(top=0.85, left=0.15)
         ax1, ax2 = fig.axes

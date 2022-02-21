@@ -174,5 +174,10 @@ class Instrument:
     def scan(self, filename, **kwargs):
         """return babelscan.Scan"""
         options = self._options.copy()
+        data = {'FolderTitle': fn.file2foldername(filename)}
+        if 'data' in options:
+            options['data'].update(data)
+        else:
+            options['data'] = data
         options.update(kwargs)
         return self._scan_loader(filename, **options)

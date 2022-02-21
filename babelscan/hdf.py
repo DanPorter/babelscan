@@ -1077,7 +1077,6 @@ class HdfScan(Scan):
             # if array - return array
             if dataset.ndim > 1:
                 # array data
-                print(dataset)
                 self._volume = DatasetVolume(dataset)
                 return
             else:

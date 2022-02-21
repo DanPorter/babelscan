@@ -147,6 +147,7 @@ class FolderMonitor:
     def set_title(self, name):
         """Set experiment title"""
         self.title = name
+        # possibly this should be self._options['data']['FolderTitle'] = self.title
         self._options['FolderTitle'] = self.title
 
     def options(self, **kwargs):

@@ -14,7 +14,7 @@ str_list = ['scan_number', 'filename', 'scan_command', 'axes', 'signal',
 options = {
     'filename_format': '%06d.nxs',
     'label_command': '#{scan_number:1.0f}',
-    'title_command': '{FolderTitle} #{scan_number} {i16_energy} {i16_temperature} {i16_hkl}\n{scan_command}\n'
+    'title_command': '{FolderTitle} #{scan_number:.0f} {i16_energy} {i16_temperature} {i16_hkl}\n{scan_command}\n'
                      'ss = {ss}, ds = {ds}',
     'scan_command_name': 'scan_command',
     'exposure_time_name': ['measurement/count_time', 'measurement/counttime', 'measurement/Time', 'measurment/t'],
@@ -55,6 +55,7 @@ default_formats = {
 # These will be added to the default_value dict and will be called if the name or alt_names can't be found
 # this should contain all requested names in default_formats
 default_values = {
+    'FolderTitle': '',
     'scan_command': 'scan x y',
     'count_time': 1.0,
     'Transmission': 1.0,

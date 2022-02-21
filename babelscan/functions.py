@@ -34,6 +34,15 @@ def file2name(filename):
     return os.path.basename(filename)
 
 
+def file2foldername(filename):
+    """
+    Extracts folder name from file
+    :param filename: str
+    :return: str
+    """
+    return os.path.basename(os.path.dirname(os.path.abspath(filename)))
+
+
 def scanfile2number(filename):
     """
     Extracts the scan number from a .nxs filename
@@ -92,7 +101,7 @@ def data_string(data):
     size = np.size(data)
     shape = np.shape(data)
     if size == 1:
-        out_str = shortstr(str(data))
+        out_str = shortstr(bytestr2str(data))
         if len(out_str) > MAX_STRING_LENGTH:
             out_str = "%s ..." % out_str[:MAX_STRING_LENGTH]
         return out_str
@@ -471,6 +480,18 @@ def load_from_config(config_file):
 
 
 def save_to_config(config_file=None, name='None', default_names=None, formats=None, default_values=None, options=None):
+    """
+
+    :param config_file:
+    :param name:
+    :param default_names:
+    :param formats:
+    :param default_values:
+    :param options:
+    :return:
+    """
+
+
     """
     Saves config settings to instrument.config file.
       .config files should be json files with the following keys:
