@@ -481,18 +481,6 @@ def load_from_config(config_file):
 
 def save_to_config(config_file=None, name='None', default_names=None, formats=None, default_values=None, options=None):
     """
-
-    :param config_file:
-    :param name:
-    :param default_names:
-    :param formats:
-    :param default_values:
-    :param options:
-    :return:
-    """
-
-
-    """
     Saves config settings to instrument.config file.
       .config files should be json files with the following keys:
         'name': str

@@ -17,6 +17,7 @@ if __name__ == '__main__':
 
     import sys
     import numpy as np
+    import h5py
     try:
         import matplotlib.pyplot as plt
     except ImportError:

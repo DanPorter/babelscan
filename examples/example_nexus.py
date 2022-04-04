@@ -12,7 +12,7 @@ print(scan.find_address('energy'))  # find addresses that match name "energy"
 print(scan.address('energy'))  # display address that is choosen by default
 
 # Load HDF file (wrapper around h5py.File)
-hdf = scan.load()
+hdf = scan.load_hdf()
 print(hdf.tree(detail=True))
 
 # Reloading dataset

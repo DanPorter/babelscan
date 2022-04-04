@@ -91,8 +91,8 @@ By Dan Porter, PhD
 Diamond Light Source Ltd.
 2021
 
-Version 0.8.0
-Last updated: 21/02/22
+Version 0.8.1
+Last updated: 22/04/22
 
 Version History:
 13/04/21 0.1.0  Version History started.
@@ -109,6 +109,7 @@ Version History:
 31/10/21 0.6.2  Refactored fitting, added new functions, added plotly & html output options to plotting
 27/01/22 0.7.0  Added _set_volume and allowed manual settting of volume location
 21/02/22 0.8.0  Added plot.scananddetector, other various improvements
+04/04/22 0.8.1  Added extra hdf methods load_all and hdf_addresses
 
 -----------------------------------------------------------------------------
    Copyright 2021 Diamond Light Source Ltd.
@@ -131,8 +132,8 @@ Version History:
 """
 
 
-__version__ = "0.8.0"
-__date__ = "2022/02/21"
+__version__ = "0.8.1"
+__date__ = "2022/04/22"
 
 
 from .__settings__ import EVAL_MODE

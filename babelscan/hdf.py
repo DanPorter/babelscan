@@ -739,7 +739,7 @@ class HdfDataset:
         filenames = fn.liststr(filenames)
         if len(filenames) == 1:
             try:
-                return HdfDataset(filenames[0])
+                return HdfDataset(filenames[0], self.address)
             except KeyError:
                 return default
         out = []
@@ -857,8 +857,11 @@ class HdfScan(Scan):
         d('entry1/data/sum') >> finds dataset at this location, returns the array
         d('eta') >> finds dataset called 'eta' in hdf file, returns the array
         d.string_format('eta = {eta:5.4f}') >> return formatted string
-        d.tree() >> returns str of hdf structure
         d.address('name') >> returns hdf address of 'name'
+        d.load_hdf() >> returns h5py like hdf file object with some extra methods
+        d.load_all() >> loads all data from file into memory (no lazy loading)
+        d.hdf_addresses() >> returns full list of hdf addresses
+        d.tree() >> returns str of hdf structure
         d.find_name('name') >> returns list of hdf addresses matching 'name'
         d.find_image() >> returns location of image data, either tiff link or 3d volume
         d.axes() >> automatically finds the default xaxis, returns the array
@@ -902,7 +905,7 @@ class HdfScan(Scan):
         out = 'HdfScan(filename: %s, namespace: %d, associations: %d)'
         return out % (self.filename, len(self._namespace), len(self._alt_names))
 
-    def load(self):
+    def load_hdf(self):
         """Open and return hdf.File object"""
         return HdfWrapper(self.filename)
 
@@ -1008,6 +1011,27 @@ class HdfScan(Scan):
         self.add2namespace(axes_name, axes_data, self._axes_str, hdf_address=axes_address)
         self.add2namespace(signal_name, signal_data, self._signal_str, hdf_address=signal_address)
         return axes_name, signal_name
+
+    def load_all(self):
+        """
+        Loads all hdf data into memory
+        :return: None
+        """
+        address_list = self._dataset_addresses()
+        # find data address
+        with load(self.filename) as hdf:
+            for address in address_list:
+                name = address_name(address)
+                dataset = hdf.get(address)
+                data = dataset_data(dataset)
+                self.add2namespace(name, data, address, hdf_address=address)
+
+    def hdf_addresses(self):
+        """
+        Return list of all hdf addresses
+        :return: list(str)
+        """
+        return self._dataset_addresses()
 
     def address(self, name):
         """
