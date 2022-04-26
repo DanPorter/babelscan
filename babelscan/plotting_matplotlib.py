@@ -569,7 +569,6 @@ class ScanPlotManager:
     def plot(self, xaxis='axes', yaxis='signal', *args, **kwargs):
         """
         Create matplotlib figure with plot of the scan
-        :param axes: matplotlib.axes subplot
         :param xaxis: str name or address of array to plot on x axis
         :param yaxis: str name or address of array to plot on y axis, also accepts list of names for multiplt plots
         :param args: given directly to plt.plot(..., *args, **kwars)
@@ -612,6 +611,7 @@ class ScanPlotManager:
         """
         # x axis data
         xname, xdata = self.scan._name_eval(xaxis)
+        xdata = np.reshape(xdata, -1)  # handle multi-dimension data
 
         # image data
         im = self.scan.image(index)
@@ -814,8 +814,7 @@ class MultiScanPlotManager:
 
     def plot(self, xaxis='axes', yaxis='signal', *args, **kwargs):
         """
-        Create matplotlib figure with plot of the scan
-        :param axes: matplotlib.axes subplot
+        Create matplotlib figure with overlayed plots of each scan
         :param xaxis: str name or address of array to plot on x axis
         :param yaxis: str name or address of array to plot on y axis
         :param args: given directly to plt.plot(..., *args, **kwars)

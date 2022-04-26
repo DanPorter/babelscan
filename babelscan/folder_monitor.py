@@ -273,6 +273,7 @@ class FolderMonitor:
         :param kwargs: options to send to file loader
         :return: MultiScan object
         """
+        scan_numbers_or_filenames = np.asarray(scan_numbers_or_filenames).reshape(-1)
         scans = [self.scan(n, **kwargs) for n in scan_numbers_or_filenames]
         return MultiScan(scans, variables)
     loadscans = readscans = scans
@@ -292,11 +293,22 @@ class FolderMonitor:
             return out[0]
         return out
 
-    def printscan(self, scan_number=0):
+    def print_scan(self, scan_number=0):
+        """
+        Print details of a scan to the console
+        :param scan_number: int scan number or string filename
+        :return: None
+        """
         scan = self.scan(scan_number)
         print(scan)
 
-    def printscans(self, scan_numbers=None, names='scan_command'):
+    def print_scans(self, scan_numbers=None, names='scan_command'):
+        """
+        Print details of a list of scans to the console
+        :param scan_numbers: list of scans or None for all scans in directories
+        :param names: str or list of string of variables that change with each scan
+        :return:
+        """
         if scan_numbers is None:
             scan_numbers = self.allscannumbers()
         else:
@@ -308,7 +320,28 @@ class FolderMonitor:
             out = '%s: %s' % (scan_numbers[n], data)
             print(out)
 
+    def load_hdf_address(self, address, scan_numbers=None, default=np.nan):
+        """
+        Rapidly load hdf data from a list of scan numbers
+        :param address: str hdf address
+        :param scan_numbers: list of int or None for all files
+        :param default: default value if address doesn't exist in file
+        :return: array of floats or strings
+        """
+        if scan_numbers is None:
+            scan_files = self.allscanfiles()
+        else:
+            scan_numbers = np.reshape(scan_numbers, -1)
+            scan_files = [self.getfile(scn) for scn in scan_numbers]
+        return load_hdf_values(scan_files, address, default)
+
     def print_hdf_address(self, address, scan_numbers=None):
+        """
+        Rapidly load hdf data from a list of scan numbers and print result to console
+        :param address: str hdf address
+        :param scan_numbers: list of int or None for all files
+        :return: None
+        """
         if scan_numbers is None:
             scan_files = self.allscanfiles()
         else:
@@ -321,10 +354,57 @@ class FolderMonitor:
             out += '%s : %s\n' % (scn, val)
         print(out)
 
-    def plotscan(self, scan_number=0, xaxis='axes', yaxis='signal'):
-        scan = self.scan(scan_number)
-        scan.plot(xaxis, yaxis)
+    def hdf_compare(self, scan1, scan2):
+        """Compare two hdf files"""
+        s1 = self.scan(scan1)
+        s2 = self.scan(scan2)
+        if hasattr(s1, 'hdf_compare') and hasattr(s2, 'hdf_compare'):
+            return s1.hdf_compare(s2)
+        raise ValueError('Scans are not HDF files')
 
-    def plot_image(self, scan_number=0):
+    def plot_scan(self, scan_number=0, xaxis='axes', yaxis='signal', *args, **kwargs):
+        """
+        Create matplotlib figure with plot of the scan (if matplotlib available)
+        :param scan_number: int or string filename
+        :param xaxis: str name or address of array to plot on x axis
+        :param yaxis: str name or address of array to plot on y axis, also accepts list of names for multiplt plots
+        :param args: given directly to plt.plot(..., *args, **kwars)
+        :param axes: matplotlib.axes subplot, or None to create a figure
+        :param kwargs: given directly to plt.plot(..., *args, **kwars)
+        :return: axes object
+        """
         scan = self.scan(scan_number)
-        scan.plot.image()
+        return scan.plot(xaxis, yaxis, *args, **kwargs)
+
+    def plot_image(self, scan_number=0, index=None, xaxis='axes', axes=None, clim=None, cmap=None,
+                   colorbar=False, **kwargs):
+        """
+        Plot image in matplotlib figure (if matplotlib available)
+        :param scan_number: int or string filename
+        :param index: int, detector image index, 0-length of scan, if None, use centre index
+        :param xaxis: name or address of xaxis dataset
+        :param axes: matplotlib axes to plot on (None to create figure)
+        :param clim: [min, max] colormap cut-offs (None for auto)
+        :param cmap: str colormap name (None for auto)
+        :param colorbar: False/ True add colorbar to plot
+        :param kwargs: additional arguments for plot_detector_image
+        :return: axes object
+        """
+        scan = self.scan(scan_number)
+        return scan.plot.image(index, xaxis, axes, clim, cmap, colorbar, **kwargs)
+
+    def plot_scans(self, scan_numbers_or_filenames=None, variables=None,
+                   xaxis='axes', yaxis='signal', *args, **kwargs):
+        """
+        Create matplotlib figure with overlayed plots of each scan (if matplotlib available)
+        :param scan_numbers_or_filenames: list of int scan numbers or str filenames
+        :param variables: str or list of str names that vary in each scan
+        :param xaxis: str name or address of array to plot on x axis
+        :param yaxis: str name or address of array to plot on y axis
+        :param args: given directly to plt.plot(..., *args, **kwargs)
+        :param axes: matplotlib.axes subplot, or None to create a figure
+        :param kwargs: given directly to plt.plot(..., *args, **kwargs)
+        :return: axes object
+        """
+        scans = self.scans(scan_numbers_or_filenames, variables)
+        return scans.plot(xaxis, yaxis, *args, **kwargs)

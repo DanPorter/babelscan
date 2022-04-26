@@ -296,7 +296,7 @@ def tree(hdf_group, detail=False, groups=False, recursion_limit=100):
     Return str of the full tree of data in a hdf object
     :param hdf_group: hdf5 File or Group object
     :param detail: False/ True - provide further information about each group and dataset
-    :param groups: Fasle/ True - only display group level structure
+    :param groups: False/ True - only display group level structure
     :param recursion_limit: int max number of levels
     :return: str
     """
@@ -341,6 +341,30 @@ def nexus_tree(hdf_group):
         out += '  %s\n   ' % group
         out += ','.join(names)
         out += '\n'
+    return out
+
+
+def tree_compare(hdf_group1, hdf_group2):
+    """
+    Compare two hdf groups, display data from both, highlighting differences and missing datasets
+    :param hdf_group1: hdf5 File or Group object
+    :param hdf_group2: hdf5 File or Group object
+    :return: str
+    """
+    group1_addresses = dataset_addresses(hdf_group1)
+    out = ''
+    missing_addresses = []
+    for address in group1_addresses:
+        data_str1 = dataset_string(hdf_group1[address])
+        if address in hdf_group2:
+            data_str2 = dataset_string(hdf_group2[address])
+        else:
+            data_str2 = 'Not available'
+            missing_addresses += [address]
+        diff = '' if data_str1 == data_str2 else '***'
+        out += '%60s  %20s  : %20s  %s\n' % (address, data_str1, data_str2, diff)
+    out += '\nMissing addresses:\n  '
+    out += '\n  '.join(missing_addresses)
     return out
 
 
@@ -928,6 +952,26 @@ class HdfScan(Scan):
         return out
     info = tree
 
+    def hdf_structure(self):
+        """Return string displaying the structure of the hdf file"""
+        with load(self.filename) as hdf:
+            out = nexus_tree(hdf)
+        return out
+
+    def hdf_compare(self, scan_or_filename):
+        """
+        Compare hdf tree to another HDF file, display data from both, highlighting differences and missing datasets
+        :param scan_or_filename: HdfScan or str filename of hdf file
+        :return: str
+        """
+        if isinstance(scan_or_filename, HdfScan):
+            scan_or_filename = scan_or_filename.filename
+
+        out = 'Comparing: %s\n     with: %s\n' % (self.filename, scan_or_filename)
+        with load(self.filename) as hdf1, load(scan_or_filename) as hdf2:
+            out += tree_compare(hdf1, hdf2)
+        return out
+
     def add2namespace(self, name, data=None, other_names=None, default_value=None, hdf_address=None):
         """
         set data in namespace
@@ -1099,13 +1143,15 @@ class HdfScan(Scan):
             dataset = hdf.get(image_address)
 
             # if array - return array
-            if dataset.ndim > 1:
+            if dataset.ndim == 3:
                 # array data
                 self._volume = DatasetVolume(dataset)
                 return
             else:
                 # image_address points to a list of filenames
-                image_file_list = [fn.bytestr2str(file) for file in dataset]
+
+                # image_file_list = [fn.bytestr2str(file) for file in dataset]
+                image_file_list = np.reshape(dataset, -1).astype(str)  # handle multi-dimensional arrays
                 hdf.close()
         
         if image_file_list is not None:
