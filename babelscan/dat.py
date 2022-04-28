@@ -66,6 +66,7 @@ def read_dat_file(filename):
 
         for inln in inlines:
             vals = inln.split('=')
+            if len(vals) != 2: continue
             try:
                 meta[vals[0]] = eval(vals[1])
             except:

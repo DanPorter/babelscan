@@ -111,7 +111,7 @@ Version History:
 21/02/22 0.8.0  Added plot.scananddetector, other various improvements
 04/04/22 0.8.1  Added extra hdf methods load_all and hdf_addresses
 26/04/22 0.8.2  Updated FolderMonitor with more plotting and printing functionality
-28/04/22 0.8.3  corrected volume for multi-dimensional scans
+28/04/22 0.8.3  corrected volume for multi-dimensional scans, dat file error corrected, unit tests updated
 
 -----------------------------------------------------------------------------
    Copyright 2021 Diamond Light Source Ltd.
@@ -135,7 +135,7 @@ Version History:
 
 
 __version__ = "0.8.3"
-__date__ = "2022/04/26"
+__date__ = "2022/04/28"
 
 
 from .__settings__ import EVAL_MODE

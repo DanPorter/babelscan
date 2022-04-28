@@ -2,6 +2,7 @@
 Unit test for babelscan
 """
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import babelscan
@@ -13,14 +14,16 @@ print('####################################################')
 print('\n')
 print(babelscan.module_info())
 
-file = r"C:\Users\dgpor\Dropbox\Python\ExamplePeaks\810002.nxs"  # eta scan with pilatus
-cv_file = r"C:\Users\dgpor\Dropbox\Python\ExamplePeaks\857991.nxs"  # trajectory scan/ cvscan/ kthZebra
-im_file = r'C:\\Users\\dgpor\\OneDrive - Diamond Light Source Ltd\\I16\\Nexus_Format\\example_nexus\\872996.nxs'  # hkl scan with data
-dat_file = r'C:\\Users\\dgpor\\OneDrive - Diamond Light Source Ltd\\I16\\Nexus_Format\\example_nexus\\872996.dat'
-datadir = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus"  # eta scan with pilatus
-rsmap = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\872996-pilatus3_100k-files\rsmap_872996_201215_101906.nxs"
-i10_file = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I10_nexus\i10-578596.nxs"
-i06_file = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I06_example\227980.dat"
+pth = os.path.expanduser('~')
+file = pth + r"\Dropbox\Python\ExamplePeaks\810002.nxs"  # eta scan with pilatus
+cv_file = pth + r"\Dropbox\Python\ExamplePeaks\857991.nxs"  # trajectory scan/ cvscan/ kthZebra
+im_file = pth + r'\\OneDrive - Diamond Light Source Ltd\\I16\\Nexus_Format\\example_nexus\\872996.nxs'  # hkl scan with data
+dat_file = pth + r'\\OneDrive - Diamond Light Source Ltd\\I16\\Nexus_Format\\example_nexus\\872996.dat'
+datadir = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus"  # eta scan with pilatus
+rsmap = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\872996-pilatus3_100k-files\rsmap_872996_201215_101906.nxs"
+i10_file = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I10_nexus\i10-578596.nxs"
+i06_file = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I06_example\227980.dat"
+multid_file = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\928878.nxs"
 
 
 print('\n\n############ File Type Tests ##############')
@@ -94,6 +97,7 @@ print(scans)
 
 
 print('\n\n################### Volume Tests ###################')
+print('Image file: %s' % im_file)
 scan = babelscan.file_loader(im_file)
 volume = scan.volume()
 print('%r, %s' % (scan, scan.find_image()))
@@ -101,28 +105,40 @@ print(volume)
 print(np.max(volume))
 print(volume.peak_search())
 
+print('\n dat file: %s' % dat_file)
 scan1 = babelscan.file_loader(dat_file)
 volume1 = scan1.volume()
-print('\n%r' % scan1)
+print('%r' % scan1)
 print(volume1)
 print(np.max(volume1))
 print(volume1.peak_search())
 
+print('\n Nexus file: %s' % file)
 scan2 = babelscan.file_loader(file)
 volume2 = scan2.volume()
-print('\n%r, %s' % (scan2, scan2.find_image()))
+print('%r, %s' % (scan2, scan2.find_image()))
 print(volume2)
 print(np.max(volume2))
 print(volume2.peak_search())
 
+print('\n Reciprocal space remapper file: %s' % rsmap)
 scan3 = babelscan.file_loader(rsmap)
 volume3 = scan3.volume()
-print('\n%r, %s' % (scan3, scan3.find_image()))
+print('%r, %s' % (scan3, scan3.find_image()))
+print(volume3)
+print(np.max(volume3))
+print(volume3.peak_search())
+
+print('\n Multi-dimensional scan file: %s' % multid_file)
+scan4 = babelscan.file_loader(multid_file)
+volume4 = scan4.volume()
+print('%r, %s' % (scan4, scan4.find_image()))
 print(volume3)
 print(np.max(volume3))
 print(volume3.peak_search())
 
 # Volume plot
+print('\n Test volume plotting')
 volume2.plot()
 am = np.array(volume2.argmax())
 print('Volume argmax:', am, am - (10, 10, 10), am + (10, 10, 10))
@@ -151,6 +167,7 @@ for scn in allscan:
     scan = exp.scan(scn)
     scan.options(start_time_name=['start_time', 'TimeSec'], end_time_name=['end_time', 'TimeSec'])
     scan.add2namespace(['counttime', 'Time', 't'], other_names='count_time', default_value=0)
+    print(scn)
     start_time = scan.time_start()
     duration = scan.duration()
     print(scan)
@@ -170,3 +187,5 @@ exp.options(
 allfiles = exp.allscanfiles()
 for f in allfiles:
     print(exp.scan(f))
+
+print('\nAll tests completed. Hooray!')
