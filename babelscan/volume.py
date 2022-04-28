@@ -514,7 +514,7 @@ class DatasetVolume(h5py.Dataset, Volume):
     """
     def __init__(self, dataset):
         if dataset.ndim != 3:
-            raise TypeError('%r is not a volume' % dataset)
+            raise TypeError('%r is not a volume as ndim=%d' % (dataset, dataset.ndim))
         super(DatasetVolume, self).__init__(dataset.id)
         self.plot = init_vol_plot_manager(self)
 

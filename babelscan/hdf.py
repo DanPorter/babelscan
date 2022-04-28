@@ -1140,19 +1140,22 @@ class HdfScan(Scan):
         
         if image_file_list is None and image_address is not None:
             hdf = load(hdf_file)
+            image_address = get_address(hdf, image_address)
             dataset = hdf.get(image_address)
 
             # if array - return array
             if dataset.ndim == 3:
-                # array data
+                # array data in hdf dataset
                 self._volume = DatasetVolume(dataset)
                 return
+            elif dataset.ndim >= 3:
+                # multi-dimensional scan, reshape to single scan dimension
+                array = np.reshape(dataset, (-1, dataset.shape[-2], dataset.shape[-1]))
             else:
                 # image_address points to a list of filenames
-
                 # image_file_list = [fn.bytestr2str(file) for file in dataset]
                 image_file_list = np.reshape(dataset, -1).astype(str)  # handle multi-dimensional arrays
-                hdf.close()
+            hdf.close()
         
         if image_file_list is not None:
             # e.g. list of tiff files
