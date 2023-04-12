@@ -319,7 +319,7 @@ def modelfit(xvals, yvals, yerrors=None, model=None, initial_parameters=None, fi
     """
     Fit x,y data to a model from lmfit
     E.G.:
-      res = peakfit(x, y, model='Gauss')
+      res = modelfit(x, y, model='Gauss')
       print(res.fit_report())
       res.plot()
       val = res.params['amplitude'].value

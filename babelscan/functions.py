@@ -77,6 +77,7 @@ def shortstr(string):
 def bytestr2str(string):
     """
     Convert bytestr or str to str
+    Note - providing an array returns a string array
     :param string: Bytes or str
     :return: str
     """
@@ -101,7 +102,7 @@ def data_string(data):
     size = np.size(data)
     shape = np.shape(data)
     if size == 1:
-        out_str = shortstr(bytestr2str(data))
+        out_str = shortstr(bytestr2str(np.reshape(data, -1)[0]))
         if len(out_str) > MAX_STRING_LENGTH:
             out_str = "%s ..." % out_str[:MAX_STRING_LENGTH]
         return out_str

@@ -314,9 +314,12 @@ class FolderMonitor:
         else:
             scan_numbers = np.asarray(scan_numbers).reshape(-1)
         for n in range(len(scan_numbers)):
-            scan = self.scan(scan_numbers[n])
-            strings = fn.liststr(scan.string(names))
-            data = ', '.join(strings)
+            try:
+                scan = self.scan(scan_numbers[n])
+                strings = fn.liststr(scan.string(names))
+                data = ', '.join(strings)
+            except Exception:
+                data = 'Not available'
             out = '%s: %s' % (scan_numbers[n], data)
             print(out)
 

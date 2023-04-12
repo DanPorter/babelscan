@@ -23,7 +23,9 @@ datadir = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_
 rsmap = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\872996-pilatus3_100k-files\rsmap_872996_201215_101906.nxs"
 i10_file = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I10_nexus\i10-578596.nxs"
 i06_file = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I06_example\227980.dat"
+i13_file = pth + r"OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I13_example\i13-1-368910.nxs"
 multid_file = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\928878.nxs"
+pil2m = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\982681.nxs"
 
 
 print('\n\n############ File Type Tests ##############')
@@ -36,6 +38,9 @@ print(scan)
 print('\nI16 hkl scan:')
 scan = babelscan.file_loader(im_file)
 print(scan)
+print('\nI16 pil2m scan:')
+scan = babelscan.file_loader(pil2m)
+print(scan)
 print('\nI16 .dat file:')
 scan = babelscan.file_loader(dat_file)
 print(scan)
@@ -47,6 +52,9 @@ scan = babelscan.file_loader(i10_file)
 print(scan)
 print('\nI06 .dat file:')
 scan = babelscan.file_loader(i06_file, scan_command_name='command')
+print(scan)
+print('\nI13 .Nexus file:')
+scan = babelscan.file_loader(i13_file)
 print(scan)
 
 

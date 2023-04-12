@@ -21,7 +21,7 @@ def load(filename):
     try:
         return h5py.File(filename, 'r')
     except OSError:
-        raise Exception('File does not exist: %s' % filename)
+        raise Exception('File does not exist or is currently being written: %s' % filename)
 
 
 def reload(hdf):
@@ -190,6 +190,13 @@ def show_attrs(dataset):
     return out
 
 
+def get_attribute(dataset, attribute='NX_class', default=''):
+    """Return a specific attribute of dataset or group"""
+    if attribute in dataset.attrs:
+        return np.squeeze(dataset.attrs[attribute]).astype(str)
+    return default
+
+
 "-------------------------HDF ADDRESS FUNCTIONS-------------------------------"
 
 
@@ -316,7 +323,12 @@ def tree(hdf_group, detail=False, groups=False, recursion_limit=100):
         if groups:
             out = ""
         elif detail:
-            out = '  %s: %s\n' % (hdf_group.name, dataset_string(hdf_group))
+            try:
+                ds_string = dataset_string(hdf_group)
+            except OSError:
+                # Catch missing datasets
+                ds_string = 'Not Available! (%s)' % (hdf_group.file)
+            out = '  %s: %s\n' % (hdf_group.name, ds_string)
             for attr, val in hdf_group.attrs.items():
                 out += '    @%s: %s\n' % (attr, val)
         else:
@@ -324,22 +336,49 @@ def tree(hdf_group, detail=False, groups=False, recursion_limit=100):
         return out
 
 
-def nexus_tree(hdf_group):
+def tree_debug(hdf_group):
+    """
+    print full tree structrue of hdf including attributes
+    :param hdf_group: hdf5 File or Group object
+    :return: None
+    """
+    try:
+        keys = hdf_group.keys()
+        print('\nHDF Group: ', hdf_group)
+        print('  Name: ', hdf_group.name)
+        for attr, val in hdf_group.attrs.items():
+            print('  Attr: ', attr, val)
+        print('  Keys: ', list(keys))
+        for key in keys:
+            tree_debug(hdf_group.get(key))
+
+    except AttributeError:
+        print('  Dataset: ', hdf_group)
+        print('    Name: ', hdf_group.name)
+        for attr, val in hdf_group.attrs.items():
+            print('    Attr: ', attr, val)
+
+
+def nexus_tree(hdf_group, list_datasets=False):
     """
     Return str of nexus structure of HDF file
     :param hdf_group: hdf5 File or Group object
+    :param list_datasets: if True, list class of each dataset
     :return: str
     """
     top_level_groups = tree(hdf_group, groups=True, recursion_limit=3).splitlines()
-    print(top_level_groups)
     out = 'File: %s\n' % hdf_group.filename
     out += 'Groups:\n'
     for group in top_level_groups:
         datasets = dataset_addresses(hdf_group, group, recursion_limit=1)
         if len(datasets) < 1: continue
         names = [address_name(address) for address in datasets]
-        out += '  %s\n   ' % group
-        out += ','.join(names)
+        nxclass = [get_attribute(hdf_group[address], 'NX_class', 'HDFdataset') for address in datasets]
+        out += ' %s:  %s\n   ' % (get_attribute(hdf_group[group], 'NX_class', 'HDFGroup'), group)
+        if list_datasets:
+            out += '\n   '.join(['%s: %s' % (cls, name) for name, cls in zip(names, nxclass)])
+        else:
+            out += ','.join(names)
         out += '\n'
     return out
 
@@ -952,11 +991,18 @@ class HdfScan(Scan):
         return out
     info = tree
 
-    def hdf_structure(self):
+    def hdf_structure(self, list_datasets=False):
         """Return string displaying the structure of the hdf file"""
         with load(self.filename) as hdf:
-            out = nexus_tree(hdf)
+            out = nexus_tree(hdf, list_datasets)
         return out
+
+    def hdf_datasets(self):
+        """Return string displaying the available datasets in the hdf file"""
+        address_list = self._dataset_addresses()
+        with load(self.filename) as hdf:
+            str_list = [dataset_string(hdf[address]) for address in address_list]
+        return '\n'.join(str_list)
 
     def hdf_compare(self, scan_or_filename):
         """

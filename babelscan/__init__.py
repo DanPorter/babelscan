@@ -91,8 +91,8 @@ By Dan Porter, PhD
 Diamond Light Source Ltd.
 2021
 
-Version 0.8.2
-Last updated: 26/04/22
+Version 0.8.4
+Last updated: 18/01/23
 
 Version History:
 13/04/21 0.1.0  Version History started.
@@ -112,6 +112,13 @@ Version History:
 04/04/22 0.8.1  Added extra hdf methods load_all and hdf_addresses
 26/04/22 0.8.2  Updated FolderMonitor with more plotting and printing functionality
 28/04/22 0.8.3  corrected volume for multi-dimensional scans, dat file error corrected, unit tests updated
+18/01/23 0.8.4  changed scan.hdf_structure to show NX_class attribute
+12/04/23 0.8.5  caught a couple of errors in hdf tree and axes for scan length 1
+
+ToDo
+ - Speed up very slow initial file_loader time
+ - Add SRS file generator, function nexus2srs
+ - allow address names such as 'h-axis'
 
 -----------------------------------------------------------------------------
    Copyright 2021 Diamond Light Source Ltd.
@@ -134,8 +141,8 @@ Version History:
 """
 
 
-__version__ = "0.8.3"
-__date__ = "2022/04/28"
+__version__ = "0.8.5"
+__date__ = "2023/04/12"
 
 
 from .__settings__ import EVAL_MODE
