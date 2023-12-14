@@ -4,7 +4,7 @@ Define Instrument class
 """
 
 from . import functions as fn
-from . import file_loader, FolderMonitor
+from . import file_loader, FolderMonitor, load_hdf_values
 
 
 def instrument_from_config(config_file):
@@ -181,3 +181,7 @@ class Instrument:
             options['data'] = data
         options.update(kwargs)
         return self._scan_loader(filename, **options)
+
+    def hdf_data(self, filenames, address, default=None):
+        """Load HDF dataset data from multiple filenames"""
+        return load_hdf_values(filenames, address, default)

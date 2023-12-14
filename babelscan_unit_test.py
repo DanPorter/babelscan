@@ -23,7 +23,7 @@ datadir = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_
 rsmap = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\872996-pilatus3_100k-files\rsmap_872996_201215_101906.nxs"
 i10_file = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I10_nexus\i10-578596.nxs"
 i06_file = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I06_example\227980.dat"
-i13_file = pth + r"OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I13_example\i13-1-368910.nxs"
+i13_file = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\I13_example\i13-1-368910.nxs"
 multid_file = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\928878.nxs"
 pil2m = pth + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\982681.nxs"
 
@@ -92,6 +92,7 @@ scan = exp(877619)  # merlin
 scan.fit('axes', 'nroi_peak[31, 31]')
 scan.plot('axes', ['nroi_peak[31, 31]', 'fit'])
 print(scan.string('amplitude'))
+print(scan.fit)
 
 scan = exp.scan(794940)  # multipeak
 scan.fit.multi_peak_fit(npeaks=2)

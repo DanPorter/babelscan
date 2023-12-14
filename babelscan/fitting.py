@@ -11,7 +11,9 @@ fit.plot()
 """
 
 import numpy as np
+from . import functions as fn
 from lmfit.models import GaussianModel, LorentzianModel, VoigtModel, PseudoVoigtModel, LinearModel, ExponentialModel
+
 
 # https://lmfit.github.io/lmfit-py/builtin_models.html#peak-like-models
 MODELS = {
@@ -21,19 +23,19 @@ MODELS = {
     'pvoight': PseudoVoigtModel,
     'linear': LinearModel,
     'exponential': ExponentialModel
-}
+}  # list of available lmfit models
 
 PEAK_MODELS = {
     'gaussian': ['gaussian', 'gauss'],
     'voight': ['voight', 'voight model'],
     'pvoight': ['pseudovoight', 'pvoight'],
     'lorentz': ['lorentz', 'lorentzian', 'lor'],
-}
+}  # alternaive names for peaks
 
 BACKGROUND_MODELS = {
     'linear': ['flat', 'slope', 'linear', 'line', 'straight'],
     'exponential': ['exponential', 'curve']
-}
+}  # alternaive names for background models
 
 # https://lmfit.github.io/lmfit-py/fitting.html#fit-methods-table
 METHODS = {
@@ -222,6 +224,8 @@ def find_local_maxima(y, yerror=None):
 
     if yerror is None or np.all(np.abs(yerror) < 0.1):
         yerror = error_func(y)
+    else:
+        yerror = np.asarray(yerror, dtype=float)
     yerror[yerror < 1] = 1.0
     bkg = np.min(y)
     wi = 1 / yerror ** 2
@@ -273,7 +277,31 @@ def find_peaks(y, yerror=None, min_peak_power=None, peak_distance_idx=6):
 
 def peak_results(res):
     """
-    Generate totals dict
+    Generate dict of fit results, including summed totals
+    totals = peak_results(res)
+    totals = {
+        'lmfit': lmfit_result (res),
+        'npeaks': number of peak models used,
+        'chisqr': Chi^2 of fit,
+        'xdata': x-data used for fit,
+        'ydata': y-data used for fit,
+        'yfit': y-fit values,
+        'weights': res.weights,
+        'yerror': 1 / res.weights if res.weights is not None else 0 * res.data,
+        # plus data from components, e.g.
+        'p1_amplitude': Peak 1 area,
+        'p1_fwhm': Peak 1 full-width and half-maximum
+        'p1_center': Peak 1 peak position
+        'p1_height': Peak 1 fitted height,
+        # plus data for total fit:
+        'amplitude': Total summed area,
+        'center': average centre of peaks,
+        'height': average height of peaks,
+        'fwhm': average FWHM of peaks,
+        'background': fitted background,
+        # plut the errors on all parameters, e.g.
+        'stderr_amplitude': error on 'amplitude',
+    }
     :param res: lmfit_result
     :return: {totals: (value, error)}
     """
@@ -296,22 +324,172 @@ def peak_results(res):
     for pname, param in res.params.items():
         ename = 'stderr_' + pname
         fit_dict[pname] = param.value
-        fit_dict[ename] = param.stderr
+        fit_dict[ename] = param.stderr if param.stderr is not None else 0
     totals = {
         'amplitude': np.sum([res.params['%samplitude' % pfx].value for pfx in peak_prefx]),
         'center': np.mean([res.params['%scenter' % pfx].value for pfx in peak_prefx]),
         'sigma': np.mean([res.params['%ssigma' % pfx].value for pfx in peak_prefx]),
         'height': np.mean([res.params['%sheight' % pfx].value for pfx in peak_prefx]),
         'fwhm': np.mean([res.params['%sfwhm' % pfx].value for pfx in peak_prefx]),
-        'background': np.mean(comps['bkg_']),
-        'stderr_amplitude': np.sqrt(np.sum([res.params['%samplitude' % pfx].stderr ** 2 for pfx in peak_prefx])),
-        'stderr_center': np.sqrt(np.sum([res.params['%scenter' % pfx].stderr ** 2 for pfx in peak_prefx])) * nn,
-        'stderr_sigma': np.sqrt(np.sum([res.params['%ssigma' % pfx].stderr ** 2 for pfx in peak_prefx])) * nn,
-        'stderr_height': np.sqrt(np.sum([res.params['%sheight' % pfx].stderr ** 2 for pfx in peak_prefx])) * nn,
-        'stderr_fwhm': np.sqrt(np.sum([res.params['%sfwhm' % pfx].stderr ** 2 for pfx in peak_prefx])) * nn,
+        'background': np.mean(comps['bkg_']) if 'bkg_' in comps else 0.0,
+        'stderr_amplitude': np.sqrt(np.sum([fit_dict['stderr_%samplitude' % pfx] ** 2 for pfx in peak_prefx])),
+        'stderr_center': np.sqrt(np.sum([fit_dict['stderr_%scenter' % pfx] ** 2 for pfx in peak_prefx])) * nn,
+        'stderr_sigma': np.sqrt(np.sum([fit_dict['stderr_%ssigma' % pfx] ** 2 for pfx in peak_prefx])) * nn,
+        'stderr_height': np.sqrt(np.sum([fit_dict['stderr_%sheight' % pfx] ** 2 for pfx in peak_prefx])) * nn,
+        'stderr_fwhm': np.sqrt(np.sum([fit_dict['stderr_%sfwhm' % pfx] ** 2 for pfx in peak_prefx])) * nn,
     }
     fit_dict.update(totals)
     return fit_dict
+
+
+def peak_results_str(res):
+    """
+    Generate output str from lmfit results, including totals
+    :param res: lmfit_result
+    :return: str
+    """
+    fit_dict = peak_results(res)
+    out = 'Fit Results\n'
+    out += '%s\n' % res.model.name
+    out += 'Npeaks = %d\n' % fit_dict['npeaks']
+    out += 'Method: %s => %s\n' % (res.method, res.message)
+    out += 'Chisqr = %1.5g\n' % res.chisqr
+    # Peaks
+    peak_prefx = [mod.prefix for mod in res.components if 'bkg' not in mod.prefix]
+    for prefx in peak_prefx:
+        out += '\nPeak %s\n' % prefx
+        for pn in res.params:
+            if prefx in pn:
+                out += '%15s = %s\n' % (pn, fn.stfm(fit_dict[pn], fit_dict['stderr_%s' % pn]))
+
+    out += '\nBackground\n'
+    for pn in res.params:
+        if 'bkg' in pn:
+            out += '%15s = %s\n' % (pn, fn.stfm(fit_dict[pn], fit_dict['stderr_%s' % pn]))
+
+    out += '\nTotals\n'
+    out += '      amplitude = %s\n' % fn.stfm(fit_dict['amplitude'], fit_dict['stderr_amplitude'])
+    out += '         center = %s\n' % fn.stfm(fit_dict['center'], fit_dict['stderr_center'])
+    out += '         height = %s\n' % fn.stfm(fit_dict['height'], fit_dict['stderr_height'])
+    out += '          sigma = %s\n' % fn.stfm(fit_dict['sigma'], fit_dict['stderr_sigma'])
+    out += '           fwhm = %s\n' % fn.stfm(fit_dict['fwhm'], fit_dict['stderr_fwhm'])
+    out += '     background = %s\n' % fn.stfm(fit_dict['background'], 0)
+    return out
+
+
+def peak_results_fit(res, ntimes=10):
+    """
+    Generate xfit, yfit data, interpolated to give smoother variation
+    :param res: lmfit_result
+    :param ntimes: int, number of points * old number of points
+    :return: xfit, yfit
+    """
+    old_x = res.userkws['x']
+    xfit = np.linspace(np.min(old_x), np.max(old_x), np.size(old_x) * ntimes)
+    yfit = res.eval(x=xfit)
+    return xfit, yfit
+
+
+def peak_results_plot(res, axes=None, xlabel=None, ylabel=None, title=None):
+    """
+    Plot peak results
+    :param res: lmfit result
+    :param axes: None or matplotlib axes
+    :param xlabel: None or str
+    :param ylabel: None or str
+    :param title: None or str
+    :return: matplotlib figure or axes
+    """
+    xdata = res.userkws['x']
+    if title is None:
+        title = res.model.name
+
+    if axes:
+        ax = res.plot_fit(ax=axes, xlabel=xlabel, ylabel=ylabel)
+        # Add peak components
+        comps = res.eval_components(x=xdata)
+        for component in comps.keys():
+            ax.plot(xdata, comps[component], label=component)
+            ax.legend()
+        return ax
+
+    fig = res.plot(xlabel=xlabel, ylabel=ylabel)
+    try:
+        fig, grid = fig  # Old version of LMFit
+    except TypeError:
+        pass
+
+    ax1, ax2 = fig.axes
+    ax1.set_title(title, wrap=True)
+    # Add peak components
+    comps = res.eval_components(x=xdata)
+    for component in comps.keys():
+        ax2.plot(xdata, comps[component], label=component)
+        ax2.legend()
+    fig.set_figwidth(8)
+    # fig.show()
+    return fig
+
+
+class FitResults:
+    """
+    FitResults Class
+    Wrapper for lmfit results object with additional functions specific to i16_peakfit
+
+    res = model.fit(ydata, x=xdata)  # lmfit ouput
+    fitres = FitResults(res)
+
+    --- Parameters ---
+    fitres.res  # lmfit output
+    # data from fit:
+    fitres.npeaks # number of peak models used,
+    fitres.chisqr  # Chi^2 of fit,
+    fitres.xdata  # x-data used for fit,
+    fitres.ydata  # y-data used for fit,
+    fitres.yfit  # y-fit values,
+    fitres.weights  # res.weights,
+    fitres.yerror  # 1 / res.weights if res.weights is not None else 0 * res.data,
+    # data from components, e.g.
+    fitres.p1_amplitude  # Peak 1 area,
+    fitres.p1_fwhm  # Peak 1 full-width and half-maximum
+    fitres.p1_center  # Peak 1 peak position
+    fitres.p1_height  # Peak 1 fitted height,
+    # data for total fit:
+    fitres.amplitude  # Total summed area,
+    fitres.center  # average centre of peaks,
+    fitres.height  # average height of peaks,
+    fitres.fwhm  # average FWHM of peaks,
+    fitres.background  # fitted background,
+    # errors on all parameters, e.g.
+    fitres.stderr_amplitude  # error on 'amplitude
+
+    --- Functions ---
+    print(fitres)  # prints formatted str with results
+    ouputdict = fitres.results()  # creates ouput dict
+    xdata, yfit = fitres.fit(ntimes=10)  # interpolated fit results
+    fig = fitres.plot(axes, xlabel, ylabel, title)  # create plot
+    """
+
+    def __init__(self, results):
+        self.res = results
+        self._res = peak_results(results)
+        for name in self._res:
+            setattr(self, name, self._res[name])
+
+    def __str__(self):
+        return peak_results_str(self.res)
+
+    def results(self):
+        """Returns dict of peak fit results"""
+        return self._res
+
+    def fit(self, ntimes=10):
+        """Returns interpolated x, y fit arrays"""
+        return peak_results_fit(self.res, ntimes=ntimes)
+
+    def plot(self, axes=None, xlabel=None, ylabel=None, title=None):
+        """Plot peak fit results"""
+        return peak_results_plot(self.res, axes, xlabel, ylabel, title)
 
 
 def modelfit(xvals, yvals, yerrors=None, model=None, initial_parameters=None, fix_parameters=None,
@@ -457,10 +635,10 @@ def peakfit(xvals, yvals, yerrors=None, model='Voight', background='slope',
     res = mod.fit(yvals, pars, x=xvals, weights=weights, method=method)
 
     if print_result:
-        print(res.fit_report())
+        print(peak_results_str(res))
     if plot_result:
-        res.plot()
-    return res
+        peak_results_plot(res)
+    return FitResults(res)
 
 
 def peak2dfit(xdata, ydata, image_data, initial_parameters=None, fix_parameters=None,
@@ -729,16 +907,10 @@ def multipeakfit(xvals, yvals, yerrors=None,
     res = mod.fit(yvals, pars, x=xvals, weights=weights, method=method)
 
     if print_result:
-        print(res.fit_report())
+        print(peak_results_str(res))
     if plot_result:
-        fig, grid = res.plot()
-        ax1, ax2 = fig.axes
-        # Add peak components
-        comps = res.eval_components(x=xvals)
-        for component in comps.keys():
-            ax2.plot(xvals, comps[component], label=component)
-            ax2.legend()
-    return res
+        peak_results_plot(res)
+    return FitResults(res)
 
 
 "----------------------------------------------------------------------------------------------------------------------"
@@ -810,15 +982,15 @@ class ScanFitManager:
         Fit x,y data to a peak model using lmfit
         E.G.:
           res = self.fit('axes', 'signal', model='Gauss')
-          print(res.fit_report())
+          print(res)
           res.plot()
-          val = res.params['amplitude'].value
-          err = res.params['amplitude'].stderr
+          val1 = res.p1_amplitude
+          val2 = res.p2_amplitude
 
         Peak Models:
-         Choice of peak model: 'Gaussian', 'Lorentzian', 'Voight',' PseudoVoight'
+         Choice of peak model: 'Gaussian', 'Lorentzian', 'Voight', 'PseudoVoight'
         Background Models:
-         Choice of background model: 'slope', 'exponential'
+         Choice of background model: 'flat', 'slope', 'exponential'
 
         Peak Parameters (%d=number of peak):
          'amplitude', 'center', 'sigma', pvoight only: 'fraction'
@@ -841,7 +1013,7 @@ class ScanFitManager:
         :param method: str method name, from lmfit fitting methods
         :param print_result: if True, prints the fit results using fit.fit_report()
         :param plot_result: if True, plots the results using fit.plot()
-        :return: lmfit.model.ModelResult < fit results object
+        :return: FitResult object
         """
         xdata, ydata, yerror, xname, yname = self.scan.get_plot_data(xaxis, yaxis, None, None)
 
@@ -849,22 +1021,17 @@ class ScanFitManager:
         res = peakfit(xdata, ydata, yerror, model=model, background=background,
                       initial_parameters=initial_parameters, fix_parameters=fix_parameters, method=method)
 
-        output = peak_results(res)
+        output = res.results()
         self.scan.update_namespace(output)
-        self.scan.add2namespace('lmfit', res, 'fit_result')
-        self.scan.add2namespace('fit', res.best_fit, other_names=['fit_%s' % yname])
+        self.scan.add2namespace('lmfit', res.res, other_names='fit_result')
+        self.scan.add2namespace('fitobj', res)
+        self.scan.add2namespace('fit', res.res.best_fit, other_names=['fit_%s' % yname])
 
         if print_result:
             print(self.scan.title())
-            print(res.fit_report())
+            print(res)
         if plot_result:
-            fig, grid = res.plot()
-            fig.suptitle(self.scan.title(), fontsize=12)
-            # plt.subplots_adjust(top=0.85, left=0.15)
-            ax1, ax2 = fig.axes
-            ax1.set_title('')
-            ax2.set_xlabel(xname)
-            ax2.set_ylabel(yname)
+            res.plot(title=self.scan.title())
         return res
 
     def multi_peak_fit(self, xaxis='axes', yaxis='signal',
@@ -876,21 +1043,21 @@ class ScanFitManager:
         Fit x,y data to a peak model using lmfit
         E.G.:
           res = self.multi_peak_fit('axes', 'signal', npeaks=2, model='Gauss')
-          print(res.fit_report())
+          print(res)
           res.plot()
-          val1 = res.params['p1_amplitude'].value
-          val2 = res.params['p2_amplitude'].value
+          val1 = res.p1_amplitude
+          val2 = res.p2_amplitude
 
         Peak centers:
          Will attempt a fit using 'npeaks' peaks, with centers defined by defalult by the find_peaks function
-          if 'npeaks' is None, the number of peaks found by find_peaks will determine npeaks
+          if 'npeaks' is None, the number of peaks will be found by find_peaks()
           if 'npeaks' is greater than the number of peaks found by find_peaks, initial peak centers are evenly
           distrubuted along xdata.
 
         Peak Models:
-         Choice of peak model: 'Gaussian', 'Lorentzian', 'Voight',' PseudoVoight'
+         Choice of peak model: 'Gaussian', 'Lorentzian', 'Voight','PseudoVoight'
         Background Models:
-         Choice of background model: 'slope', 'exponential'
+         Choice of background model: 'flat', 'slope', 'exponential'
 
         Peak Parameters (%d=number of peak):
          'p%d_amplitude', 'p%d_center', 'p%d_sigma', pvoight only: 'p%d_fraction'
@@ -918,7 +1085,7 @@ class ScanFitManager:
         :param method: str method name, from lmfit fitting methods
         :param print_result: if True, prints the fit results using fit.fit_report()
         :param plot_result: if True, plots the results using fit.plot()
-        :return: lmfit.model.ModelResult < fit results object
+        :return: FitResult object
         """
         xdata, ydata, yerror, xname, yname = self.scan.get_plot_data(xaxis, yaxis, None, None)
 
@@ -927,28 +1094,17 @@ class ScanFitManager:
                            peak_distance_idx=peak_distance_idx, model=model, background=background,
                            initial_parameters=initial_parameters, fix_parameters=fix_parameters, method=method)
 
-        output = peak_results(res)
+        output = res.results()
         self.scan.update_namespace(output)
-        self.scan.add2namespace('lmfit', res, 'fit_result')
-        self.scan.add2namespace('fit', res.best_fit, other_names=['fit_%s' % yname])
+        self.scan.add2namespace('lmfit', res.res, other_names='fit_result')
+        self.scan.add2namespace('fitobj', res)
+        self.scan.add2namespace('fit', res.res.best_fit, other_names=['fit_%s' % yname])
 
         if print_result:
             print(self.scan.title())
-            print(res.fit_report())
-            print('Totals:')
-            print('\n'.join(self.scan.string(['amplitude', 'center', 'height', 'sigma', 'fwhm', 'background'])))
+            print(res)
         if plot_result:
-            fig, grid = res.plot()
-            fig.suptitle(self.scan.title(), fontsize=12)
-            # plt.subplots_adjust(top=0.85, left=0.15)
-            ax1, ax2 = fig.axes
-            ax1.set_title('')
-            ax2.set_xlabel(xname)
-            ax2.set_ylabel(yname)
-            comps = res.eval_components()
-            for component in comps.keys():
-                ax2.plot(xdata, comps[component], label=component)
-                ax2.legend()
+            res.plot(title=self.scan.title())
         return res
 
     def modelfit(self, xaxis='axis', yaxis='signal', model=None, pars=None, method='leastsq',
@@ -1011,12 +1167,13 @@ class ScanFitManager:
             print(self.scan.title())
             print(res.fit_report())
         if plot_result:
-            fig, grid = res.plot()
-            # plt.suptitle(self.title(), fontsize=12)
-            # plt.subplots_adjust(top=0.85, left=0.15)
+            fig = res.plot(xlabel=xname, ylabel=yname)
+            try:
+                fig, grid = fig  # Old version of LMFit
+            except TypeError:
+                pass
             ax1, ax2 = fig.axes
-            ax2.set_xlabel(xname)
-            ax2.set_ylabel(yname)
+            ax1.set_title(self.scan.title(), wrap=True)
         return res
 
     def gen_model(self, xaxis='axes', yaxis='signal',
@@ -1048,7 +1205,7 @@ class ScanFitManager:
                          model='Gaussian', background='slope',
                          initial_parameters=None, fix_parameters=None, include_babelscan=True):
         """
-        Generate script string of
+        Generate script string of fit process
         :param xaxis: str name or address of array to plot on x axis
         :param yaxis: str name or address of array to plot on y axis
         :param npeaks: None or int number of peaks to fit. None will guess the number of peaks
@@ -1070,47 +1227,64 @@ class ScanFitManager:
                                     include_babelscan=include_babelscan)
         return out
 
-    def fit_result(self, parameter_name=None):
+    def gen_lmfit_script(self, xaxis='axes', yaxis='signal',
+                         npeaks=None, min_peak_power=None, peak_distance_idx=6,
+                         model='Gaussian', background='slope',
+                         initial_parameters=None, fix_parameters=None):
+        """
+        Generate script string of fit process, using only lmfit
+        :param xaxis: str name or address of array to plot on x axis
+        :param yaxis: str name or address of array to plot on y axis
+        :param npeaks: None or int number of peaks to fit. None will guess the number of peaks
+        :param min_peak_power: float, only return peaks with power greater than this. If None compare against std(y)
+        :param peak_distance_idx: int, group adjacent maxima if closer in index than this
+        :param model: str, specify the peak model 'Gaussian','Lorentzian','Voight'
+        :param background: str, specify the background model: 'slope', 'exponential'
+        :param initial_parameters: None or dict of initial values for parameters
+        :param fix_parameters: None or dict of parameters to fix at positions
+        :return: str
+        """
+        xdata, ydata, yerror, xname, yname = self.scan.get_plot_data(xaxis, yaxis, None, None)
+        out = generate_model_script(xdata, ydata, yerror,
+                                    npeaks=npeaks, min_peak_power=min_peak_power,
+                                    peak_distance_idx=peak_distance_idx,
+                                    model=model, background=background,
+                                    initial_parameters=initial_parameters, fix_parameters=fix_parameters,
+                                    include_babelscan=False)
+        return out
+
+    def fit_parameter(self, parameter_name='amplitude'):
         """
         Returns parameter, error from the last run fit
-        :param parameter_name: str, name from last fit e.g. 'amplitude', or None to return lmfit object
-        :param
-        :return:
+        :param parameter_name: str, name from last fit e.g. 'amplitude', 'center', 'fwhm', 'background'
+        :returns:  value, error
         """
         if not self.scan.isinnamespace('lmfit'):
             self.fit()
         lmfit = self.scan('lmfit')
         if parameter_name is None:
-            return lmfit
+            return FitResults(lmfit)
         param = lmfit.params[parameter_name]
         return param.value, param.stderr
 
-    def fit_values(self, fit_result=None):
-        """Return dict of values from last fit"""
-        if fit_result is None:
-            lmfit = self.fit_result()
-        return peak_results(lmfit)
+    def fit_result(self):
+        """
+        Returns FitResults object from last fit
+        :return: PeakResults obect
+        """
+        if not self.scan.isinnamespace('fitobj'):
+            self.fit()
+        return self.scan('fitobj')
 
-    def fit_report(self, fit_result=None):
-        """Return lmfit.ModelResult.fit_report()"""
-        if fit_result is None:
-            lmfit = self.fit_result()
-        return lmfit.fit_report()
+    def fit_report(self):
+        """Return str results of last fit"""
+        fitobj = self.fit_result()
+        return str(fitobj)
 
-    def plot(self, fit_result=None):
+    def plot(self):
         """Plot fit results"""
-        if fit_result is None:
-            lmfit = self.fit_result()
-
-        try:
-            fig, grid = lmfit.plot()
-        except TypeError:
-            fig = lmfit.plot()
-        fig.suptitle(self.scan.title(), fontsize=12)
-        # plt.subplots_adjust(top=0.85, left=0.15)
-        ax1, ax2 = fig.axes
-        ax1.set_title('')
-        return fig
+        fitobj = self.fit_result()
+        return fitobj.plot(title=self.scan.title())
 
 
 "----------------------------------------------------------------------------------------------------------------------"
@@ -1127,13 +1301,8 @@ class MultiScanFitManager:
     fit.fit(xaxis, yaxis)  # estimate & fit data against a peak profile model using lmfit
     fit.multi_peak_fit(xaxis, yaxis)  # find peaks & fit multiprofile model using lmfit
     fit.model_fit(xaxis, yaxis, model, pars)  # fit supplied model against data
-    fit.fit_results()  # return lmfit.ModelResult for last fit
-    fit.fit_values()  # return dict of fit values for last fit
-    fit.fit_report()  # return str of fit report
-    fit.plot()  # plot last lmfit results
-    * xaxis, yaxis are str names of arrays in the scan namespace
-
-    :param scan: babelscan.MultiScan
+    fit.fit_parameter('amplitude')  # return [(value,error),...] list for each scan for given parameter
+    :param multiscan: babelscan.MultiScan
     """
 
     def __init__(self, multiscan):
@@ -1146,11 +1315,9 @@ class MultiScanFitManager:
     def fit(self, xaxis='axes', yaxis='signal', model='Gaussian', background='slope',
             initial_parameters=None, fix_parameters=None, method='leastsq', print_result=False, plot_result=False):
         """
-        Automatic fitting of scan
-
-        Use LMFit
-        Pass fit_type = LMFit model
-        return LMFit output
+        Automatic fitting of multiple scans using the same single-peak model
+        Uses LMFit
+        return [list of FitResult objects]
         """
         out = [
             scan.fit(xaxis, yaxis, model, background, initial_parameters, fix_parameters, method,
@@ -1165,11 +1332,9 @@ class MultiScanFitManager:
                        initial_parameters=None, fix_parameters=None, method='leastsq',
                        print_result=False, plot_result=False):
         """
-        Automatic fitting of scan
-
-        Use LMFit
-        Pass fit_type = LMFit model
-        return LMFit output
+        Automatic fitting of multiple scans using the same multi-peak model
+        Uses LMFit
+        return [list of FitResult objects]
         """
         out = [
             scan.fit.multi_peak_fit(xaxis, yaxis,
@@ -1184,7 +1349,7 @@ class MultiScanFitManager:
     def model_fit(self, xaxis='axis', yaxis='signal', model=None, pars=None, method='leastsq',
                   print_result=False, plot_result=False):
         """
-        Automatic fitting of scan against given lmfit Model
+        Automatic fitting of multiple scans against given lmfit Model
         """
         out = [
             scan.fit.model_fit(xaxis, yaxis, model=model, pars=pars, method=method,
@@ -1193,3 +1358,21 @@ class MultiScanFitManager:
         ]
         return out
 
+    def fit_parameter(self, parameter_name='amplitude'):
+        """
+        Returns [(parameter, error), ...] for each scan from the last run fit
+        :param parameter_name: str, name from last fit e.g. 'amplitude', 'center', 'fwhm', 'background'
+        :returns:  value, error
+        """
+        out = [
+            (s('lmfit').params[parameter_name].value, s('lmfit').params[parameter_name].stderr)
+            for s in self.multiscan
+        ]
+        return out
+
+    def fit_result(self):
+        """
+        Returns FitResults object from last fit
+        :return: PeakResults obect
+        """
+        return [s('fitobj') for s in self.multiscan]

@@ -8,7 +8,8 @@ import os
 import babelscan
 
 instrument = babelscan.instrument_from_config('../config_files/i16.config')
-exp = instrument.experiment(r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus")
+mydir = os.path.expanduser('~')
+exp = instrument.experiment(mydir + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus")
 
 scan_numbers = range(794932, 794947, 1)
 scans = exp.scans(scan_numbers, ['sperp', 'spara'])

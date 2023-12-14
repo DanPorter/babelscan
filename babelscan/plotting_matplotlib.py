@@ -541,12 +541,11 @@ class ScanPlotManager:
     """
     def __init__(self, scan):
         self.scan = scan
+        self.show = plt.show
 
     def __call__(self, *args, **kwargs):
         """Calls ScanPlotManager.plot(...)"""
         return self.plot(*args, **kwargs)
-
-    show = plt.show
 
     def plotline(self, xaxis='axes', yaxis='signal', *args, **kwargs):
         """
@@ -776,11 +775,10 @@ class MultiScanPlotManager:
     """
     def __init__(self, multiscan):
         self.multiscan = multiscan
+        self.show = plt.show
 
     def __call__(self, *args, **kwargs):
         return self.plot(*args, **kwargs)
-
-    show = plt.show
 
     def plot_simple(self, xname, yname, *args, **kwargs):
         """

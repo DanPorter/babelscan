@@ -2,9 +2,11 @@
 BabelScan Example
 """
 
+import os
 import babelscan
 
-scan = babelscan.file_loader(r"C:\Users\dgpor\Dropbox\Python\ExamplePeaks\810002.nxs")
+mydir = os.path.expanduser('~')
+scan = babelscan.file_loader(mydir + r"\Dropbox\Python\ExamplePeaks\810002.nxs")
 print(scan)
 
 # HDF options

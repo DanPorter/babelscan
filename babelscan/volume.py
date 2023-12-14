@@ -153,6 +153,33 @@ def roi_op_sum(volume, operation):
     return roi_sum(volume, cen_h, cen_v, wid_h, wid_v)
 
 
+def rebin(volume, step=[1, 1, 1], average_points=True):
+    """
+    Rebins the volume along 3 dimensions, taking the average of elements within each step
+    :param volume: Volume object or numpy.array with ndim==3
+    :param step: [i', j', k'] step size along each dimension
+    :param average_points: Bool, if True, averages the points along each step, otherwise just sum
+    :return: volume[i//i',j//j',k//k']
+    """
+
+    i, j, k = volume.shape
+
+    # remove trailing elements
+    vol2 = volume[:i - i % step[0], :j - j % step[1], :k - k % step[2]]
+
+    # sum pixels
+    count = 0.0
+    volsum = np.zeros(np.floor_divide(vol2.shape, step))
+    for n in range(step[0]):
+        for m in range(step[1]):
+            for o in range(step[2]):
+                count += 1.0
+                volsum += vol2[n::step[0],m::step[1],o::step[2]]
+    if average_points:
+        return volsum / count  # Take the average
+    return volsum
+
+
 "----------------------------------------------------------------------------------------------------------------------"
 "-------------------------------------------- Volume Classes ----------------------------------------------------------"
 "----------------------------------------------------------------------------------------------------------------------"
@@ -224,6 +251,15 @@ class Volume:
             return self[indexes]  # uses numpy advanced indexing
         except IndexError:
             return [self[idx[0], idx[1], idx[2]] for idx in indexes]
+
+    def rebin(self, step=[1, 1, 1], average_points=True):
+        """
+        Rebins the volume along 3 dimensions, taking the average of elements within each step
+        :param step: [i', j', k'] step size along each dimension
+        :param average_points: Bool, if True, averages the points along each step, otherwise just sum
+        :return: volume[i//i',j//j',k//k']
+        """
+        return rebin(self, step, average_points)
 
     def sum_flat(self):
         """Return sum of images: np.sum(volume, axis=0)"""

@@ -6,19 +6,19 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 from babelscan import file_loader, FolderMonitor
 
-file = r"C:\Users\dgpor\Dropbox\Python\ExamplePeaks\810002.nxs"  # eta scan with pilatus
-cv_file = r"C:\Users\dgpor\Dropbox\Python\ExamplePeaks\857991.nxs"  # trajectory scan/ cvscan/ kthZebra
-im_file = r'C:\\Users\\dgpor\\OneDrive - Diamond Light Source Ltd\\I16\\Nexus_Format\\example_nexus\\872996.nxs'  # hkl scan with data
-dat_file = r'C:\\Users\\dgpor\\OneDrive - Diamond Light Source Ltd\\I16\\Nexus_Format\\example_nexus\\872996.dat'
-files = r"C:\Users\dgpor\Dropbox\Python\ExamplePeaks\%d.nxs"  # eta scan with pilatus
-datadir = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus"  # eta scan with pilatus
+mydir = os.path.expanduser('~')
+file = mydir + r"\Dropbox\Python\ExamplePeaks\810002.nxs"  # eta scan with pilatus
+cv_file = mydir + r"\Dropbox\Python\ExamplePeaks\857991.nxs"  # trajectory scan/ cvscan/ kthZebra
+im_file = mydir + r"\\OneDrive - Diamond Light Source Ltd\\I16\\Nexus_Format\\example_nexus\\872996.nxs"  # hkl scan with data
+dat_file = mydir + r"\\OneDrive - Diamond Light Source Ltd\\I16\\Nexus_Format\\example_nexus\\872996.dat"
+files = mydir + r"\Python\ExamplePeaks\%d.nxs"  # eta scan with pilatus
+datadir = mydir + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus"  # eta scan with pilatus
 livedata = r"\\data.diamond.ac.uk\i16\data\2021\cm28156-1\%d.nxs"  # 879419
 #datadir = [r"C:\Users\dgpor\Dropbox\Python\ExamplePeaks", r"\\data.diamond.ac.uk\i16\data\2020\cm26473-1"]
-rsmap = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\rsmap_872996_201215_101906.nxs"
-rsmap = r"C:\Users\dgpor\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\872996-pilatus3_100k-files\rsmap_872996_201215_101906.nxs"
+rsmap = mydir + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\rsmap_872996_201215_101906.nxs"
+rsmap = mydir + r"\OneDrive - Diamond Light Source Ltd\I16\Nexus_Format\example_nexus\872996-pilatus3_100k-files\rsmap_872996_201215_101906.nxs"
 
 scan = file_loader(im_file)
 volume = scan.volume()

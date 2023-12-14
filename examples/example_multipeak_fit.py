@@ -8,7 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import babelscan
 
-scan = babelscan.file_loader(r"C:\Users\dgpor\Dropbox\Python\ExamplePeaks\794940.nxs")
+mydir = os.path.expanduser('~')
+scan = babelscan.file_loader(mydir + r"\Dropbox\Python\ExamplePeaks\794940.nxs")
 scan.set_error_operation()
 print(scan)
 

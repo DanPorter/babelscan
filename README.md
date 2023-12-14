@@ -19,7 +19,7 @@ You can read the documentation [here!](https://babelscan.readthedocs.io/en/lates
 
 [![Documentation Status](https://readthedocs.org/projects/babelscan/badge/?version=latest)](https://babelscan.readthedocs.io/en/latest/?badge=latest)
 
-By Dan Porter, Diamond Light Source Ltd. 2021
+By Dan Porter, Diamond Light Source Ltd. 2023
 
 ### Usage
 ```python

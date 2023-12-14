@@ -7,6 +7,10 @@ import re
 import datetime
 import numpy as np
 import h5py
+try:
+    import hdf5plugin  # required for compressed data
+except ImportError:
+    print('Warning: hdf5plugin not available.')
 
 from . import functions as fn
 from .babelscan import Scan
@@ -21,6 +25,8 @@ def load(filename):
     try:
         return h5py.File(filename, 'r')
     except OSError:
+        if os.path.isfile(filename):
+            raise Exception('File not readable, maybe you need to import hdf5plugin')
         raise Exception('File does not exist or is currently being written: %s' % filename)
 
 
@@ -810,6 +816,11 @@ class HdfDataset:
             out += [self.files(filename, default)]
         return out
 
+    def dataset(self):
+        """Return hdf dataset"""
+        hdf = load(self.filename)
+        return hdf.get(self.address)
+
     def data(self):
         """Return data directly from dataset"""
         with load(self.filename) as hdf:
@@ -882,7 +893,6 @@ class HdfWrapper(h5py.File):
     def dataset_addresses(self, addresses='/', recursion_limit=100, get_size=None, get_ndim=None):
         """
         Return list of addresses of datasets, starting at each address
-        :param hdf_group: hdf5 File or Group object
         :param addresses: list of str or str : time_start in this / these addresses
         :param recursion_limit: Limit on recursivley checking lower groups
         :param get_size: None or int, if int, return only datasets with matching size
@@ -980,6 +990,8 @@ class HdfScan(Scan):
     def tree(self, group_address='/', detail=False, groups=False, recursion_limit=100):
         """
         Return str of the full tree of data in a hdf object
+          print(scan.tree())
+        ** Note using scan.tree(detail=True) will load all data into memory.
         :param group_address: str address of hdf group to time_start in
         :param detail: False/ True - provide further information about each group and dataset, including attributes
         :param groups: False/ True - only provide group level information

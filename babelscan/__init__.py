@@ -89,10 +89,10 @@ Instrument class
 
 By Dan Porter, PhD
 Diamond Light Source Ltd.
-2021
+2023
 
-Version 0.8.4
-Last updated: 18/01/23
+Version 0.8.8
+Last updated: 14/12/23
 
 Version History:
 13/04/21 0.1.0  Version History started.
@@ -114,6 +114,9 @@ Version History:
 28/04/22 0.8.3  corrected volume for multi-dimensional scans, dat file error corrected, unit tests updated
 18/01/23 0.8.4  changed scan.hdf_structure to show NX_class attribute
 12/04/23 0.8.5  caught a couple of errors in hdf tree and axes for scan length 1
+18/04/23 0.8.6  Added hdf5plugin requirement and imports to load compressed data
+26/10/23 0.8.7  Various minor changes
+14/12/23 0.8.8  Changes to fitting, providing better output. Other minor changes
 
 ToDo
  - Speed up very slow initial file_loader time
@@ -141,8 +144,8 @@ ToDo
 """
 
 
-__version__ = "0.8.5"
-__date__ = "2023/04/12"
+__version__ = "0.8.8"
+__date__ = "2023/12/14"
 
 
 from .__settings__ import EVAL_MODE
@@ -172,6 +175,11 @@ def module_info():
     out += '\n      h5py version: %s' % h5py.__version__
     import imageio
     out += '\n   imageio version: %s' % imageio.__version__
+    try:
+        import hdf5plugin
+        out += '\n    hdf5plugin: %s' % hdf5plugin.version
+    except ImportError:
+        out += '\n    hdf5plugin: None'
     try:
         import matplotlib
         out += '\nmatplotlib version: %s' % matplotlib.__version__
