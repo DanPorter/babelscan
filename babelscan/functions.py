@@ -53,7 +53,7 @@ def scanfile2number(filename):
     name = os.path.splitext(nameext)[0]
     numbers = re_integer.findall(name)
     if len(numbers) > 0:
-        return np.int(numbers[-1])
+        return int(numbers[-1])
     return 0
 
 
