@@ -118,6 +118,7 @@ def labels(ttl=None, xvar=None, yvar=None, zvar=None, legend=False,
         axes.legend(fontsize=lab)
 
     if colorbar:
+        # TODO: make this work for mappable lines
         mappables = axes.images + axes.collections
         cb = plt.colorbar(mappables[0], ax=axes)
         if colorbar_label:
@@ -246,7 +247,7 @@ def plot_lines(axes, xdata, ydata, yerrors=None, cdata=None, cmap=None, line_spe
     Uses matplotlib.plot or matplotlib.errorbar if yerrors is not None
     :param axes: matplotlib figure or subplot axes, None uses current axes
     :param xdata: array[n] data on x axis
-    :param ydata: list[n] of array[n] data on y axis
+    :param ydata: list[m] of array[n] data on y axis
     :param yerrors: list[m] of array[n] errors on y axis (or None)
     :param cdata: list[n] of values to define line colour
     :param cmap: name of colormap to generate colour variation in lines
@@ -282,13 +283,6 @@ def plot_lines(axes, xdata, ydata, yerrors=None, cdata=None, cmap=None, line_spe
     line_spec = fn.liststr(line_spec)
     if len(line_spec) != nplots:
         line_spec = line_spec * nplots
-
-    print(axes)
-    print(len(xdata), xdata)
-    print(len(ydata), ydata)
-    print(len(yerrors), yerrors)
-    print(len(line_spec), line_spec)
-    print(len(cols), cols)
 
     lines = []
     for n in range(nplots):
@@ -840,6 +834,31 @@ class MultiScanPlotManager:
             plt.show()
         return axes
 
+    def plot_colors(self, xaxis='axes', yaxis='signal', *args, **kwargs):
+        """
+        Create matplotlib figure with overlayed plots of each scan, with colorbar
+        :param xaxis: str name or address of array to plot on x axis
+        :param yaxis: str name or address of array to plot on y axis
+        :param args: given directly to plt.plot(..., *args, **kwars)
+        :param axes: matplotlib.axes subplot, or None to create a figure
+        :param kwargs: given directly to plt.plot(..., *args, **kwars)
+        :return: axes object
+        """
+        # Create figure
+        if 'axes' in kwargs:
+            axes = kwargs.pop('axes')
+        else:
+            axes = create_axes(subplot=111)
+        # Get data in list format
+        xdata, ydata, dydata, scan_labels, xlabel, ylabel = self.multiscan.get_plot_lines(xaxis, yaxis)
+        # Plot data
+        plot_lines(axes, xdata, ydata, *args, **kwargs)
+        # labels
+        labels(self.multiscan.title(), xlabel, ylabel, colorbar=True, colorbar_label=self.multiscan.get_plot_variable())
+        if self.multiscan[0].options('plot_show'):
+            plt.show()
+        return axes
+
     def multiplot(self, xaxis='axes', yaxis='signal', size=(4, 4), *args, **kwargs):
         """
         Create matplotlib figure with plot of the scan
@@ -856,16 +875,16 @@ class MultiScanPlotManager:
         scan_labels = self.multiscan.labels()
         yaxis_list = fn.liststr(yaxis)
         for figno in range(n_figs):
-            scans = self.multiscan[figno * n_axes: (figno + 1) * n_axes]
-            scan_labels = scan_labels[figno * n_axes: (figno + 1) * n_axes]
+            fig_scans = self.multiscan[figno * n_axes: (figno + 1) * n_axes]
+            fig_labels = scan_labels[figno * n_axes: (figno + 1) * n_axes]
 
             # Create figure
             axes = create_multiplot(size[0], size[1])
-            for n, scan in enumerate(scans):
+            for n, scan in enumerate(fig_scans):
                 for yaxis in yaxis_list:
                     xdata, ydata, yerror, xname, yname = scan.get_plot_data(xaxis, yaxis, None, None)
                     plot_line(axes[n], xdata, ydata, None, *args, label=yname, **kwargs)
-                    labels(scan_labels[n], xaxis, axes=axes[n], size='tiny', legend=True)
+                    labels(fig_labels[n], xaxis, axes=axes[n], size='tiny', legend=True)
 
     def plot_details_to_pdf(self, filename):
         """
