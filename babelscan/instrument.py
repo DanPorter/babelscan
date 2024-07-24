@@ -5,6 +5,7 @@ Define Instrument class
 
 from . import functions as fn
 from . import file_loader, FolderMonitor, load_hdf_values
+from .babelscan import MultiScan
 
 
 def instrument_from_config(config_file):
@@ -181,6 +182,17 @@ class Instrument:
             options['data'] = data
         options.update(kwargs)
         return self._scan_loader(filename, **options)
+
+    def scans(self, filenames, variables=None, **kwargs):
+        """
+        Generate MultiScan object for given range of scans using either scan number or filename.
+        :param filenames: list of str filenames
+        :param variables: str or list of str names that vary in each scan
+        :param kwargs: options to send to file loader
+        :return: MultiScan object
+        """
+        scans = [self.scan(f, **kwargs) for f in filenames]
+        return MultiScan(scans, variables)
 
     def hdf_data(self, filenames, address, default=None):
         """Load HDF dataset data from multiple filenames"""

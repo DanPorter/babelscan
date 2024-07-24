@@ -255,6 +255,7 @@ def plot_lines(axes, xdata, ydata, yerrors=None, cdata=None, cmap=None, line_spe
     :param args: additional arguments
     :param kwargs: additional arguments
     :return: output of plt.plot [line], or plt.errorbar [line, xerrors, yerrors]
+    :return: scalarmappable
     """
     if axes is None:
         axes = plt.gca()
@@ -276,9 +277,12 @@ def plot_lines(axes, xdata, ydata, yerrors=None, cdata=None, cmap=None, line_spe
         cdata = np.arange(nplots)
     else:
         cdata = np.asarray(cdata)
-    cnorm = cdata - cdata.min()
-    cnorm = cnorm / cnorm.max()
+    min_bound = 0.98 * cdata.min()
+    max_bound = 1.02 * cdata.max()
+    cnorm = (cdata - min_bound) / (max_bound - min_bound)
     cols = plt.get_cmap(cmap)(cnorm)
+    sm = plt.cm.ScalarMappable(cmap=cmap)
+    sm.set_array(cdata)
 
     line_spec = fn.liststr(line_spec)
     if len(line_spec) != nplots:
@@ -287,7 +291,7 @@ def plot_lines(axes, xdata, ydata, yerrors=None, cdata=None, cmap=None, line_spe
     lines = []
     for n in range(nplots):
         lines += plot_line(axes, xdata[n], ydata[n], yerrors[n], line_spec[n], c=cols[n], *args, **kwargs)
-    return lines
+    return lines, sm
 
 
 def plot_detector_image(axes, image, clim=None, *args, **kwargs):
@@ -834,7 +838,7 @@ class MultiScanPlotManager:
             plt.show()
         return axes
 
-    def plot_colors(self, xaxis='axes', yaxis='signal', *args, **kwargs):
+    def plot_with_colorbar(self, xaxis='axes', yaxis='signal', *args, **kwargs):
         """
         Create matplotlib figure with overlayed plots of each scan, with colorbar
         :param xaxis: str name or address of array to plot on x axis
@@ -852,9 +856,12 @@ class MultiScanPlotManager:
         # Get data in list format
         xdata, ydata, dydata, scan_labels, xlabel, ylabel = self.multiscan.get_plot_lines(xaxis, yaxis)
         # Plot data
-        plot_lines(axes, xdata, ydata, *args, **kwargs)
+        name = self.multiscan.get_variables()[0]
+        values = self.multiscan.get_variable_data()[0]
+        obj, sm = plot_lines(axes, xdata, ydata, *args, cdata=values, **kwargs)
         # labels
-        labels(self.multiscan.title(), xlabel, ylabel, colorbar=True, colorbar_label=self.multiscan.get_plot_variable())
+        labels(self.multiscan.title(), xlabel, ylabel, axes=axes)
+        plt.colorbar(sm, ax=axes, label=name)
         if self.multiscan[0].options('plot_show'):
             plt.show()
         return axes

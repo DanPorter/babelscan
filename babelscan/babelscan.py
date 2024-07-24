@@ -1009,7 +1009,11 @@ class MultiScan:
         names = fn.liststr(name)
         self._variables += names
 
-    def _get_variable_data(self):
+    def get_variables(self):
+        """Return list of assigned variables"""
+        return [self._get_name(name) for name in self._variables]
+
+    def get_variable_data(self):
         """
         Return array of variable data such that
           data = self._get_variable_data()
@@ -1017,7 +1021,7 @@ class MultiScan:
         """
         return np.transpose(self.value(self._variables)).reshape(len(self._variables), -1)
 
-    def _get_variable_string(self):
+    def get_variable_string(self):
         """
         Return string of variable data
         :return: str
