@@ -16,6 +16,7 @@ MAX_STRING_LENGTH = 100
 VALUE_FORMAT = '%.5g'
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
 OUTPUT_FORMAT = '%20s = %s'
+CONFIG_DIR = os.path.join(os.path.dirname(__file__), '..', 'config_files')
 
 # Compile useful pattern strings
 re_integer = re.compile(r'\d+')
@@ -469,6 +470,10 @@ def load_from_config(config_file):
     :param config_file: str config filename
     :return: name, default_names, formats, default_values, options
     """
+    if os.path.isfile(os.path.join(CONFIG_DIR, config_file)):
+        config_file = os.path.join(CONFIG_DIR, config_file)
+    elif os.path.isfile(os.path.join(CONFIG_DIR, config_file + '.config')):
+        config_file = os.path.join(CONFIG_DIR, config_file + '.config')
     with open(config_file, 'r') as fp:
         config = json.load(fp)
     name = config['name'] if 'name' in config else 'None'

@@ -1,6 +1,6 @@
 """
 BabelScan
-Example generation of a config file
+Create config file for i16
 """
 
 import babelscan
@@ -10,7 +10,7 @@ str_list = ['scan_number', 'filename', 'scan_command', 'axes', 'signal',
             'i16_energy', 'i16_temperature', 'i16_hkl', 'ss', 'ds']
 
 
-# These will be added as **kwargs in each scan
+# These will be added as **kwargs in each scan, see scan.options()
 options = {
     'filename_format': '%06d.nxs',
     'label_command': '#{scan_number:1.0f}',

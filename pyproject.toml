@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools >= 61.0", "wheel", "pytest", "numpy", "h5py",
+  "hdf5plugin", "imageio", "python-dateutil"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = 'babelscan'
+version = '0.9.0'
+dependencies = [
+  "numpy",
+  "h5py",
+  "hdf5plugin",
+  "imageio",
+  "python-dateutil"
+]
+requires-python = ">=3.7"
+authors = [
+  {name = "Dan Porter", email = "dan.porter@diamond.ac.uk"},
+]
+maintainers = [
+  {name = "Dan Porter", email = "dan.porter@diamond.ac.uk"},
+]
+description = "BabelScan is a format independent data structure for holding different types of data from a scan file"
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = [
+  'nexus',
+]
+classifiers = [
+  'Programming Language :: Python :: 3.7',
+  'Intended Audience :: Science/Research',
+  'Topic :: Scientific/Engineering :: Physics',
+  'License :: OSI Approved :: Apache Software License',
+  'Development Status :: 3 - Alpha',
+]
+
+[project.urls]
+Homepage = "https://github.com/DanPorter/babelscan"
+Documentation = "https://github.com/DanPorter/babelscan"
+Repository = "https://github.com/DanPorter/babelscan"
+"Bug Tracker" = "https://github.com/DanPorter/babelscan"
+Changelog = "https://github.com/DanPorter/babelscan/blob/master/README.md"
+
+[project.scripts]
+babelscan = "babelscan"

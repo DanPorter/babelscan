@@ -118,8 +118,8 @@ def gauss(x, y=None, height=1, cen=0, fwhm=0.5, bkg=0):
     if y is None:
         y = cen
 
-    x = np.asarray(x, dtype=np.float).reshape([-1])
-    y = np.asarray(y, dtype=np.float).reshape([-1])
+    x = np.asarray(x, dtype=float).reshape([-1])
+    y = np.asarray(y, dtype=float).reshape([-1])
     X, Y = np.meshgrid(x, y)
     g = height * np.exp(-np.log(2) * (((X - cen) ** 2 + (Y - cen) ** 2) / (fwhm / 2) ** 2)) + bkg
 
@@ -307,7 +307,7 @@ def peak_results(res):
     """
     peak_prefx = [mod.prefix for mod in res.components if 'bkg' not in mod.prefix]
     npeaks = len(peak_prefx)
-    nn = 1 / len(peak_prefx) if len(peak_prefx) > 0 else 1
+    nn = 1 / len(peak_prefx) if len(peak_prefx) > 0 else 1  # normalise by number of peaks
     comps = res.eval_components()
     fit_dict = {
         'lmfit': res,
@@ -337,6 +337,7 @@ def peak_results(res):
         'stderr_sigma': np.sqrt(np.sum([fit_dict['stderr_%ssigma' % pfx] ** 2 for pfx in peak_prefx])) * nn,
         'stderr_height': np.sqrt(np.sum([fit_dict['stderr_%sheight' % pfx] ** 2 for pfx in peak_prefx])) * nn,
         'stderr_fwhm': np.sqrt(np.sum([fit_dict['stderr_%sfwhm' % pfx] ** 2 for pfx in peak_prefx])) * nn,
+        'stderr_background': np.std(comps['bkg_']) if 'bkg_' in comps else 0.0,
     }
     fit_dict.update(totals)
     return fit_dict
@@ -373,7 +374,7 @@ def peak_results_str(res):
     out += '         height = %s\n' % fn.stfm(fit_dict['height'], fit_dict['stderr_height'])
     out += '          sigma = %s\n' % fn.stfm(fit_dict['sigma'], fit_dict['stderr_sigma'])
     out += '           fwhm = %s\n' % fn.stfm(fit_dict['fwhm'], fit_dict['stderr_fwhm'])
-    out += '     background = %s\n' % fn.stfm(fit_dict['background'], 0)
+    out += '     background = %s\n' % fn.stfm(fit_dict['background'], fit_dict['stderr_background'])
     return out
 
 
@@ -997,6 +998,9 @@ class ScanFitManager:
          output only: 'fwhm', 'height'
         Background parameters:
          'bkg_slope', 'bkg_intercept', or for exponential: 'bkg_amplitude', 'bkg_decay'
+         output only: 'background'
+        Uncertainties (errors):
+         'stderr_PARAMETER', e.g. 'stderr_amplitude'
 
         Provide initial guess:
           res = self.fit(x, y, model='Voight', initial_parameters={'p1_center':1.23})
@@ -1066,6 +1070,8 @@ class ScanFitManager:
          'bkg_slope', 'bkg_intercept', or for exponential: 'bkg_amplitude', 'bkg_decay'
         Total parameters (always available, output only - sum/averages of all peaks):
          'amplitude', 'center', 'sigma', 'fwhm', 'height', 'background'
+        Uncertainties (errors):
+         'stderr_PARAMETER', e.g. 'stderr_amplitude'
 
         Provide initial guess:
           res = self.multi_peak_fit(x, y, model='Voight', initial_parameters={'p1_center':1.23})
@@ -1317,6 +1323,7 @@ class MultiScanFitManager:
         """
         Automatic fitting of multiple scans using the same single-peak model
         Uses LMFit
+        See: scan.fit.fit
         return [list of FitResult objects]
         """
         out = [
@@ -1334,6 +1341,7 @@ class MultiScanFitManager:
         """
         Automatic fitting of multiple scans using the same multi-peak model
         Uses LMFit
+        See: scan.fit.multi_peak_fit
         return [list of FitResult objects]
         """
         out = [

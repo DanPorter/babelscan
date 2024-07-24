@@ -153,7 +153,7 @@ def roi_op_sum(volume, operation):
     return roi_sum(volume, cen_h, cen_v, wid_h, wid_v)
 
 
-def rebin(volume, step=[1, 1, 1], average_points=True):
+def rebin(volume, step=(1, 1, 1), average_points=True):
     """
     Rebins the volume along 3 dimensions, taking the average of elements within each step
     :param volume: Volume object or numpy.array with ndim==3
@@ -202,6 +202,10 @@ class Volume:
             return np.array([operation(self.__getitem__(idx), other) for idx in range(self.shape[0])])
         else:
             raise TypeError('ArrayVolume %s %s not implemented yet' % (operation.__name__, type(other)))
+
+    def __getitem__(self, item):
+        """Overloaded method"""
+        pass
 
     def __lt__(self, other):
         """self < other"""
@@ -252,7 +256,7 @@ class Volume:
         except IndexError:
             return [self[idx[0], idx[1], idx[2]] for idx in indexes]
 
-    def rebin(self, step=[1, 1, 1], average_points=True):
+    def rebin(self, step=(1, 1, 1), average_points=True):
         """
         Rebins the volume along 3 dimensions, taking the average of elements within each step
         :param step: [i', j', k'] step size along each dimension
@@ -316,8 +320,8 @@ class Volume:
         :param background_percentile: int from 0-100, percentile of volume to use as background
         :return: float
         """
-        bkg = self <= np.percentile(self, background_percentile)
-        return np.mean(self[bkg])
+        bkg_index = self <= np.percentile(self, background_percentile)
+        return np.mean(self[bkg_index])
 
     def peak_amplitude(self, background_percentile=50):
         """
@@ -334,8 +338,8 @@ class Volume:
         Create new region of interest from detector images
         :param cen_h: int or None
         :param cen_v: int or None
-        :param wid_h:  int or None
-        :param wid_v:  int or None
+        :param wid_h:  int
+        :param wid_v:  int
         :return: l*wid_v*wid_h array
         """
         if cen_h is None:
@@ -349,8 +353,8 @@ class Volume:
         Create new region of interest from detector images, return sum and max of each image
         :param cen_h: int or None
         :param cen_v: int or None
-        :param wid_h:  int or None
-        :param wid_v:  int or None
+        :param wid_h:  int
+        :param wid_v:  int
         :return: roi_sum, roi_max
         """
         if cen_h is None:

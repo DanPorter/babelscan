@@ -89,10 +89,10 @@ Instrument class
 
 By Dan Porter, PhD
 Diamond Light Source Ltd.
-2023
+2024
 
-Version 0.8.8
-Last updated: 14/12/23
+Version 0.9.0
+Last updated: 24/07/24
 
 Version History:
 13/04/21 0.1.0  Version History started.
@@ -117,6 +117,7 @@ Version History:
 18/04/23 0.8.6  Added hdf5plugin requirement and imports to load compressed data
 26/10/23 0.8.7  Various minor changes
 14/12/23 0.8.8  Changes to fitting, providing better output. Other minor changes
+24/07/24 0.9.0  Updates to fitting, volume, multiplots. Added pyproject.toml
 
 ToDo
  - Speed up very slow initial file_loader time
@@ -124,7 +125,7 @@ ToDo
  - allow address names such as 'h-axis'
 
 -----------------------------------------------------------------------------
-   Copyright 2021 Diamond Light Source Ltd.
+   Copyright 2024 Diamond Light Source Ltd.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -144,8 +145,8 @@ ToDo
 """
 
 
-__version__ = "0.8.8"
-__date__ = "2023/12/14"
+__version__ = "0.9.0"
+__date__ = "2024/07/24"
 
 
 from .__settings__ import EVAL_MODE
