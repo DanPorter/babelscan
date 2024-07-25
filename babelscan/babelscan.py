@@ -1040,6 +1040,22 @@ class MultiScan:
             pass
         return name
 
+    def sort(self, name=None, index=None, reverse=False):
+        """
+        Sort scan list by variable or index
+        :param name: str name of value in scan files to use sort index, None uses default variable
+        :param index: list of integer positions, defining sort index
+        :param reverse: if True, will reverse the index
+        """
+        if index is None:
+            if name is None:
+                name = self._variables[0]
+            values = self.value(name)
+            index = np.argsort(values)
+        if reverse:
+            index = index[::-1]
+        self._scan_list = [self._scan_list[ii] for ii in index]
+
     def scan_numbers(self):
         return [scan.scan_number for scan in self._scan_list]
 

@@ -776,6 +776,8 @@ class MultiScanPlotManager:
         self.show = plt.show
 
     def __call__(self, *args, **kwargs):
+        if len(self.multiscan) > 6:
+            return self.plot_with_colorbar(*args, **kwargs)
         return self.plot(*args, **kwargs)
 
     def plot_simple(self, xname, yname, *args, **kwargs):
