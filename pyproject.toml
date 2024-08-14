@@ -41,5 +41,3 @@ Repository = "https://github.com/DanPorter/babelscan"
 "Bug Tracker" = "https://github.com/DanPorter/babelscan"
 Changelog = "https://github.com/DanPorter/babelscan/blob/master/README.md"
 
-[project.scripts]
-babelscan = "babelscan"
